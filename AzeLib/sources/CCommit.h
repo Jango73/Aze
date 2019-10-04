@@ -32,6 +32,7 @@ public:
     Q_FAST_PROPERTY(QString, s, date, Date)
     Q_FAST_PROPERTY(QString, s, message, Message)
     Q_FAST_PROPERTY(QDictionary, m, user, User)
+    Q_FAST_PROPERTY(QStringList, l, files, Files)
 
 public:
 
@@ -58,6 +59,7 @@ public:
 
 public:
 
+    //!
     static CCommit* fromNode(const CXMLNode& xNode);
 };
 

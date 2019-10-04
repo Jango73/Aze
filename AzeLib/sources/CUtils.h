@@ -29,6 +29,18 @@ public:
 
     //!
     static CXMLNode nodeFromDictionary(const QDictionary& xDict);
+
+    //!
+    static QString serializeBase64(const QString& sText);
+
+    //!
+    static QString deserializeBase64(const QString& sText);
+
+    //!
+    static QString idFromByteArray(const QByteArray& baData);
+
+    //!
+    static QString idFromFile(const QString& sFilename);
 };
 
 }

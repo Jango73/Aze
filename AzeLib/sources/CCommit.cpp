@@ -35,6 +35,10 @@ CXMLNode CCommit::toNode() const
     CXMLNode xUser = CUtils::nodeFromDictionary(m_mUser);
     xNode << xUser;
 
+    CXMLNode xFiles(CStrings::s_sParamFiles);
+    xFiles.setValue(m_lFiles.join(CStrings::s_sNewLine));
+    xNode << xFiles;
+
     return xNode;
 }
 
@@ -53,6 +57,9 @@ CCommit* CCommit::fromNode(const CXMLNode& xNode)
 
     CXMLNode xUser = xNode.getNodeByTagName(CStrings::s_sParamUser);
     pCommit->setUser(CUtils::dictionaryFromNode(xUser));
+
+    CXMLNode xFiles = xNode.getNodeByTagName(CStrings::s_sParamFiles);
+    pCommit->setFiles(xFiles.value().split(CStrings::s_sNewLine));
 
     return pCommit;
 }
