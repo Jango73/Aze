@@ -7,32 +7,34 @@
 
 // qt-plus
 #include "Macros.h"
-#include "CXMLNode.h"
 
 // Application
 #include "CObject.h"
 #include "CEnums.h"
 #include "CStrings.h"
+#include "CFile.h"
 
 //-------------------------------------------------------------------------------------------------
 
 namespace Aze {
 
-class CCommit : public CObject
+class CRepository : public CObject
 {
     Q_OBJECT
 
 public:
 
     //-------------------------------------------------------------------------------------------------
-    // QML properties
+    // Properties
     //-------------------------------------------------------------------------------------------------
 
-    Q_FAST_PROPERTY(QString, s, author, Author)
-    Q_FAST_PROPERTY(QString, s, date, Date)
-    Q_FAST_PROPERTY(QString, s, message, Message)
-    Q_FAST_PROPERTY(QDictionary, m, user, User)
-    Q_FAST_PROPERTY(QDictionary, m, files, Files)
+    Q_FAST_PROPERTY(bool, b, ok, Ok)
+    Q_FAST_PROPERTY(QString, s, rootPath, RootPath)
+    Q_FAST_PROPERTY(QString, s, dataPath, DataPath)
+    Q_FAST_PROPERTY(QString, s, stashPath, StashPath)
+    Q_FAST_PROPERTY(QString, s, branchPath, BranchPath)
+    Q_FAST_PROPERTY(QString, s, commitPath, CommitPath)
+    Q_FAST_PROPERTY(QString, s, objectPath, ObjectPath)
 
 public:
 
@@ -41,26 +43,44 @@ public:
     //-------------------------------------------------------------------------------------------------
 
     //!
-    CCommit(QObject* parent = nullptr);
+    CRepository(const QString& sRootPath, QObject* parent = nullptr);
 
     //!
-    ~CCommit();
+    ~CRepository();
 
     //-------------------------------------------------------------------------------------------------
     // Control methods
     //-------------------------------------------------------------------------------------------------
 
     //!
-    CXMLNode toNode() const;
-
-    //-------------------------------------------------------------------------------------------------
-    // Static control methods
-    //-------------------------------------------------------------------------------------------------
-
-public:
+    bool init();
 
     //!
-    static CCommit* fromNode(const CXMLNode& xNode);
+    bool add(const QStringList& lRelativeFileName);
+
+    //!
+    bool remove(const QStringList& lRelativeFileName);
+
+    //!
+    QList<CFile> fileStatus();
+
+    //!
+    QString absoluteFileName(const QString& sFileName);
+
+    //!
+    QString relativeFileName(const QString& sFileName);
+
+    //-------------------------------------------------------------------------------------------------
+    // Protected control methods
+    //-------------------------------------------------------------------------------------------------
+
+protected:
+
+    //!
+    bool addSingleFile(QString sRelativeFileName);
+
+    //!
+    bool removeSingleFile(QString sRelativeFileName);
 };
 
 }

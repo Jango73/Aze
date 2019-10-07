@@ -1,5 +1,6 @@
 
 // Qt
+#include <QFile>
 #include <QBuffer>
 #include <QDataStream>
 #include <QCryptographicHash>
@@ -71,8 +72,34 @@ QString CUtils::idFromByteArray(const QByteArray& baData)
 
 QString CUtils::idFromFile(const QString& sFilename)
 {
-    Q_UNUSED(sFilename);
-    return "";
+    QString sId;
+    QFile file(sFilename);
+    if (file.open(QFile::ReadOnly))
+    {
+        QByteArray baData = file.readAll();
+        file.close();
+        sId = idFromByteArray(baData);
+    }
+    return sId;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+QString CUtils::packIdAndFile(const QString& sId, const QString& sFilePath)
+{
+    return QString("%1%2%3").arg(sId).arg(sId).arg(CStrings::s_sPathIdSeparator).arg(sFilePath);
+}
+
+//-------------------------------------------------------------------------------------------------
+
+void CUtils::unpackIdAndFile(const QString& sPack, QString& sId, QString& sFilePath)
+{
+    QStringList sValues = sPack.split(CStrings::s_sPathIdSeparator);
+    if (sValues.count() == 2)
+    {
+        sId = sValues[0];
+        sFilePath = sValues[1];
+    }
 }
 
 //-------------------------------------------------------------------------------------------------

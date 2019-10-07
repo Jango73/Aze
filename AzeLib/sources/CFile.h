@@ -3,16 +3,34 @@
 
 // Qt
 #include <QObject>
-#include <QCoreApplication>
+#include <QDateTime>
+
+// qt-plus
+#include "Macros.h"
+#include "CXMLNode.h"
 
 // Application
-#include "CConstants.h"
+#include "CObject.h"
+#include "CEnums.h"
+#include "CStrings.h"
 
 //-------------------------------------------------------------------------------------------------
 
-class Aze : public QCoreApplication
+namespace Aze {
+
+class CFile : public QObject
 {
     Q_OBJECT
+
+public:
+
+    //-------------------------------------------------------------------------------------------------
+    // QML properties
+    //-------------------------------------------------------------------------------------------------
+
+    Q_FAST_PROPERTY(QString, s, name, Name)
+    Q_FAST_PROPERTY(QString, s, relativePath, RelativePath)
+    Q_FAST_PROPERTY(CEnums::EFileStatus, e, status, Status)
 
 public:
 
@@ -20,24 +38,15 @@ public:
     // Constructor & destructor
     //-------------------------------------------------------------------------------------------------
 
-    //! Constructor
-    Aze(int argc, char *argv[]);
+    //!
+    CFile(QObject* parent = nullptr);
 
-    //! Destructor
-    virtual ~Aze();
+    //!
+    ~CFile();
 
     //-------------------------------------------------------------------------------------------------
     // Control methods
     //-------------------------------------------------------------------------------------------------
-
-    //!
-    int run();
-
-    //-------------------------------------------------------------------------------------------------
-    // Properties
-    //-------------------------------------------------------------------------------------------------
-
-protected:
-
-    CConstants::ECommand    m_eCommand;
 };
+
+}

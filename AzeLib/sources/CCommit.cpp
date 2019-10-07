@@ -36,7 +36,12 @@ CXMLNode CCommit::toNode() const
     xNode << xUser;
 
     CXMLNode xFiles(CStrings::s_sParamFiles);
-    xFiles.setValue(m_lFiles.join(CStrings::s_sNewLine));
+    QStringList lFiles;
+    for (QString sId : m_mFiles.keys())
+    {
+        lFiles << CUtils::packIdAndFile(sId, m_mFiles[sId]);
+    }
+    xFiles.setValue(lFiles.join(CStrings::s_sNewLine));
     xNode << xFiles;
 
     return xNode;
@@ -46,6 +51,10 @@ CXMLNode CCommit::toNode() const
 
 CCommit* CCommit::fromNode(const CXMLNode& xNode)
 {
+    QDictionary mFiles;
+    QString sId;
+    QString sFilePath;
+
     CCommit* pCommit = new CCommit();
 
     CXMLNode xInfo = xNode.getNodeByTagName(CStrings::s_sParamInfo);
@@ -59,7 +68,14 @@ CCommit* CCommit::fromNode(const CXMLNode& xNode)
     pCommit->setUser(CUtils::dictionaryFromNode(xUser));
 
     CXMLNode xFiles = xNode.getNodeByTagName(CStrings::s_sParamFiles);
-    pCommit->setFiles(xFiles.value().split(CStrings::s_sNewLine));
+    QStringList sLines = xFiles.value().split(CStrings::s_sNewLine);
+    for (QString sLine : sLines)
+    {
+        CUtils::unpackIdAndFile(sLine, sId, sFilePath);
+        if (not sId.isEmpty())
+            mFiles[sId] = sFilePath;
+    }
+    pCommit->setFiles(mFiles);
 
     return pCommit;
 }

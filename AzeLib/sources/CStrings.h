@@ -26,7 +26,16 @@ public:
     static const QString s_sParamFiles;
     static const QString s_sParamInfo;
     static const QString s_sParamMessage;
+    static const QString s_sParamRoot;
+    static const QString s_sParamTip;
+    static const QString s_sParamType;
     static const QString s_sParamUser;
+
+    static const QString s_sPathAzeDataRoot;
+    static const QString s_sPathAzeStashPath;
+    static const QString s_sPathAzeBranchPath;
+    static const QString s_sPathAzeCommitPath;
+    static const QString s_sPathAzeObjectPath;
 };
 
 }

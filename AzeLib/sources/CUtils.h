@@ -41,6 +41,12 @@ public:
 
     //!
     static QString idFromFile(const QString& sFilename);
+
+    //!
+    static QString packIdAndFile(const QString& sId, const QString& sFilePath);
+
+    //!
+    static void unpackIdAndFile(const QString& sPack, QString& sId, QString& sFilePath);
 };
 
 }

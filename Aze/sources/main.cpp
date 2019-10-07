@@ -1,15 +1,17 @@
 
-// Qt
-#include <QCoreApplication>
-
 // Application
-#include "Aze.h"
+#include "AzeApp.h"
 
 int main(int argc, char *argv[])
 {
     // Build Aze instance
-    Aze aze(argc, argv);
+    AzeApp* aze = new AzeApp(argc, argv);
 
     // Run Aze instance
-    return aze.run();
+    int iResult = aze->run();
+
+    // Delete Aze instance
+    delete aze;
+
+    return iResult;
 }

@@ -18,7 +18,7 @@
 
 namespace Aze {
 
-class CCommit : public CObject
+class CBranch : public CObject
 {
     Q_OBJECT
 
@@ -28,11 +28,11 @@ public:
     // QML properties
     //-------------------------------------------------------------------------------------------------
 
+    Q_FAST_PROPERTY(CEnums::EBranchType, e, type, Type)
     Q_FAST_PROPERTY(QString, s, author, Author)
     Q_FAST_PROPERTY(QString, s, date, Date)
-    Q_FAST_PROPERTY(QString, s, message, Message)
-    Q_FAST_PROPERTY(QDictionary, m, user, User)
-    Q_FAST_PROPERTY(QDictionary, m, files, Files)
+    Q_FAST_PROPERTY(QString, s, rootCommitId, RootCommitId)
+    Q_FAST_PROPERTY(QString, s, tipCommitId, TipCommitId)
 
 public:
 
@@ -41,10 +41,10 @@ public:
     //-------------------------------------------------------------------------------------------------
 
     //!
-    CCommit(QObject* parent = nullptr);
+    CBranch(QObject* parent = nullptr);
 
     //!
-    ~CCommit();
+    ~CBranch();
 
     //-------------------------------------------------------------------------------------------------
     // Control methods
@@ -60,7 +60,7 @@ public:
 public:
 
     //!
-    static CCommit* fromNode(const CXMLNode& xNode);
+    static CBranch* fromNode(const CXMLNode& xNode);
 };
 
 }

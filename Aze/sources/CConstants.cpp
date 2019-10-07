@@ -7,4 +7,8 @@
 
 //-------------------------------------------------------------------------------------------------
 
-const char* CConstants::s_sSwitchShowStatus = "--show-status";
+const char* CConstants::s_sSwitchInitRepository = "init";
+const char* CConstants::s_sSwitchStatus = "status";
+const char* CConstants::s_sSwitchAdd = "add";
+const char* CConstants::s_sSwitchCommit = "commit";
+const char* CConstants::s_sSwitchBranch = "branch";
