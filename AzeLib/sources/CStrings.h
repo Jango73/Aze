@@ -1,6 +1,9 @@
 
 #pragma once
 
+// Global
+#include "Aze_global.h"
+
 // Qt
 #include <QObject>
 #include <QtGlobal>
@@ -9,7 +12,7 @@
 
 namespace Aze {
 
-class CStrings : public QObject
+class AZESHARED_EXPORT CStrings : public QObject
 {
     Q_OBJECT
 

@@ -27,11 +27,15 @@ AzeApp::AzeApp(int argc, char *argv[])
     for (int Index = 0; Index < argc; Index++)
         lRawArguments << QString(argv[Index]);
 
-    // Get some arguments from console
+    // Get some arguments from console if none provided
     if (lRawArguments.count() < 2)
     {
-        QTextStream s(stdin);
-        QString value = s.readLine();
+        QTextStream out(stdout);
+        out << QString("Please enter a command (%1)\n>").arg(m_pRepository->rootPath());
+        out.flush();
+
+        QTextStream in(stdin);
+        QString value = in.readLine();
 
         // Get arguments by splitting on space except for quoted strings
         lRawArguments << value.split(QRegExp(" (?=[^\"]*(\"[^\"]*\"[^\"]*)*$)"));

@@ -1,6 +1,9 @@
 
 #pragma once
 
+// Global
+#include "Aze_global.h"
+
 // Qt
 #include <QObject>
 #include <QDateTime>
@@ -18,7 +21,7 @@
 
 namespace Aze {
 
-class CBranch : public CObject
+class AZESHARED_EXPORT CBranch : public CObject
 {
     Q_OBJECT
 

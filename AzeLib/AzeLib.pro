@@ -3,6 +3,7 @@ QT += core xml
 
 TEMPLATE = lib
 DEFINES += "AZELIB_VERSION_STRING=\"\\\"0.0.0.alpha.1\\\"\""
+DEFINES += AZE_LIBRARY
 DEFINES += QTPLUS_LIBRARY
 
 # Dependencies

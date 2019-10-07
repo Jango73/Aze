@@ -1,6 +1,9 @@
 
 #pragma once
 
+// Global
+#include "Aze_global.h"
+
 // Qt
 #include <QObject>
 #include <QMetaEnum>
@@ -11,7 +14,7 @@
 
 namespace Aze {
 
-class CEnums : public QObject
+class AZESHARED_EXPORT CEnums : public QObject
 {
     Q_OBJECT
 
