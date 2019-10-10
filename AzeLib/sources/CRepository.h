@@ -16,12 +16,13 @@
 #include "CEnums.h"
 #include "CStrings.h"
 #include "CFile.h"
+#include "CCommit.h"
 
 //-------------------------------------------------------------------------------------------------
 
 namespace Aze {
 
-class AZESHARED_EXPORT CRepository : public CObject
+class AZE_SHARED_EXPORT CRepository : public CObject
 {
     Q_OBJECT
 
@@ -38,6 +39,8 @@ public:
     Q_FAST_PROPERTY(QString, s, branchPath, BranchPath)
     Q_FAST_PROPERTY(QString, s, commitPath, CommitPath)
     Q_FAST_PROPERTY(QString, s, objectPath, ObjectPath)
+
+    Q_FAST_PROPERTY(CCommit*, p, stagingCommit, StagingCommit)
 
 public:
 
@@ -65,7 +68,13 @@ public:
     bool remove(const QStringList& lRelativeFileName);
 
     //!
+    CCommit* getStagingCommit();
+
+    //! Populates the staging commit
     QList<CFile> fileStatus();
+
+    //!
+    void readStage();
 
     //!
     QString absoluteFileName(const QString& sFileName);

@@ -21,7 +21,7 @@
 
 namespace Aze {
 
-class AZESHARED_EXPORT CBranch : public CObject
+class AZE_SHARED_EXPORT CBranch : public CObject
 {
     Q_OBJECT
 

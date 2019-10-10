@@ -15,6 +15,7 @@ CRepository::CRepository(const QString& sRootPath, QObject* parent)
     : CObject(parent)
     , m_bOk(false)
     , m_sRootPath(sRootPath)
+    , m_pStagingCommit(nullptr)
 {
     m_sDataPath = QString("%1/%2").arg(m_sRootPath).arg(CStrings::s_sPathAzeDataRoot);
     m_sBranchPath = QString("%1/%2").arg(CStrings::s_sPathAzeDataRoot).arg(CStrings::s_sPathAzeBranchPath);
@@ -91,6 +92,14 @@ QList<CFile> CRepository::fileStatus()
 
 //-------------------------------------------------------------------------------------------------
 
+void CRepository::readStage()
+{
+    QString sStagingCommitFileName = QString("%1/%2").arg(m_sCommitPath).arg(CStrings::s_sStagingCommitFileName);
+    setStagingCommit(CCommit::fromFile(sStagingCommitFileName));
+}
+
+//-------------------------------------------------------------------------------------------------
+
 QString CRepository::absoluteFileName(const QString& sFileName)
 {
     QFileInfo info(sFileName);
@@ -115,7 +124,9 @@ bool CRepository::addSingleFile(QString sFileName)
 
 bool CRepository::removeSingleFile(QString sFileName)
 {
-    Q_UNUSED(sFileName);
+    QString sAbsoluteFileName = absoluteFileName(sFileName);
+    QFile file(sAbsoluteFileName);
+
     return true;
 }
 

@@ -19,7 +19,7 @@
 
 namespace Aze {
 
-class AZESHARED_EXPORT CUtils
+class AZE_SHARED_EXPORT CUtils
 {
 public:
 

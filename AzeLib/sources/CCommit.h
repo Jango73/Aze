@@ -21,7 +21,7 @@
 
 namespace Aze {
 
-class AZESHARED_EXPORT CCommit : public CObject
+class AZE_SHARED_EXPORT CCommit : public CObject
 {
     Q_OBJECT
 
@@ -56,6 +56,12 @@ public:
     //!
     CXMLNode toNode() const;
 
+    //!
+    void addFile(QString sFileName);
+
+    //!
+    void removeFile(QString sFileName);
+
     //-------------------------------------------------------------------------------------------------
     // Static control methods
     //-------------------------------------------------------------------------------------------------
@@ -64,6 +70,9 @@ public:
 
     //!
     static CCommit* fromNode(const CXMLNode& xNode);
+
+    //!
+    static CCommit* fromFile(const QString& sFileName);
 };
 
 }

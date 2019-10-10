@@ -19,7 +19,7 @@
 
 namespace Aze {
 
-class AZESHARED_EXPORT CObject : public QObject
+class AZE_SHARED_EXPORT CObject : public QObject
 {
     Q_OBJECT
 

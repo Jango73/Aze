@@ -21,7 +21,7 @@
 
 namespace Aze {
 
-class AZESHARED_EXPORT CFile : public QObject
+class AZE_SHARED_EXPORT CFile : public QObject
 {
     Q_OBJECT
 

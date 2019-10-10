@@ -49,6 +49,20 @@ CXMLNode CCommit::toNode() const
 
 //-------------------------------------------------------------------------------------------------
 
+void CCommit::addFile(QString sFileName)
+{
+    // TODO
+}
+
+//-------------------------------------------------------------------------------------------------
+
+void CCommit::removeFile(QString sFileName)
+{
+    // TODO
+}
+
+//-------------------------------------------------------------------------------------------------
+
 CCommit* CCommit::fromNode(const CXMLNode& xNode)
 {
     QDictionary mFiles;
@@ -78,6 +92,13 @@ CCommit* CCommit::fromNode(const CXMLNode& xNode)
     pCommit->setFiles(mFiles);
 
     return pCommit;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+CCommit* CCommit::fromFile(const QString& sFileName)
+{
+    return fromNode(CXMLNode::load(sFileName));
 }
 
 } // namespace Aze

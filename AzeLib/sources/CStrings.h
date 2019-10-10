@@ -12,7 +12,7 @@
 
 namespace Aze {
 
-class AZESHARED_EXPORT CStrings : public QObject
+class AZE_SHARED_EXPORT CStrings : public QObject
 {
     Q_OBJECT
 
@@ -23,6 +23,7 @@ public:
     static const QString s_sNewLineEscaped;
     static const QString s_sBase64Marker;
     static const QString s_sPathIdSeparator;
+    static const QString s_sCompressedXMLExtension;
 
     static const QString s_sParamAuthor;
     static const QString s_sParamDate;
@@ -39,6 +40,8 @@ public:
     static const QString s_sPathAzeBranchPath;
     static const QString s_sPathAzeCommitPath;
     static const QString s_sPathAzeObjectPath;
+
+    static const QString s_sStagingCommitFileName;
 };
 
 }
