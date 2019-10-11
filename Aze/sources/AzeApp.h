@@ -57,15 +57,19 @@ public:
     //!
     bool isASainRepository();
 
+    //!
+    void initCommandMap();
+
     //-------------------------------------------------------------------------------------------------
     // Properties
     //-------------------------------------------------------------------------------------------------
 
 protected:
 
-    QStringList             m_lArguments;
-    QStringList             m_lSwitches;
-    QStringList             m_lFilesAndIds;
-    CConstants::ECommand    m_eCommand;
-    Aze::CRepository*       m_pRepository;
+    QStringList                             m_lArguments;
+    QStringList                             m_lSwitches;
+    QStringList                             m_lFilesAndIds;
+    CConstants::ECommand                    m_eCommand;
+    Aze::CRepository*                       m_pRepository;
+    QMap<QString, CConstants::ECommand>     m_mCommands;
 };

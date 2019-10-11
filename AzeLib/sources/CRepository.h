@@ -16,6 +16,7 @@
 #include "CEnums.h"
 #include "CStrings.h"
 #include "CFile.h"
+#include "CBranch.h"
 #include "CCommit.h"
 
 //-------------------------------------------------------------------------------------------------
@@ -40,7 +41,13 @@ public:
     Q_FAST_PROPERTY(QString, s, commitPath, CommitPath)
     Q_FAST_PROPERTY(QString, s, objectPath, ObjectPath)
 
+    Q_FAST_PROPERTY(QString, s, currentBranchName, CurrentBranchName)
+    Q_FAST_PROPERTY(CBranch*, p, currentBranch, CurrentBranch)
+
+    Q_FAST_PROPERTY(QString, s, stagingCommitFileName, StagingCommitFileName)
     Q_FAST_PROPERTY(CCommit*, p, stagingCommit, StagingCommit)
+
+    Q_FAST_PROPERTY(CCommit*, p, tipCommit, TipCommit)
 
 public:
 
@@ -62,25 +69,37 @@ public:
     bool init();
 
     //!
-    bool add(const QStringList& lRelativeFileName);
+    bool add(const QStringList& lFileNames);
 
     //!
-    bool remove(const QStringList& lRelativeFileName);
+    bool remove(const QStringList& lFileNames);
+
+    //!
+    bool commit(const QString& sAuthor, const QString& sMessage);
 
     //!
     CCommit* getStagingCommit();
 
-    //! Populates the staging commit
+    //!
     QList<CFile> fileStatus();
 
-    //!
-    void readStage();
+    //! Reads the stage commit
+    bool readGeneralInfo();
+
+    //! Reads the current branch
+    bool readCurrentBranch();
+
+    //! Reads general information
+    bool readStage();
 
     //!
-    QString absoluteFileName(const QString& sFileName);
+    bool readTipCommit();
 
-    //!
-    QString relativeFileName(const QString& sFileName);
+    //! Writes the stage commit
+    bool writeStage();
+
+    //! Clears the stage commit (but does not write it)
+    bool clearStage();
 
     //-------------------------------------------------------------------------------------------------
     // Protected control methods
@@ -93,6 +112,9 @@ protected:
 
     //!
     bool removeSingleFile(QString sRelativeFileName);
+
+    //!
+    bool fileExists(QString sRelativeFileName);
 };
 
 }

@@ -12,6 +12,9 @@ const QString CStrings::s_sPathIdSeparator          = "@";
 const QString CStrings::s_sCompressedXMLExtension   = "xmlc";
 
 const QString CStrings::s_sParamAuthor              = "author";
+const QString CStrings::s_sParamBranches            = "branches";
+const QString CStrings::s_sParamCommit              = "commit";
+const QString CStrings::s_sParamCurrent             = "current";
 const QString CStrings::s_sParamDate                = "date";
 const QString CStrings::s_sParamFiles               = "files";
 const QString CStrings::s_sParamInfo                = "info";
@@ -27,6 +30,9 @@ const QString CStrings::s_sPathAzeBranchPath        = "branches";
 const QString CStrings::s_sPathAzeCommitPath        = "commits";
 const QString CStrings::s_sPathAzeObjectPath        = "objects";
 
-const QString CStrings::s_sStagingCommitFileName    = "stage.xmlc";
+const QString CStrings::s_sGeneralInfoFileName      = "info.xml";
+const QString CStrings::s_sStagingCommitFileName    = "stage.xml"; // "stage.xmlc";
+
+const QString CStrings::s_sTextNoSuchFile           = tr("No such file");
 
 } // namespace Aze

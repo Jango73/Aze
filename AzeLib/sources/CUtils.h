@@ -28,6 +28,12 @@ public:
     //-------------------------------------------------------------------------------------------------
 
     //!
+    static QString relativeFileName(const QString& sRootPath, const QString& sFileName);
+
+    //!
+    static QString absoluteFileName(const QString& sRootPath, const QString& sFileName);
+
+    //!
     static QDictionary dictionaryFromNode(const CXMLNode& xNode);
 
     //!
@@ -41,6 +47,9 @@ public:
 
     //!
     static QString idFromByteArray(const QByteArray& baData);
+
+    //!
+    static QString idFromString(const QString& sText);
 
     //!
     static QString idFromFile(const QString& sFilename);

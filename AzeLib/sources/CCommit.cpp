@@ -7,7 +7,8 @@ namespace Aze {
 
 //-------------------------------------------------------------------------------------------------
 
-CCommit::CCommit(QObject* parent) : CObject(parent)
+CCommit::CCommit(QObject* parent)
+    : CObject(parent)
 {
 }
 
@@ -19,9 +20,26 @@ CCommit::~CCommit()
 
 //-------------------------------------------------------------------------------------------------
 
+CCommit* CCommit::clone() const
+{
+    CCommit* pResult = new CCommit();
+
+    pResult->setAuthor(m_sAuthor);
+    pResult->setDate(m_sDate);
+    pResult->setMessage(m_sMessage);
+    pResult->setUser(m_mUser);
+    pResult->setFiles(m_mFiles);
+
+    return pResult;
+}
+
+//-------------------------------------------------------------------------------------------------
+
 CXMLNode CCommit::toNode() const
 {
-    CXMLNode xNode;
+    OUT_DEBUG(m_sId);
+
+    CXMLNode xNode(CStrings::s_sParamCommit);
 
     CXMLNode xInfo(CStrings::s_sParamInfo);
     xInfo.attributes()[CStrings::s_sParamAuthor] = m_sAuthor;
@@ -39,7 +57,9 @@ CXMLNode CCommit::toNode() const
     QStringList lFiles;
     for (QString sId : m_mFiles.keys())
     {
-        lFiles << CUtils::packIdAndFile(sId, m_mFiles[sId]);
+        QString sText = CUtils::packIdAndFile(sId, m_mFiles[sId]);;
+        OUT_DEBUG(sText);
+        lFiles << sText;
     }
     xFiles.setValue(lFiles.join(CStrings::s_sNewLine));
     xNode << xFiles;
@@ -49,16 +69,47 @@ CXMLNode CCommit::toNode() const
 
 //-------------------------------------------------------------------------------------------------
 
-void CCommit::addFile(QString sFileName)
+bool CCommit::toFile(const QString& sFileName) const
 {
-    // TODO
+    OUT_DEBUG(sFileName);
+
+    toNode().save(sFileName);
+    return true;
 }
 
 //-------------------------------------------------------------------------------------------------
 
-void CCommit::removeFile(QString sFileName)
+bool CCommit::addFile(QString sRelativeFileName, QString sId)
 {
+    OUT_DEBUG(sRelativeFileName);
+    OUT_DEBUG(sId);
+
+    if (not m_mFiles.values().contains(sRelativeFileName))
+    {
+        if (sId.isEmpty())
+            sId = CUtils::idFromFile(sRelativeFileName);
+
+        m_mFiles[sId] = sRelativeFileName;
+    }
+
+    return true;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+bool CCommit::removeFile(QString sRelativeFileName)
+{
+    OUT_DEBUG(sRelativeFileName);
     // TODO
+    return true;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+bool CCommit::add(CCommit* pCommitToAdd)
+{
+    Q_UNUSED(pCommitToAdd);
+    return true;
 }
 
 //-------------------------------------------------------------------------------------------------

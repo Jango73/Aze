@@ -54,13 +54,22 @@ public:
     //-------------------------------------------------------------------------------------------------
 
     //!
+    CCommit* clone() const;
+
+    //!
     CXMLNode toNode() const;
 
     //!
-    void addFile(QString sFileName);
+    bool toFile(const QString& sFileName) const;
 
     //!
-    void removeFile(QString sFileName);
+    bool addFile(QString sRelativeFileName, QString sId = "");
+
+    //!
+    bool removeFile(QString sRelativeFileName);
+
+    //!
+    bool add(CCommit* pCommitToAdd);
 
     //-------------------------------------------------------------------------------------------------
     // Static control methods

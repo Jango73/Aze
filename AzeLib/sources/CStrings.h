@@ -26,6 +26,9 @@ public:
     static const QString s_sCompressedXMLExtension;
 
     static const QString s_sParamAuthor;
+    static const QString s_sParamBranches;
+    static const QString s_sParamCommit;
+    static const QString s_sParamCurrent;
     static const QString s_sParamDate;
     static const QString s_sParamFiles;
     static const QString s_sParamInfo;
@@ -41,7 +44,10 @@ public:
     static const QString s_sPathAzeCommitPath;
     static const QString s_sPathAzeObjectPath;
 
+    static const QString s_sGeneralInfoFileName;
     static const QString s_sStagingCommitFileName;
+
+    static const QString s_sTextNoSuchFile;
 };
 
 }

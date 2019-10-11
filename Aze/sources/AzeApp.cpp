@@ -22,6 +22,8 @@ AzeApp::AzeApp(int argc, char *argv[])
     , m_eCommand(CConstants::eCommandNone)
     , m_pRepository(new Aze::CRepository(QDir::currentPath(), this))
 {
+    initCommandMap();
+
     QStringList lRawArguments;
 
     for (int Index = 0; Index < argc; Index++)
@@ -57,16 +59,7 @@ AzeApp::AzeApp(int argc, char *argv[])
     m_lArguments.takeFirst();
 
     // Get command
-    QString sCommand = m_lArguments.takeFirst().toLower();
-
-    if (sCommand == CConstants::s_sSwitchInitRepository)
-        m_eCommand = CConstants::eCommandInitRepository;
-    else if (sCommand == CConstants::s_sSwitchStatus)
-        m_eCommand = CConstants::eCommandShowStatus;
-    else if (sCommand == CConstants::s_sSwitchAdd)
-        m_eCommand = CConstants::eCommandAdd;
-    else if (sCommand == CConstants::s_sSwitchCommit)
-        m_eCommand = CConstants::eCommandCommit;
+    m_eCommand = m_mCommands[m_lArguments.takeFirst().toLower()];
 
     // Split switches and files
     for (QString sArgument : m_lArguments)
@@ -116,8 +109,6 @@ int AzeApp::run()
 
 int AzeApp::init()
 {
-    qDebug() << "init()";
-
     return m_pRepository->init() ? 0 : 1;
 }
 
@@ -125,10 +116,7 @@ int AzeApp::init()
 
 int AzeApp::status()
 {
-    if (not isASainRepository())
-        return 1;
-
-    qDebug() << "status()";
+    ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
 
     QList<Aze::CFile> lFiles = m_pRepository->fileStatus();
     return 0;
@@ -138,48 +126,60 @@ int AzeApp::status()
 
 int AzeApp::add()
 {
-    if (not isASainRepository())
-        return 1;
+    ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
 
-    qDebug() << "add()";
+    ERROR_WHEN_FALSE(m_pRepository->readStage(), CConstants::s_iError_CouldNotReadStage);
 
-    return m_pRepository->add(m_lFilesAndIds) ? 0 : 1;
+    ERROR_WHEN_FALSE(m_pRepository->add(m_lFilesAndIds), CConstants::s_iError_CouldNotAddFiles);
+
+    ERROR_WHEN_FALSE(m_pRepository->writeStage(), CConstants::s_iError_CouldNotWriteStage);
+
+    return CConstants::s_iError_None;
 }
 
 //-------------------------------------------------------------------------------------------------
 
 int AzeApp::move()
 {
-    if (not isASainRepository())
-        return 1;
+    ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
 
-    qDebug() << "move()";
+    ERROR_WHEN_FALSE(m_pRepository->readStage(), CConstants::s_iError_CouldNotReadStage);
 
-    return 0;
+    ERROR_WHEN_FALSE(m_pRepository->writeStage(), CConstants::s_iError_CouldNotWriteStage);
+
+    return CConstants::s_iError_None;
 }
 
 //-------------------------------------------------------------------------------------------------
 
 int AzeApp::remove()
 {
-    if (not isASainRepository())
-        return 1;
+    ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
 
-    qDebug() << "remove()";
+    ERROR_WHEN_FALSE(m_pRepository->readStage(), CConstants::s_iError_CouldNotReadStage);
 
-    return m_pRepository->remove(m_lFilesAndIds) ? 0 : 1;
+    ERROR_WHEN_FALSE(m_pRepository->remove(m_lFilesAndIds), CConstants::s_iError_CouldNotRemoveFiles);
+
+    ERROR_WHEN_FALSE(m_pRepository->writeStage(), CConstants::s_iError_CouldNotWriteStage);
+
+    return CConstants::s_iError_None;
 }
 
 //-------------------------------------------------------------------------------------------------
 
 int AzeApp::commit()
 {
-    if (not isASainRepository())
-        return 1;
+    ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
 
-    qDebug() << "commit()";
+    ERROR_WHEN_FALSE(m_pRepository->readStage(), CConstants::s_iError_CouldNotReadStage);
 
-    return 0;
+    ERROR_WHEN_FALSE(m_pRepository->commit("", ""), CConstants::s_iError_CouldNotRemoveFiles);
+
+    ERROR_WHEN_FALSE(m_pRepository->clearStage(), CConstants::s_iError_CouldNotWriteStage);
+
+    ERROR_WHEN_FALSE(m_pRepository->writeStage(), CConstants::s_iError_CouldNotWriteStage);
+
+    return CConstants::s_iError_None;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -188,9 +188,22 @@ bool AzeApp::isASainRepository()
 {
     if (not m_pRepository->ok())
     {
-        qWarning() << "This is not an Aze repository.";
+        OUT_ERROR("This is not an Aze repository.");
+
         return false;
     }
 
     return true;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+void AzeApp::initCommandMap()
+{
+    m_mCommands[CConstants::s_sSwitchInitRepository]    = CConstants::eCommandInitRepository;
+    m_mCommands[CConstants::s_sSwitchShowStatus]        = CConstants::eCommandShowStatus;
+    m_mCommands[CConstants::s_sSwitchAdd]               = CConstants::eCommandAdd;
+    m_mCommands[CConstants::s_sSwitchMove]              = CConstants::eCommandMove;
+    m_mCommands[CConstants::s_sSwitchRemove]            = CConstants::eCommandRemove;
+    m_mCommands[CConstants::s_sSwitchCommit]            = CConstants::eCommandCommit;
 }
