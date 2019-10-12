@@ -34,6 +34,9 @@ public:
     //-------------------------------------------------------------------------------------------------
 
     //!
+    QString getArgumentValue(const QString& sName);
+
+    //!
     int run();
 
     //!
@@ -53,6 +56,9 @@ public:
 
     //!
     int commit();
+
+    //!
+    int dump();
 
     //!
     bool isASainRepository();

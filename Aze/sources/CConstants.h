@@ -26,7 +26,8 @@ public:
         eCommandAdd,
         eCommandMove,
         eCommandRemove,
-        eCommandCommit
+        eCommandCommit,
+        eCommandDump
     };
 
     // Switches
@@ -37,6 +38,9 @@ public:
     static const char* s_sSwitchRemove;
     static const char* s_sSwitchCommit;
     static const char* s_sSwitchBranch;
+    static const char* s_sSwitchDump;
+
+    static const char* s_sSwitchMessage;
 
     static const int s_iError_None;
     static const int s_iError_NotARepository;

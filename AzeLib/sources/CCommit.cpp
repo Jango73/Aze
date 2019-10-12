@@ -44,6 +44,7 @@ CXMLNode CCommit::toNode() const
     CXMLNode xInfo(CStrings::s_sParamInfo);
     xInfo.attributes()[CStrings::s_sParamAuthor] = m_sAuthor;
     xInfo.attributes()[CStrings::s_sParamDate] = m_sDate;
+    xInfo.attributes()[CStrings::s_sParamParents] = m_lParents.join(",");
     xNode << xInfo;
 
     CXMLNode xMessage(CStrings::s_sParamMessage);
@@ -75,6 +76,13 @@ bool CCommit::toFile(const QString& sFileName) const
 
     toNode().save(sFileName);
     return true;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+void CCommit::addParent(const QString& sParentId)
+{
+    m_lParents << sParentId;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -123,7 +131,9 @@ bool CCommit::add(const QString& sRootPath, const QString& sObjectPath, CCommit*
             if (lKeys.count() > 0)
                 sExistingId = lKeys[0];
 
-            if (sExistingId.isEmpty())
+            QString sNewId = CUtils::idFromFile(sAbsoluteFileName);
+
+            if (sExistingId.isEmpty() || sExistingId != sNewId)
             {
                 // File object does not exist
 
@@ -131,6 +141,7 @@ bool CCommit::add(const QString& sRootPath, const QString& sObjectPath, CCommit*
 
                 if (not sNewObjectId.isEmpty())
                 {
+                    m_mFiles.remove(sExistingId);
                     m_mFiles[sNewObjectId] = sRelativeFileName;
                 }
             }
@@ -153,6 +164,7 @@ CCommit* CCommit::fromNode(const CXMLNode& xNode)
     CXMLNode xInfo = xNode.getNodeByTagName(CStrings::s_sParamInfo);
     pCommit->setAuthor(xInfo.attributes()[CStrings::s_sParamAuthor]);
     pCommit->setDate(xInfo.attributes()[CStrings::s_sParamDate]);
+    pCommit->setParents(xInfo.attributes()[CStrings::s_sParamParents].split(CStrings::s_sItemSeparator));
 
     CXMLNode xMessage = xNode.getNodeByTagName(CStrings::s_sParamMessage);
     pCommit->setMessage(xMessage.value());

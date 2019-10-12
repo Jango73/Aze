@@ -14,6 +14,9 @@ const char* CConstants::s_sSwitchMove                       = "move";
 const char* CConstants::s_sSwitchRemove                     = "remove";
 const char* CConstants::s_sSwitchCommit                     = "commit";
 const char* CConstants::s_sSwitchBranch                     = "branch";
+const char* CConstants::s_sSwitchDump                       = "show";
+
+const char* CConstants::s_sSwitchMessage                    = "--message";
 
 const int CConstants::s_iError_None                         = 0;
 const int CConstants::s_iError_NotARepository               = 1;

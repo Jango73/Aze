@@ -110,6 +110,15 @@ public:
     //! Clears the stage commit (but does not write it)
     bool clearStage();
 
+    //!
+    QString getFileContent(const QString& sId);
+
+    //!
+    QString composeCommitFileName(const QString& sId);
+
+    //!
+    QString composeObjectFileName(const QString& sId);
+
     //-------------------------------------------------------------------------------------------------
     // Protected control methods
     //-------------------------------------------------------------------------------------------------

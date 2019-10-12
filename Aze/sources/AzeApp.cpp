@@ -76,6 +76,26 @@ AzeApp::~AzeApp()
 
 //-------------------------------------------------------------------------------------------------
 
+QString AzeApp::getArgumentValue(const QString& sName)
+{
+    for (int iIndex = 0; iIndex < m_lArguments.count(); iIndex++)
+    {
+        if (m_lArguments[iIndex] == sName)
+        {
+            m_lArguments.takeAt(iIndex);
+
+            if (iIndex < m_lArguments.count())
+                return m_lArguments.takeAt(iIndex);
+
+            return "";
+        }
+    }
+
+    return "";
+}
+
+//-------------------------------------------------------------------------------------------------
+
 int AzeApp::run()
 {
     switch (m_eCommand)
@@ -100,6 +120,9 @@ int AzeApp::run()
 
     case CConstants::eCommandCommit:
         return commit();
+
+    case CConstants::eCommandDump:
+        return dump();
     }
 
     return 0;
@@ -173,13 +196,31 @@ int AzeApp::commit()
 
     ERROR_WHEN_FALSE(m_pRepository->readStage(), CConstants::s_iError_CouldNotReadStage);
 
-    ERROR_WHEN_FALSE(m_pRepository->commit("", ""), CConstants::s_iError_CouldNotRemoveFiles);
+    QString sMessage = getArgumentValue(CConstants::s_sSwitchMessage);
+
+    ERROR_WHEN_FALSE(m_pRepository->commit("", sMessage), CConstants::s_iError_CouldNotRemoveFiles);
 
     ERROR_WHEN_FALSE(m_pRepository->writeCurrentBranch(), CConstants::s_iError_CouldNotWriteCurrentBranch);
 
     ERROR_WHEN_FALSE(m_pRepository->clearStage(), CConstants::s_iError_CouldNotWriteStage);
 
     ERROR_WHEN_FALSE(m_pRepository->writeStage(), CConstants::s_iError_CouldNotWriteStage);
+
+    return CConstants::s_iError_None;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+int AzeApp::dump()
+{
+    ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
+
+    for (QString sId : m_lFilesAndIds)
+    {
+        QString sText = m_pRepository->getFileContent(sId);
+
+        std::printf(sText.toLatin1());
+    }
 
     return CConstants::s_iError_None;
 }
@@ -208,4 +249,5 @@ void AzeApp::initCommandMap()
     m_mCommands[CConstants::s_sSwitchMove]              = CConstants::eCommandMove;
     m_mCommands[CConstants::s_sSwitchRemove]            = CConstants::eCommandRemove;
     m_mCommands[CConstants::s_sSwitchCommit]            = CConstants::eCommandCommit;
+    m_mCommands[CConstants::s_sSwitchDump]              = CConstants::eCommandDump;
 }

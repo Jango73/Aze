@@ -37,6 +37,12 @@ public:
     static bool fileExists(const QString& sRootPath, const QString& sRelativeFileName);
 
     //!
+    static QString getFileContent(const QString& sFileName);
+
+    //!
+    static QByteArray getFileFromDB(const QString& sObjectPath, const QString& sId);
+
+    //!
     static QString storeFileInDB(const QString& sObjectPath, const QString& sFileName);
 
     //!

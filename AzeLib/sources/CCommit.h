@@ -34,6 +34,7 @@ public:
     Q_FAST_PROPERTY(QString, s, author, Author)
     Q_FAST_PROPERTY(QString, s, date, Date)
     Q_FAST_PROPERTY(QString, s, message, Message)
+    Q_FAST_PROPERTY(QStringList, l, parents, Parents)
     Q_FAST_PROPERTY(QDictionary, m, user, User)
     Q_FAST_PROPERTY(QDictionary, m, files, Files)
 
@@ -61,6 +62,9 @@ public:
 
     //!
     bool toFile(const QString& sFileName) const;
+
+    //!
+    void addParent(const QString& sParentId);
 
     //!
     bool addFile(QString sRelativeFileName, QString sId = "");

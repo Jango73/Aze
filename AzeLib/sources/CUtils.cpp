@@ -141,6 +141,46 @@ void CUtils::unpackIdAndFile(const QString& sPack, QString& sId, QString& sFileP
 
 //-------------------------------------------------------------------------------------------------
 
+QString CUtils::getFileContent(const QString& sFileName)
+{
+    QByteArray baData;
+    QFile tInputFile(sFileName);
+
+    if (tInputFile.exists())
+    {
+        if (tInputFile.open(QIODevice::ReadOnly))
+        {
+            baData = tInputFile.readAll();
+            tInputFile.close();
+        }
+    }
+
+    return QString(baData);
+}
+
+//-------------------------------------------------------------------------------------------------
+
+QByteArray CUtils::getFileFromDB(const QString& sObjectPath, const QString& sId)
+{
+    QByteArray baData;
+
+    QString sStoredObjectFileName = QString("%1/%2").arg(sObjectPath).arg(sId);
+    QFile tOutputFile(sStoredObjectFileName);
+
+    if (tOutputFile.exists())
+    {
+        if (tOutputFile.open(QIODevice::ReadOnly))
+        {
+            baData = qUncompress(tOutputFile.readAll());
+            tOutputFile.close();
+        }
+    }
+
+    return baData;
+}
+
+//-------------------------------------------------------------------------------------------------
+
 QString CUtils::storeFileInDB(const QString& sObjectPath, const QString& sFileName)
 {
     QString sId;

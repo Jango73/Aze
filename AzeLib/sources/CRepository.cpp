@@ -132,8 +132,8 @@ bool CRepository::remove(const QStringList& lFileNames)
 
 bool CRepository::commit(const QString& sAuthor, const QString& sMessage)
 {
-    Q_UNUSED(sAuthor);
-    Q_UNUSED(sMessage);
+    OUT_DEBUG(QString("sAuthor=%1").arg(sAuthor));
+    OUT_DEBUG(QString("sMessage=%1").arg(sMessage));
 
     // Check presence of current branch
     if (IS_NULL(m_pCurrentBranch))
@@ -149,13 +149,12 @@ bool CRepository::commit(const QString& sAuthor, const QString& sMessage)
         return false;
     }
 
-    OUT_DEBUG("Stage commit ok");
-
     CCommit* pNewCommit = nullptr;
 
     if (readTipCommit())
     {
         pNewCommit = m_pTipCommit->clone();
+        pNewCommit->addParent(m_pTipCommit->id());
     }
     else
     {
@@ -164,14 +163,12 @@ bool CRepository::commit(const QString& sAuthor, const QString& sMessage)
 
     OUT_DEBUG(QString("Tip commit id=%1").arg(pNewCommit->id()));
 
+    pNewCommit->setMessage(sMessage);
     pNewCommit->add(m_sRootPath, m_sObjectPath, m_pStagingCommit);
 
     QString sCommitContent = pNewCommit->toNode().toString();
     QString sCommitId = CUtils::idFromString(sCommitContent);
-    QString sCommitFileName = QString("%1/%2.%3")
-            .arg(m_sCommitPath)
-            .arg(sCommitId)
-            .arg(CStrings::s_sCompressedXMLExtension);
+    QString sCommitFileName = composeCommitFileName(sCommitId);
 
     pNewCommit->toFile(sCommitFileName);
 
@@ -196,7 +193,9 @@ QList<CFile> CRepository::fileStatus()
 
 bool CRepository::readGeneralInfo()
 {
-    QString sFileName = QString("%1/%2").arg(m_sDataPath).arg(CStrings::s_sGeneralInfoFileName);
+    QString sFileName = QString("%1/%2")
+            .arg(m_sDataPath)
+            .arg(CStrings::s_sGeneralInfoFileName);
 
     CXMLNode xInfo = CXMLNode::load(sFileName);
 
@@ -243,11 +242,7 @@ bool CRepository::readTipCommit()
     {
         if (IS_NULL(m_pTipCommit))
         {
-            QString sTipFileName = QString("%1/%2.%3")
-                    .arg(m_sCommitPath)
-                    .arg(m_pCurrentBranch->tipCommitId())
-                    .arg(CStrings::s_sCompressedXMLExtension);
-
+            QString sTipFileName = composeCommitFileName(m_pCurrentBranch->tipCommitId());
             setTipCommit(CCommit::fromFile(sTipFileName));
             return true;
         }
@@ -260,7 +255,9 @@ bool CRepository::readTipCommit()
 
 bool CRepository::writeGeneralInfo()
 {
-    QString sFileName = QString("%1/%2").arg(m_sDataPath).arg(CStrings::s_sGeneralInfoFileName);
+    QString sFileName = QString("%1/%2")
+            .arg(m_sDataPath)
+            .arg(CStrings::s_sGeneralInfoFileName);
 
     CXMLNode xInfo(CStrings::s_sParamInfo);
 
@@ -277,7 +274,10 @@ bool CRepository::writeGeneralInfo()
 
 bool CRepository::writeCurrentBranch()
 {
-    QString sFileName = QString("%1/%2.%3").arg(m_sBranchPath).arg(m_sCurrentBranchName).arg(CStrings::s_sCompressedXMLExtension);
+    QString sFileName = QString("%1/%2.%3")
+            .arg(m_sBranchPath)
+            .arg(m_sCurrentBranchName)
+            .arg(CStrings::s_sCompressedXMLExtension);
 
     if (m_pCurrentBranch != nullptr)
     {
@@ -313,6 +313,47 @@ bool CRepository::clearStage()
     }
 
     return false;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+QString CRepository::getFileContent(const QString& sId)
+{
+    QString sText;
+    QString sFileName;
+
+    // Try in commits
+    sFileName = composeCommitFileName(sId);
+
+    if (QFile(sFileName).exists())
+        return CUtils::getFileContent(sFileName);
+
+    // Try in objects
+    sFileName = composeObjectFileName(sId);
+
+    if (QFile(sFileName).exists())
+        return CUtils::getFileFromDB(m_sObjectPath, sId);
+
+    return sText;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+QString CRepository::composeCommitFileName(const QString& sId)
+{
+    return QString("%1/%2.%3")
+            .arg(m_sCommitPath)
+            .arg(sId)
+            .arg(CStrings::s_sCompressedXMLExtension);
+}
+
+//-------------------------------------------------------------------------------------------------
+
+QString CRepository::composeObjectFileName(const QString& sId)
+{
+    return QString("%1/%2")
+            .arg(m_sObjectPath)
+            .arg(sId);
 }
 
 //-------------------------------------------------------------------------------------------------
