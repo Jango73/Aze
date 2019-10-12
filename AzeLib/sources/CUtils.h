@@ -27,11 +27,17 @@ public:
     // Public static methods
     //-------------------------------------------------------------------------------------------------
 
-    //!
+    //! Returns a relative file name given a root path and an absolute path to a file
     static QString relativeFileName(const QString& sRootPath, const QString& sFileName);
 
     //!
     static QString absoluteFileName(const QString& sRootPath, const QString& sFileName);
+
+    //!
+    static bool fileExists(const QString& sRootPath, const QString& sRelativeFileName);
+
+    //!
+    static QString storeFileInDB(const QString& sObjectPath, const QString& sFileName);
 
     //!
     static QDictionary dictionaryFromNode(const CXMLNode& xNode);

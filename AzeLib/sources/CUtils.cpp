@@ -34,6 +34,14 @@ QString CUtils::absoluteFileName(const QString& sRootPath, const QString& sFileN
 
 //-------------------------------------------------------------------------------------------------
 
+bool CUtils::fileExists(const QString& sRootPath, const QString& sRelativeFileName)
+{
+    QString sAbsoluteName = CUtils::absoluteFileName(sRootPath, sRelativeFileName);
+    return QFile(sAbsoluteName).exists();
+}
+
+//-------------------------------------------------------------------------------------------------
+
 QDictionary CUtils::dictionaryFromNode(const CXMLNode& xNode)
 {
     QDictionary mValue;
@@ -129,6 +137,54 @@ void CUtils::unpackIdAndFile(const QString& sPack, QString& sId, QString& sFileP
         sId = sValues[0];
         sFilePath = sValues[1];
     }
+}
+
+//-------------------------------------------------------------------------------------------------
+
+QString CUtils::storeFileInDB(const QString& sObjectPath, const QString& sFileName)
+{
+    QString sId;
+    QFile tInputFile(sFileName);
+
+    if (tInputFile.exists())
+    {
+        if (tInputFile.open(QIODevice::ReadOnly))
+        {
+            QByteArray baData = tInputFile.readAll();
+            tInputFile.close();
+
+            // Get the Id of this file
+            sId = idFromByteArray(baData);
+
+            // Check if it already exists
+            QString sStoredObjectFileName = QString("%1/%2").arg(sObjectPath).arg(sId);
+            QFile tOutputFile(sStoredObjectFileName);
+
+            // If it does not exist, compress it and store it in objects folder
+            if (not tOutputFile.exists())
+            {
+                OUT_DEBUG(QString("Creating : %1").arg(sStoredObjectFileName));
+
+                baData = qCompress(baData);
+
+                if (tOutputFile.open(QIODevice::WriteOnly))
+                {
+                    if (tOutputFile.write(baData) != baData.count())
+                    {
+                        sId = "";
+                        tOutputFile.close();
+                        tOutputFile.remove();
+                    }
+                    else
+                    {
+                        tOutputFile.close();
+                    }
+                }
+            }
+        }
+    }
+
+    return sId;
 }
 
 //-------------------------------------------------------------------------------------------------

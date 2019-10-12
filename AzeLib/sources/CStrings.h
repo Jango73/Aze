@@ -48,6 +48,8 @@ public:
     static const QString s_sStagingCommitFileName;
 
     static const QString s_sTextNoSuchFile;
+    static const QString s_sTextNoCurrentBranch;
+    static const QString s_sTextCommitEmpty;
 };
 
 }

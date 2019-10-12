@@ -175,6 +175,8 @@ int AzeApp::commit()
 
     ERROR_WHEN_FALSE(m_pRepository->commit("", ""), CConstants::s_iError_CouldNotRemoveFiles);
 
+    ERROR_WHEN_FALSE(m_pRepository->writeCurrentBranch(), CConstants::s_iError_CouldNotWriteCurrentBranch);
+
     ERROR_WHEN_FALSE(m_pRepository->clearStage(), CConstants::s_iError_CouldNotWriteStage);
 
     ERROR_WHEN_FALSE(m_pRepository->writeStage(), CConstants::s_iError_CouldNotWriteStage);

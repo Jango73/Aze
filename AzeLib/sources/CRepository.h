@@ -95,6 +95,12 @@ public:
     //!
     bool readTipCommit();
 
+    //!
+    bool writeGeneralInfo();
+
+    //!
+    bool writeCurrentBranch();
+
     //! Writes the stage commit
     bool writeStage();
 
@@ -112,9 +118,6 @@ protected:
 
     //!
     bool removeSingleFile(QString sRelativeFileName);
-
-    //!
-    bool fileExists(QString sRelativeFileName);
 };
 
 }

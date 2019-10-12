@@ -2,6 +2,9 @@
 // Application
 #include "CStrings.h"
 
+#define XMLC_EXTENSION  "xml"
+// #define XMLC_EXTENSION  "xmlc"
+
 namespace Aze {
 
 const QString CStrings::s_sPathSep                  = "/";
@@ -9,7 +12,7 @@ const QString CStrings::s_sNewLine                  = "\n";
 const QString CStrings::s_sNewLineEscaped           = "\\n";
 const QString CStrings::s_sBase64Marker             = "B64:";
 const QString CStrings::s_sPathIdSeparator          = "@";
-const QString CStrings::s_sCompressedXMLExtension   = "xmlc";
+const QString CStrings::s_sCompressedXMLExtension   = XMLC_EXTENSION;
 
 const QString CStrings::s_sParamAuthor              = "author";
 const QString CStrings::s_sParamBranches            = "branches";
@@ -30,9 +33,11 @@ const QString CStrings::s_sPathAzeBranchPath        = "branches";
 const QString CStrings::s_sPathAzeCommitPath        = "commits";
 const QString CStrings::s_sPathAzeObjectPath        = "objects";
 
-const QString CStrings::s_sGeneralInfoFileName      = "info.xml";
-const QString CStrings::s_sStagingCommitFileName    = "stage.xml"; // "stage.xmlc";
+const QString CStrings::s_sGeneralInfoFileName      = "info." XMLC_EXTENSION;
+const QString CStrings::s_sStagingCommitFileName    = "stage." XMLC_EXTENSION;
 
 const QString CStrings::s_sTextNoSuchFile           = tr("No such file");
+const QString CStrings::s_sTextNoCurrentBranch      = tr("No current branch");
+const QString CStrings::s_sTextCommitEmpty          = tr("No files to commit");
 
 } // namespace Aze

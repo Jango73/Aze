@@ -69,7 +69,7 @@ public:
     bool removeFile(QString sRelativeFileName);
 
     //!
-    bool add(CCommit* pCommitToAdd);
+    bool add(const QString& sRootPath, const QString& sObjectPath, CCommit* pCommitToAdd);
 
     //-------------------------------------------------------------------------------------------------
     // Static control methods

@@ -100,15 +100,43 @@ bool CCommit::addFile(QString sRelativeFileName, QString sId)
 bool CCommit::removeFile(QString sRelativeFileName)
 {
     OUT_DEBUG(sRelativeFileName);
-    // TODO
     return true;
 }
 
 //-------------------------------------------------------------------------------------------------
 
-bool CCommit::add(CCommit* pCommitToAdd)
+bool CCommit::add(const QString& sRootPath, const QString& sObjectPath, CCommit* pCommitToAdd)
 {
-    Q_UNUSED(pCommitToAdd);
+    for (QString sAddKey : pCommitToAdd->m_mFiles.keys())
+    {
+        QString sRelativeFileName = pCommitToAdd->m_mFiles[sAddKey];
+        QString sAbsoluteFileName = CUtils::absoluteFileName(sRootPath, sRelativeFileName);
+
+        OUT_DEBUG(QString("sAbsoluteFileName=%1").arg(sAbsoluteFileName));
+
+        if (CUtils::fileExists(sRootPath, sRelativeFileName))
+        {
+            // This file exists in working directory
+
+            QString sExistingId;
+            QList<QString> lKeys = m_mFiles.keys(sRelativeFileName);
+            if (lKeys.count() > 0)
+                sExistingId = lKeys[0];
+
+            if (sExistingId.isEmpty())
+            {
+                // File object does not exist
+
+                QString sNewObjectId = CUtils::storeFileInDB(sObjectPath, sAbsoluteFileName);
+
+                if (not sNewObjectId.isEmpty())
+                {
+                    m_mFiles[sNewObjectId] = sRelativeFileName;
+                }
+            }
+        }
+    }
+
     return true;
 }
 
@@ -134,9 +162,11 @@ CCommit* CCommit::fromNode(const CXMLNode& xNode)
 
     CXMLNode xFiles = xNode.getNodeByTagName(CStrings::s_sParamFiles);
     QStringList sLines = xFiles.value().split(CStrings::s_sNewLine);
+
     for (QString sLine : sLines)
     {
         CUtils::unpackIdAndFile(sLine, sId, sFilePath);
+
         if (not sId.isEmpty())
             mFiles[sId] = sFilePath;
     }

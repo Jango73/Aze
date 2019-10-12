@@ -42,6 +42,7 @@ public:
     static const int s_iError_NotARepository;
     static const int s_iError_CouldNotReadStage;
     static const int s_iError_CouldNotWriteStage;
+    static const int s_iError_CouldNotWriteCurrentBranch;
     static const int s_iError_CouldNotAddFiles;
     static const int s_iError_CouldNotMoveFiles;
     static const int s_iError_CouldNotRemoveFiles;
