@@ -42,11 +42,11 @@ public:
     Q_FAST_PROPERTY(QString, s, objectPath, ObjectPath)
 
     Q_FAST_PROPERTY(QString, s, currentBranchName, CurrentBranchName)
-    Q_FAST_PROPERTY(CBranch*, p, currentBranch, CurrentBranch)
-
     Q_FAST_PROPERTY(QString, s, stagingCommitFileName, StagingCommitFileName)
-    Q_FAST_PROPERTY(CCommit*, p, stagingCommit, StagingCommit)
 
+    Q_FAST_PROPERTY(CBranch*, p, currentBranch, CurrentBranch)
+    Q_FAST_PROPERTY(CCommit*, p, stagingCommit, StagingCommit)
+    Q_FAST_PROPERTY(CCommit*, p, rootCommit, RootCommit)
     Q_FAST_PROPERTY(CCommit*, p, tipCommit, TipCommit)
 
 public:
@@ -67,6 +67,9 @@ public:
 
     //!
     bool init();
+
+    //!
+    bool branch(const QString& sName);
 
     //!
     bool add(const QStringList& lFileNames);

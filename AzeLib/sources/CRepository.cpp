@@ -17,6 +17,7 @@ CRepository::CRepository(const QString& sRootPath, QObject* parent)
     , m_sRootPath(sRootPath)
     , m_pCurrentBranch(nullptr)
     , m_pStagingCommit(nullptr)
+    , m_pRootCommit(nullptr)
     , m_pTipCommit(nullptr)
 {
     m_sDataPath = QString("%1/%2").arg(m_sRootPath).arg(CStrings::s_sPathAzeDataRoot);
@@ -42,6 +43,10 @@ CRepository::CRepository(const QString& sRootPath, QObject* parent)
 
 CRepository::~CRepository()
 {
+    SAFE_DELETE(m_pCurrentBranch);
+    SAFE_DELETE(m_pStagingCommit);
+    SAFE_DELETE(m_pRootCommit);
+    SAFE_DELETE(m_pTipCommit);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -60,10 +65,31 @@ bool CRepository::init()
     rootDir.mkpath(m_sCommitPath);
     rootDir.mkpath(m_sObjectPath);
 
-    setCurrentBranchName("trunk");
+    branch(CStrings::s_sDefaultBranchName);
+
     writeGeneralInfo();
+    writeCurrentBranch();
 
     setOk(true);
+
+    return true;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+bool CRepository::branch(const QString& sName)
+{
+    if (not IS_NULL(m_pCurrentBranch))
+    {
+        m_pCurrentBranch->setRootCommitId(m_pCurrentBranch->tipCommitId());
+        m_pCurrentBranch->setType(CEnums::eBranch);
+    }
+    else
+    {
+        CBranch* pNewBranch = new CBranch();
+        setCurrentBranch(pNewBranch);
+        setCurrentBranchName(sName);
+    }
 
     return true;
 }
@@ -149,6 +175,7 @@ bool CRepository::commit(const QString& sAuthor, const QString& sMessage)
 
     pNewCommit->toFile(sCommitFileName);
 
+    // Update the current branch
     m_pCurrentBranch->setTipCommitId(sCommitId);
 
     delete pNewCommit;
@@ -183,7 +210,10 @@ bool CRepository::readGeneralInfo()
 
 bool CRepository::readCurrentBranch()
 {
-    QString sFileName = QString("%1/%2").arg(m_sBranchPath).arg(m_sCurrentBranchName);
+    QString sFileName = QString("%1/%2.%3")
+            .arg(m_sBranchPath)
+            .arg(m_sCurrentBranchName)
+            .arg(CStrings::s_sCompressedXMLExtension);
 
     setCurrentBranch(CBranch::fromNode(CXMLNode::load(sFileName)));
 
@@ -213,7 +243,11 @@ bool CRepository::readTipCommit()
     {
         if (IS_NULL(m_pTipCommit))
         {
-            QString sTipFileName = QString("%1/%2").arg(m_sCommitPath).arg(m_pCurrentBranch->tipCommitId());
+            QString sTipFileName = QString("%1/%2.%3")
+                    .arg(m_sCommitPath)
+                    .arg(m_pCurrentBranch->tipCommitId())
+                    .arg(CStrings::s_sCompressedXMLExtension);
+
             setTipCommit(CCommit::fromFile(sTipFileName));
             return true;
         }
@@ -239,12 +273,11 @@ bool CRepository::writeGeneralInfo()
     return true;
 }
 
-
 //-------------------------------------------------------------------------------------------------
 
 bool CRepository::writeCurrentBranch()
 {
-    QString sFileName = QString("%1/%2").arg(m_sBranchPath).arg(m_sCurrentBranchName);
+    QString sFileName = QString("%1/%2.%3").arg(m_sBranchPath).arg(m_sCurrentBranchName).arg(CStrings::s_sCompressedXMLExtension);
 
     if (m_pCurrentBranch != nullptr)
     {

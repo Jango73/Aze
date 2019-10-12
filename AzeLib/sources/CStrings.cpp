@@ -15,6 +15,7 @@ const QString CStrings::s_sPathIdSeparator          = "@";
 const QString CStrings::s_sCompressedXMLExtension   = XMLC_EXTENSION;
 
 const QString CStrings::s_sParamAuthor              = "author";
+const QString CStrings::s_sParamBranch              = "branch";
 const QString CStrings::s_sParamBranches            = "branches";
 const QString CStrings::s_sParamCommit              = "commit";
 const QString CStrings::s_sParamCurrent             = "current";
@@ -35,6 +36,8 @@ const QString CStrings::s_sPathAzeObjectPath        = "objects";
 
 const QString CStrings::s_sGeneralInfoFileName      = "info." XMLC_EXTENSION;
 const QString CStrings::s_sStagingCommitFileName    = "stage." XMLC_EXTENSION;
+
+const QString CStrings::s_sDefaultBranchName        = "trunk";
 
 const QString CStrings::s_sTextNoSuchFile           = tr("No such file");
 const QString CStrings::s_sTextNoCurrentBranch      = tr("No current branch");

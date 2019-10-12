@@ -26,6 +26,7 @@ public:
     static const QString s_sCompressedXMLExtension;
 
     static const QString s_sParamAuthor;
+    static const QString s_sParamBranch;
     static const QString s_sParamBranches;
     static const QString s_sParamCommit;
     static const QString s_sParamCurrent;
@@ -46,6 +47,8 @@ public:
 
     static const QString s_sGeneralInfoFileName;
     static const QString s_sStagingCommitFileName;
+
+    static const QString s_sDefaultBranchName;
 
     static const QString s_sTextNoSuchFile;
     static const QString s_sTextNoCurrentBranch;
