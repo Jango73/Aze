@@ -22,7 +22,7 @@ AzeApp::AzeApp(int argc, char *argv[])
     , m_eCommand(CConstants::eCommandNone)
     , m_pRepository(new Aze::CRepository(QDir::currentPath(), this))
 {
-    initCommandMap();
+    CConstants::initCommandMap();
 
     QStringList lRawArguments;
 
@@ -59,7 +59,7 @@ AzeApp::AzeApp(int argc, char *argv[])
     m_lArguments.takeFirst();
 
     // Get command
-    m_eCommand = m_mCommands[m_lArguments.takeFirst().toLower()];
+    m_eCommand = CConstants::s_mCommands[m_lArguments.takeFirst().toLower()];
 
     // Split switches and files
     for (QString sArgument : m_lArguments)
@@ -106,6 +106,9 @@ int AzeApp::run()
     case CConstants::eCommandInitRepository:
         return init();
 
+    case CConstants::eCommandCreateBranch:
+        return createBranch();
+
     case CConstants::eCommandShowStatus:
         return status();
 
@@ -133,6 +136,23 @@ int AzeApp::run()
 int AzeApp::init()
 {
     return m_pRepository->init() ? 0 : 1;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+int AzeApp::createBranch()
+{
+    ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
+
+    ERROR_WHEN_FALSE(m_lFilesAndIds.count() > 0, CConstants::s_iError_NoBranchNameGiven);
+
+    ERROR_WHEN_FALSE(m_pRepository->createBranch(m_lFilesAndIds[0]), CConstants::s_iError_CouldNotCreateBranch);
+
+    ERROR_WHEN_FALSE(m_pRepository->writeCurrentBranch(), CConstants::s_iError_CouldNotWriteCurrentBranch);
+
+    ERROR_WHEN_FALSE(m_pRepository->writeGeneralInfo(), CConstants::s_iError_CouldNotWriteCurrentBranch);
+
+    return CConstants::s_iError_None;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -196,9 +216,10 @@ int AzeApp::commit()
 
     ERROR_WHEN_FALSE(m_pRepository->readStage(), CConstants::s_iError_CouldNotReadStage);
 
+    QString sAuthor = getArgumentValue(CConstants::s_sSwitchAuthor);
     QString sMessage = getArgumentValue(CConstants::s_sSwitchMessage);
 
-    ERROR_WHEN_FALSE(m_pRepository->commit("", sMessage), CConstants::s_iError_CouldNotRemoveFiles);
+    ERROR_WHEN_FALSE(m_pRepository->commit(sAuthor, sMessage), CConstants::s_iError_CouldNotRemoveFiles);
 
     ERROR_WHEN_FALSE(m_pRepository->writeCurrentBranch(), CConstants::s_iError_CouldNotWriteCurrentBranch);
 
@@ -219,7 +240,7 @@ int AzeApp::dump()
     {
         QString sText = m_pRepository->getFileContent(sId);
 
-        std::printf(sText.toLatin1());
+        std::printf("%s", sText.toLatin1().constData());
     }
 
     return CConstants::s_iError_None;
@@ -237,17 +258,4 @@ bool AzeApp::isASainRepository()
     }
 
     return true;
-}
-
-//-------------------------------------------------------------------------------------------------
-
-void AzeApp::initCommandMap()
-{
-    m_mCommands[CConstants::s_sSwitchInitRepository]    = CConstants::eCommandInitRepository;
-    m_mCommands[CConstants::s_sSwitchShowStatus]        = CConstants::eCommandShowStatus;
-    m_mCommands[CConstants::s_sSwitchAdd]               = CConstants::eCommandAdd;
-    m_mCommands[CConstants::s_sSwitchMove]              = CConstants::eCommandMove;
-    m_mCommands[CConstants::s_sSwitchRemove]            = CConstants::eCommandRemove;
-    m_mCommands[CConstants::s_sSwitchCommit]            = CConstants::eCommandCommit;
-    m_mCommands[CConstants::s_sSwitchDump]              = CConstants::eCommandDump;
 }

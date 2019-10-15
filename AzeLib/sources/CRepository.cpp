@@ -65,7 +65,7 @@ bool CRepository::init()
     rootDir.mkpath(m_sCommitPath);
     rootDir.mkpath(m_sObjectPath);
 
-    branch(CStrings::s_sDefaultBranchName);
+    createBranch(CStrings::s_sDefaultBranchName);
 
     writeGeneralInfo();
     writeCurrentBranch();
@@ -77,7 +77,7 @@ bool CRepository::init()
 
 //-------------------------------------------------------------------------------------------------
 
-bool CRepository::branch(const QString& sName)
+bool CRepository::createBranch(const QString& sName)
 {
     if (not IS_NULL(m_pCurrentBranch))
     {
@@ -88,8 +88,9 @@ bool CRepository::branch(const QString& sName)
     {
         CBranch* pNewBranch = new CBranch();
         setCurrentBranch(pNewBranch);
-        setCurrentBranchName(sName);
     }
+
+    setCurrentBranchName(sName);
 
     return true;
 }
@@ -142,6 +143,8 @@ bool CRepository::commit(const QString& sAuthor, const QString& sMessage)
         return false;
     }
 
+    OUT_DEBUG(QString("current branch=%1").arg(m_sCurrentBranchName));
+
     // Check presence and relevancy of staging commmit
     if (IS_NULL(m_pStagingCommit) || m_pStagingCommit->files().count() == 0)
     {
@@ -149,31 +152,39 @@ bool CRepository::commit(const QString& sAuthor, const QString& sMessage)
         return false;
     }
 
+    // Create a new commit object
     CCommit* pNewCommit = nullptr;
 
+    // Read the tip commit of the current branch
     if (readTipCommit())
     {
+        OUT_DEBUG(QString("Existing tip commit id=%1").arg(m_pTipCommit->id()));
+
         pNewCommit = m_pTipCommit->clone();
         pNewCommit->addParent(m_pTipCommit->id());
     }
     else
     {
+        OUT_DEBUG("No current tip commit");
+
         pNewCommit = new CCommit();
     }
 
-    OUT_DEBUG(QString("Tip commit id=%1").arg(pNewCommit->id()));
+    pNewCommit->addCommit(m_sRootPath, m_sObjectPath, m_pStagingCommit);
 
+    QString sNewCommitContent = pNewCommit->toNode().toString();
+    QString sNewCommitId = CUtils::idFromString(sNewCommitContent);
+    QString sNewCommitFileName = composeCommitFileName(sNewCommitId);
+
+    // Finalize and save the commit
+    pNewCommit->setId(sNewCommitId);
+    pNewCommit->setDate(QDateTime::currentDateTimeUtc().toString(Qt::ISODate));
+    pNewCommit->setAuthor(sAuthor);
     pNewCommit->setMessage(sMessage);
-    pNewCommit->add(m_sRootPath, m_sObjectPath, m_pStagingCommit);
-
-    QString sCommitContent = pNewCommit->toNode().toString();
-    QString sCommitId = CUtils::idFromString(sCommitContent);
-    QString sCommitFileName = composeCommitFileName(sCommitId);
-
-    pNewCommit->toFile(sCommitFileName);
+    pNewCommit->toFile(sNewCommitFileName);
 
     // Update the current branch
-    m_pCurrentBranch->setTipCommitId(sCommitId);
+    m_pCurrentBranch->setTipCommitId(sNewCommitId);
 
     delete pNewCommit;
 
@@ -242,8 +253,11 @@ bool CRepository::readTipCommit()
     {
         if (IS_NULL(m_pTipCommit))
         {
-            QString sTipFileName = composeCommitFileName(m_pCurrentBranch->tipCommitId());
+            QString sTipId = m_pCurrentBranch->tipCommitId();
+            QString sTipFileName = composeCommitFileName(sTipId);
+            OUT_DEBUG(QString("Reading commit %1").arg(sTipFileName));
             setTipCommit(CCommit::fromFile(sTipFileName));
+            m_pTipCommit->setId(sTipId);
             return true;
         }
     }

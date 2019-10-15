@@ -39,8 +39,11 @@ public:
     //!
     int run();
 
-    //!
+    //! Initializes a repository
     int init();
+
+    //!
+    int createBranch();
 
     //!
     int status();
@@ -77,5 +80,4 @@ protected:
     QStringList                             m_lFilesAndIds;
     CConstants::ECommand                    m_eCommand;
     Aze::CRepository*                       m_pRepository;
-    QMap<QString, CConstants::ECommand>     m_mCommands;
 };

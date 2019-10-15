@@ -69,7 +69,7 @@ public:
     bool init();
 
     //!
-    bool branch(const QString& sName);
+    bool createBranch(const QString& sName);
 
     //!
     bool add(const QStringList& lFileNames);

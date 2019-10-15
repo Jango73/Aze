@@ -27,6 +27,7 @@ CCommit* CCommit::clone() const
     pResult->setAuthor(m_sAuthor);
     pResult->setDate(m_sDate);
     pResult->setMessage(m_sMessage);
+    pResult->setParents(m_lParents);
     pResult->setUser(m_mUser);
     pResult->setFiles(m_mFiles);
 
@@ -82,6 +83,8 @@ bool CCommit::toFile(const QString& sFileName) const
 
 void CCommit::addParent(const QString& sParentId)
 {
+    OUT_DEBUG(QString("Adding parent %1 to commit").arg(sParentId));
+
     m_lParents << sParentId;
 }
 
@@ -108,28 +111,32 @@ bool CCommit::addFile(QString sRelativeFileName, QString sId)
 bool CCommit::removeFile(QString sRelativeFileName)
 {
     OUT_DEBUG(sRelativeFileName);
+
+    if (m_mFiles.values().contains(sRelativeFileName))
+    {
+    }
+
     return true;
 }
 
 //-------------------------------------------------------------------------------------------------
 
-bool CCommit::add(const QString& sRootPath, const QString& sObjectPath, CCommit* pCommitToAdd)
+bool CCommit::addCommit(const QString& sRootPath, const QString& sObjectPath, CCommit* pCommitToAdd)
 {
     for (QString sAddKey : pCommitToAdd->m_mFiles.keys())
     {
         QString sRelativeFileName = pCommitToAdd->m_mFiles[sAddKey];
         QString sAbsoluteFileName = CUtils::absoluteFileName(sRootPath, sRelativeFileName);
 
+        OUT_DEBUG(QString("sRelativeFileName=%1").arg(sRelativeFileName));
         OUT_DEBUG(QString("sAbsoluteFileName=%1").arg(sAbsoluteFileName));
 
         if (CUtils::fileExists(sRootPath, sRelativeFileName))
         {
             // This file exists in working directory
+            QString sExistingId = mapKeyForValue(m_mFiles, sRelativeFileName);
 
-            QString sExistingId;
-            QList<QString> lKeys = m_mFiles.keys(sRelativeFileName);
-            if (lKeys.count() > 0)
-                sExistingId = lKeys[0];
+            OUT_DEBUG(QString("sExistingId=%1").arg(sExistingId));
 
             QString sNewId = CUtils::idFromFile(sAbsoluteFileName);
 
