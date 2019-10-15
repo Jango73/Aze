@@ -2,6 +2,7 @@
 // Qt
 #include <QDebug>
 #include <QDir>
+#include <QDirIterator>
 
 // qt-plus
 #include <CXMLNode.h>
@@ -173,6 +174,8 @@ int AzeApp::add()
 
     ERROR_WHEN_FALSE(m_pRepository->readStage(), CConstants::s_iError_CouldNotReadStage);
 
+    processWildCards();
+
     ERROR_WHEN_FALSE(m_pRepository->add(m_lFilesAndIds), CConstants::s_iError_CouldNotAddFiles);
 
     ERROR_WHEN_FALSE(m_pRepository->writeStage(), CConstants::s_iError_CouldNotWriteStage);
@@ -258,4 +261,49 @@ bool AzeApp::isASainRepository()
     }
 
     return true;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+void AzeApp::processWildCards()
+{
+    OUT_DEBUG("start");
+
+    QStringList lFiles;
+
+    for (QString sText : m_lFilesAndIds)
+    {
+        QString sFullName = QString("%1/%2").arg(m_pRepository->rootPath()).arg(sText);
+
+        if (QFile(sFullName).exists())
+        {
+            lFiles << sFullName;
+        }
+        else
+        {
+            QString sDirectory = QDir(sFullName).path();
+            sFullName.replace(sDirectory, "");
+            QString sWildCard = sFullName;
+
+            OUT_DEBUG(sDirectory);
+            OUT_DEBUG(sWildCard);
+
+            QStringList lFilter;
+            lFilter << sWildCard;
+
+            QDir dDirectory(sDirectory);
+            QStringList lFiles = dDirectory.entryList(lFilter);
+
+            for (QString sFile : lFiles)
+            {
+                if (sFile != "." && sFile != "..")
+                {
+                    lFiles << sFile;
+                    OUT_DEBUG(sFile);
+                }
+            }
+        }
+    }
+
+    m_lFilesAndIds = lFiles;
 }

@@ -67,7 +67,7 @@ public:
     bool isASainRepository();
 
     //!
-    void initCommandMap();
+    void processWildCards();
 
     //-------------------------------------------------------------------------------------------------
     // Properties
