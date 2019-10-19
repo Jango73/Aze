@@ -1,6 +1,7 @@
 
 // Application
 #include "CObject.h"
+#include "CUtils.h"
 
 namespace Aze {
 
@@ -15,6 +16,20 @@ CObject::CObject(QObject* parent)
 
 CObject::~CObject()
 {
+}
+
+//-------------------------------------------------------------------------------------------------
+
+QString CObject::generateId() const
+{
+    return CUtils::idFromString(toNode().toString());
+}
+
+//-------------------------------------------------------------------------------------------------
+
+CXMLNode CObject::toNode() const
+{
+    return CXMLNode();
 }
 
 //-------------------------------------------------------------------------------------------------

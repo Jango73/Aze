@@ -48,7 +48,7 @@ public:
     CCommit(QObject* parent = nullptr);
 
     //!
-    ~CCommit();
+    virtual ~CCommit() override;
 
     //-------------------------------------------------------------------------------------------------
     // Control methods
@@ -58,7 +58,7 @@ public:
     CCommit* clone() const;
 
     //!
-    CXMLNode toNode() const;
+    CXMLNode toNode() const override;
 
     //!
     bool toFile(const QString& sFileName) const;

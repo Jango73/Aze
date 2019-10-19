@@ -14,6 +14,7 @@ const char* CConstants::s_sSwitchAdd                        = "add";
 const char* CConstants::s_sSwitchMove                       = "move";
 const char* CConstants::s_sSwitchRemove                     = "remove";
 const char* CConstants::s_sSwitchCommit                     = "commit";
+const char* CConstants::s_sSwitchDiff                       = "diff";
 const char* CConstants::s_sSwitchDump                       = "show";
 
 const char* CConstants::s_sSwitchAuthor                     = "--author";

@@ -28,6 +28,7 @@ public:
         eCommandMove,
         eCommandRemove,
         eCommandCommit,
+        eCommandDiff,
         eCommandDump
     };
 
@@ -39,6 +40,7 @@ public:
     static const char* s_sSwitchMove;
     static const char* s_sSwitchRemove;
     static const char* s_sSwitchCommit;
+    static const char* s_sSwitchDiff;
     static const char* s_sSwitchDump;
 
     static const char* s_sSwitchAuthor;

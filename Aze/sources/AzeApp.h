@@ -61,6 +61,9 @@ public:
     int commit();
 
     //!
+    int diff();
+
+    //!
     int dump();
 
     //!
@@ -68,6 +71,9 @@ public:
 
     //!
     void processWildCards();
+
+    //!
+    void processWildCardsRecurse(const QString& sCurrentDirectory, const QString& sWildCard);
 
     //-------------------------------------------------------------------------------------------------
     // Properties
@@ -79,5 +85,6 @@ protected:
     QStringList                             m_lSwitches;
     QStringList                             m_lFilesAndIds;
     CConstants::ECommand                    m_eCommand;
+    QTextStream*                            m_pOutStream;
     Aze::CRepository*                       m_pRepository;
 };

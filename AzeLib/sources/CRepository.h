@@ -62,7 +62,7 @@ public:
     ~CRepository();
 
     //-------------------------------------------------------------------------------------------------
-    // Control methods
+    // Command methods
     //-------------------------------------------------------------------------------------------------
 
     //!
@@ -79,6 +79,9 @@ public:
 
     //!
     bool commit(const QString& sAuthor, const QString& sMessage);
+
+    //!
+    QString diff(const QString& sFirst, const QString& sSecond);
 
     //!
     CCommit* getStagingCommit();
@@ -110,8 +113,15 @@ public:
     //! Clears the stage commit (but does not write it)
     bool clearStage();
 
+    //-------------------------------------------------------------------------------------------------
+    // Helper methods
+    //-------------------------------------------------------------------------------------------------
+
     //!
-    QString getFileContent(const QString& sId);
+    QString getFileContentFromId(const QString& sId);
+
+    //!
+    QString getFileContentFromFileName(const QString& sFileName);
 
     //!
     QString composeCommitFileName(const QString& sId);
@@ -130,6 +140,9 @@ protected:
 
     //!
     bool removeSingleFile(QString sRelativeFileName);
+
+    //!
+    QString processKeywords(const QString& sText);
 };
 
 }

@@ -41,7 +41,13 @@ public:
     CObject(QObject* parent = nullptr);
 
     //!
-    ~CObject();
+    virtual ~CObject();
+
+    //!
+    QString generateId() const;
+
+    //!
+    virtual CXMLNode toNode() const;
 };
 
 }
