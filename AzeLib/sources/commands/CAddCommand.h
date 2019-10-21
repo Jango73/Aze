@@ -2,52 +2,44 @@
 #pragma once
 
 // Global
-#include "Aze_global.h"
-
-// Qt
-#include <QObject>
-#include <QDateTime>
-
-// qt-plus
-#include "Macros.h"
-#include "CXMLNode.h"
+#include "../Aze_global.h"
 
 // Application
-#include "CEnums.h"
+#include "CBaseCommand.h"
 
 //-------------------------------------------------------------------------------------------------
 
 namespace Aze {
 
-class AZE_SHARED_EXPORT CObject : public QObject
+class AZE_SHARED_EXPORT CAddCommand : public CBaseCommand
 {
     Q_OBJECT
 
 public:
 
     //-------------------------------------------------------------------------------------------------
-    // QML properties
+    // Constructor
     //-------------------------------------------------------------------------------------------------
 
-    Q_FAST_PROPERTY(QString, s, id, Id)
-
-public:
+    CAddCommand(CRepository* pRepository, const QStringList& lFileNames);
 
     //-------------------------------------------------------------------------------------------------
-    // Constructor & destructor
+    // Control methods
     //-------------------------------------------------------------------------------------------------
 
     //!
-    CObject(QObject* parent = nullptr);
+    virtual bool execute() override;
 
     //!
-    virtual ~CObject();
+    bool addSingleFile(QString sRelativeFileName);
 
-    //!
-    QString generateId() const;
+    //-------------------------------------------------------------------------------------------------
+    // Properties
+    //-------------------------------------------------------------------------------------------------
 
-    //!
-    virtual CXMLNode toNode() const;
+protected:
+
+    QStringList     m_lFileNames;
 };
 
 }

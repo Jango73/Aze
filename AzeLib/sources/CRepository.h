@@ -12,12 +12,12 @@
 #include "Macros.h"
 
 // Application
-#include "CObject.h"
+#include "objects/CObject.h"
+#include "objects/CBranch.h"
+#include "objects/CCommit.h"
+#include "objects/CFile.h"
 #include "CEnums.h"
 #include "CStrings.h"
-#include "CFile.h"
-#include "CBranch.h"
-#include "CCommit.h"
 
 //-------------------------------------------------------------------------------------------------
 
@@ -124,25 +124,25 @@ public:
     QString getFileContentFromFileName(const QString& sFileName);
 
     //!
-    QString composeCommitFileName(const QString& sId);
+    QString composeBranchFileName(const QString& sBranchName);
+
+    //!
+    QString composeCommitFileName(const QString& sCommitId);
 
     //!
     QString composeObjectFileName(const QString& sId);
 
-    //-------------------------------------------------------------------------------------------------
-    // Protected control methods
-    //-------------------------------------------------------------------------------------------------
-
-protected:
-
-    //!
-    bool addSingleFile(QString sRelativeFileName);
-
-    //!
-    bool removeSingleFile(QString sRelativeFileName);
-
     //!
     QString processKeywords(const QString& sText);
+
+    //!
+    QString processDeltas(const QString& sText, int& iDelta);
+
+    //!
+    CCommit* workingDirectoryAsCommit();
+
+    //!
+    void listFilesRecursive(QStringList& lStack, QString sRootDirectory, QString sCurrentDirectory);
 };
 
 }

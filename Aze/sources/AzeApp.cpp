@@ -177,6 +177,8 @@ int AzeApp::add()
 {
     ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
 
+    ERROR_WHEN_FALSE(m_lFilesAndIds.count() > 0, CConstants::s_iError_NoFileNameGiven);
+
     ERROR_WHEN_FALSE(m_pRepository->readStage(), CConstants::s_iError_CouldNotReadStage);
 
     processWildCards();
@@ -246,8 +248,8 @@ int AzeApp::diff()
 
     ERROR_WHEN_FALSE(m_pRepository->readStage(), CConstants::s_iError_CouldNotReadStage);
 
-    QString sFirst = m_lFilesAndIds.takeFirst();
-    QString sSecond = m_lFilesAndIds.takeFirst();
+    QString sFirst = m_lFilesAndIds.isEmpty() ? "" : m_lFilesAndIds.takeFirst();
+    QString sSecond = m_lFilesAndIds.isEmpty() ? "" : m_lFilesAndIds.takeFirst();
 
     (*m_pOutStream) << m_pRepository->diff(sFirst, sSecond);
     m_pOutStream->flush();
@@ -265,7 +267,7 @@ int AzeApp::dump()
     {
         QString sText = m_pRepository->getFileContentFromId(sId);
 
-        std::printf("%s", sText.toLatin1().constData());
+        std::printf("%s", sText.toUtf8().constData());
     }
 
     return CConstants::s_iError_None;

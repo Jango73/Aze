@@ -2,7 +2,7 @@
 #pragma once
 
 // Global
-#include "Aze_global.h"
+#include "../Aze_global.h"
 
 // Qt
 #include <QObject>
@@ -13,15 +13,13 @@
 #include "CXMLNode.h"
 
 // Application
-#include "CObject.h"
-#include "CEnums.h"
-#include "CStrings.h"
+#include "../CEnums.h"
 
 //-------------------------------------------------------------------------------------------------
 
 namespace Aze {
 
-class AZE_SHARED_EXPORT CFile : public QObject
+class AZE_SHARED_EXPORT CObject : public QObject
 {
     Q_OBJECT
 
@@ -31,9 +29,7 @@ public:
     // QML properties
     //-------------------------------------------------------------------------------------------------
 
-    Q_FAST_PROPERTY(QString, s, name, Name)
-    Q_FAST_PROPERTY(QString, s, relativePath, RelativePath)
-    Q_FAST_PROPERTY(CEnums::EFileStatus, e, status, Status)
+    Q_FAST_PROPERTY(QString, s, id, Id)
 
 public:
 
@@ -42,14 +38,16 @@ public:
     //-------------------------------------------------------------------------------------------------
 
     //!
-    CFile(QObject* parent = nullptr);
+    CObject(QObject* parent = nullptr);
 
     //!
-    ~CFile();
+    virtual ~CObject();
 
-    //-------------------------------------------------------------------------------------------------
-    // Control methods
-    //-------------------------------------------------------------------------------------------------
+    //!
+    QString generateId() const;
+
+    //!
+    virtual CXMLNode toNode() const;
 };
 
 }

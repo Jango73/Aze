@@ -2,7 +2,7 @@
 #pragma once
 
 // Global
-#include "Aze_global.h"
+#include "../Aze_global.h"
 
 // Qt
 #include <QObject>
@@ -14,8 +14,8 @@
 
 // Application
 #include "CObject.h"
-#include "CEnums.h"
-#include "CStrings.h"
+#include "../CEnums.h"
+#include "../CStrings.h"
 
 //-------------------------------------------------------------------------------------------------
 
@@ -74,6 +74,9 @@ public:
 
     //!
     bool addCommit(const QString& sRootPath, const QString& sObjectPath, CCommit* pCommitToAdd);
+
+    //!
+    QByteArray fileContent(const QString& sRootPath, const QString& sObjectPath, QString sName);
 
     //-------------------------------------------------------------------------------------------------
     // Static control methods

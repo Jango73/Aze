@@ -1,7 +1,7 @@
 
 // Application
 #include "CCommit.h"
-#include "CUtils.h"
+#include "../CUtils.h"
 
 namespace Aze {
 
@@ -146,6 +146,8 @@ bool CCommit::addCommit(const QString& sRootPath, const QString& sObjectPath, CC
 
                 QString sNewObjectId = CUtils::storeFileInDB(sObjectPath, sAbsoluteFileName);
 
+                OUT_DEBUG(QString("sNewObjectId=%1").arg(sNewObjectId));
+
                 if (not sNewObjectId.isEmpty())
                 {
                     m_mFiles.remove(sExistingId);
@@ -156,6 +158,22 @@ bool CCommit::addCommit(const QString& sRootPath, const QString& sObjectPath, CC
     }
 
     return true;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+QByteArray CCommit::fileContent(const QString& sRootPath, const QString& sObjectPath, QString sName)
+{
+    QString sId = mapKeyForValue(m_mFiles, sName);
+
+    if (CUtils::fileExistsInDB(sObjectPath, sId))
+    {
+        return CUtils::getFileFromDB(sObjectPath, sId);
+    }
+
+    QString sFullName = QString("%1/%2").arg(sRootPath).arg(sName);
+
+    return CUtils::getBinaryFileContent(sFullName);
 }
 
 //-------------------------------------------------------------------------------------------------

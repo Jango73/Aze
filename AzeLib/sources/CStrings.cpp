@@ -2,8 +2,13 @@
 // Application
 #include "CStrings.h"
 
+//-------------------------------------------------------------------------------------------------
+
+// Use first line for human readable files
 #define XMLC_EXTENSION  "xml"
 // #define XMLC_EXTENSION  "xmlc"
+
+//-------------------------------------------------------------------------------------------------
 
 namespace Aze {
 
@@ -37,7 +42,7 @@ const QString CStrings::s_sPathAzeCommitPath        = "commits";
 const QString CStrings::s_sPathAzeObjectPath        = "objects";
 
 const QString CStrings::s_sGeneralInfoFileName      = "info." XMLC_EXTENSION;
-const QString CStrings::s_sStagingCommitFileName    = "stage." XMLC_EXTENSION;
+const QString CStrings::s_sStagingCommitFileName    = "stage";
 
 const QString CStrings::s_sDefaultBranchName        = "trunk";
 

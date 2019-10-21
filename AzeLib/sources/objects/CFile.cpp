@@ -1,7 +1,7 @@
 
 // Application
 #include "CFile.h"
-#include "CUtils.h"
+#include "../CUtils.h"
 
 namespace Aze {
 

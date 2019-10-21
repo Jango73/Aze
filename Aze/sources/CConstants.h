@@ -49,6 +49,7 @@ public:
     static const int s_iError_None;
     static const int s_iError_NotARepository;
     static const int s_iError_NoBranchNameGiven;
+    static const int s_iError_NoFileNameGiven;
     static const int s_iError_CouldNotCreateBranch;
     static const int s_iError_CouldNotReadStage;
     static const int s_iError_CouldNotWriteStage;

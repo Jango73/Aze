@@ -2,7 +2,7 @@
 #pragma once
 
 // Global
-#include "Aze_global.h"
+#include "../Aze_global.h"
 
 // Qt
 #include <QObject>
@@ -14,14 +14,14 @@
 
 // Application
 #include "CObject.h"
-#include "CEnums.h"
-#include "CStrings.h"
+#include "../CEnums.h"
+#include "../CStrings.h"
 
 //-------------------------------------------------------------------------------------------------
 
 namespace Aze {
 
-class AZE_SHARED_EXPORT CBranch : public CObject
+class AZE_SHARED_EXPORT CFile : public QObject
 {
     Q_OBJECT
 
@@ -31,11 +31,9 @@ public:
     // QML properties
     //-------------------------------------------------------------------------------------------------
 
-    Q_FAST_PROPERTY(CEnums::EBranchType, e, type, Type)
-    Q_FAST_PROPERTY(QString, s, author, Author)
-    Q_FAST_PROPERTY(QString, s, date, Date)
-    Q_FAST_PROPERTY(QString, s, rootCommitId, RootCommitId)
-    Q_FAST_PROPERTY(QString, s, tipCommitId, TipCommitId)
+    Q_FAST_PROPERTY(QString, s, name, Name)
+    Q_FAST_PROPERTY(QString, s, relativePath, RelativePath)
+    Q_FAST_PROPERTY(CEnums::EFileStatus, e, status, Status)
 
 public:
 
@@ -44,26 +42,14 @@ public:
     //-------------------------------------------------------------------------------------------------
 
     //!
-    CBranch(QObject* parent = nullptr);
+    CFile(QObject* parent = nullptr);
 
     //!
-    ~CBranch();
+    ~CFile();
 
     //-------------------------------------------------------------------------------------------------
     // Control methods
     //-------------------------------------------------------------------------------------------------
-
-    //!
-    CXMLNode toNode() const;
-
-    //-------------------------------------------------------------------------------------------------
-    // Static control methods
-    //-------------------------------------------------------------------------------------------------
-
-public:
-
-    //!
-    static CBranch* fromNode(const CXMLNode& xNode);
 };
 
 }

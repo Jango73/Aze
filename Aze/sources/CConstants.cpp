@@ -23,13 +23,14 @@ const char* CConstants::s_sSwitchMessage                    = "--message";
 const int CConstants::s_iError_None                         = 0;
 const int CConstants::s_iError_NotARepository               = 1;
 const int CConstants::s_iError_NoBranchNameGiven            = 2;
-const int CConstants::s_iError_CouldNotCreateBranch         = 3;
-const int CConstants::s_iError_CouldNotReadStage            = 4;
-const int CConstants::s_iError_CouldNotWriteStage           = 5;
-const int CConstants::s_iError_CouldNotWriteCurrentBranch   = 6;
-const int CConstants::s_iError_CouldNotAddFiles             = 7;
-const int CConstants::s_iError_CouldNotMoveFiles            = 8;
-const int CConstants::s_iError_CouldNotRemoveFiles          = 9;
+const int CConstants::s_iError_NoFileNameGiven              = 3;
+const int CConstants::s_iError_CouldNotCreateBranch         = 4;
+const int CConstants::s_iError_CouldNotReadStage            = 5;
+const int CConstants::s_iError_CouldNotWriteStage           = 6;
+const int CConstants::s_iError_CouldNotWriteCurrentBranch   = 7;
+const int CConstants::s_iError_CouldNotAddFiles             = 8;
+const int CConstants::s_iError_CouldNotMoveFiles            = 9;
+const int CConstants::s_iError_CouldNotRemoveFiles          = 10;
 
 QMap<QString, CConstants::ECommand> CConstants::s_mCommands;
 
@@ -44,5 +45,6 @@ void CConstants::initCommandMap()
     s_mCommands[CConstants::s_sSwitchMove]              = CConstants::eCommandMove;
     s_mCommands[CConstants::s_sSwitchRemove]            = CConstants::eCommandRemove;
     s_mCommands[CConstants::s_sSwitchCommit]            = CConstants::eCommandCommit;
+    s_mCommands[CConstants::s_sSwitchDiff]              = CConstants::eCommandDiff;
     s_mCommands[CConstants::s_sSwitchDump]              = CConstants::eCommandDump;
 }

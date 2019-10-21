@@ -7,6 +7,11 @@
 #include "CRepository.h"
 #include "CUtils.h"
 
+#include "commands/CAddCommand.h"
+#include "commands/CRemoveCommand.h"
+#include "commands/CCommitCommand.h"
+#include "commands/CDiffCommand.h"
+
 namespace Aze {
 
 //-------------------------------------------------------------------------------------------------
@@ -21,11 +26,16 @@ CRepository::CRepository(const QString& sRootPath, QObject* parent)
     , m_pTipCommit(nullptr)
 {
     m_sDataPath = QString("%1/%2").arg(m_sRootPath).arg(CStrings::s_sPathAzeDataRoot);
-    m_sBranchPath = QString("%1/%2").arg(CStrings::s_sPathAzeDataRoot).arg(CStrings::s_sPathAzeBranchPath);
-    m_sCommitPath = QString("%1/%2").arg(CStrings::s_sPathAzeDataRoot).arg(CStrings::s_sPathAzeCommitPath);
-    m_sObjectPath = QString("%1/%2").arg(CStrings::s_sPathAzeDataRoot).arg(CStrings::s_sPathAzeObjectPath);
+    m_sBranchPath = QString("%1/%2").arg(m_sDataPath).arg(CStrings::s_sPathAzeBranchPath);
+    m_sCommitPath = QString("%1/%2").arg(m_sDataPath).arg(CStrings::s_sPathAzeCommitPath);
+    m_sObjectPath = QString("%1/%2").arg(m_sDataPath).arg(CStrings::s_sPathAzeObjectPath);
+    m_sStagingCommitFileName = composeCommitFileName(CStrings::s_sStagingCommitFileName);
 
-    m_sStagingCommitFileName = QString("%1/%2").arg(m_sCommitPath).arg(CStrings::s_sStagingCommitFileName);
+    OUT_DEBUG(QString("m_sDataPath: %1").arg(m_sDataPath));
+    OUT_DEBUG(QString("m_sBranchPath: %1").arg(m_sBranchPath));
+    OUT_DEBUG(QString("m_sCommitPath: %1").arg(m_sCommitPath));
+    OUT_DEBUG(QString("m_sObjectPath: %1").arg(m_sObjectPath));
+    OUT_DEBUG(QString("m_sStagingCommitFileName: %1").arg(m_sStagingCommitFileName));
 
     // Check if repository is ok
     QDir dataPath(m_sDataPath);
@@ -36,6 +46,7 @@ CRepository::CRepository(const QString& sRootPath, QObject* parent)
     {
         readGeneralInfo();
         readCurrentBranch();
+        readTipCommit();
     }
 }
 
@@ -99,124 +110,35 @@ bool CRepository::createBranch(const QString& sName)
 
 bool CRepository::add(const QStringList& lFileNames)
 {
-    for (QString sFileName : lFileNames)
-    {
-        QString sRelativeFileName = CUtils::relativeFileName(m_sRootPath, sFileName);
-
-        OUT_DEBUG(sRelativeFileName);
-
-        if (not addSingleFile(sRelativeFileName))
-            return false;
-    }
-
-    return true;
+    return CAddCommand(this, lFileNames).execute();
 }
 
 //-------------------------------------------------------------------------------------------------
 
 bool CRepository::remove(const QStringList& lFileNames)
 {
-    for (QString sFileName : lFileNames)
-    {
-        QString sRelativeFileName = CUtils::relativeFileName(m_sRootPath, sFileName);
-
-        OUT_DEBUG(sRelativeFileName);
-
-        if (not removeSingleFile(sRelativeFileName))
-            return false;
-    }
-
-    return true;
+    return CRemoveCommand(this, lFileNames).execute();
 }
 
 //-------------------------------------------------------------------------------------------------
 
 bool CRepository::commit(const QString& sAuthor, const QString& sMessage)
 {
-    OUT_DEBUG(QString("sAuthor=%1").arg(sAuthor));
-    OUT_DEBUG(QString("sMessage=%1").arg(sMessage));
-
-    // Check presence of current branch
-    if (IS_NULL(m_pCurrentBranch))
-    {
-        OUT_ERROR(CStrings::s_sTextNoCurrentBranch);
-        return false;
-    }
-
-    OUT_DEBUG(QString("current branch=%1").arg(m_sCurrentBranchName));
-
-    // Check presence and relevancy of staging commmit
-    if (IS_NULL(m_pStagingCommit) || m_pStagingCommit->files().count() == 0)
-    {
-        OUT_ERROR(CStrings::s_sTextCommitEmpty);
-        return false;
-    }
-
-    // Create a new commit object
-    CCommit* pNewCommit = nullptr;
-
-    // Read the tip commit of the current branch
-    if (readTipCommit())
-    {
-        OUT_DEBUG(QString("Existing tip commit id=%1").arg(m_pTipCommit->id()));
-
-        pNewCommit = m_pTipCommit->clone();
-        pNewCommit->addParent(m_pTipCommit->id());
-    }
-    else
-    {
-        OUT_DEBUG("No current tip commit");
-
-        pNewCommit = new CCommit();
-    }
-
-    // Add the staged commmit to this new commit
-    pNewCommit->addCommit(m_sRootPath, m_sObjectPath, m_pStagingCommit);
-
-    // Finalize and save the commit
-    // We need all the info to generate the commit's id
-    pNewCommit->setDate(QDateTime::currentDateTimeUtc().toString(Qt::ISODate));
-    pNewCommit->setAuthor(sAuthor);
-    pNewCommit->setMessage(sMessage);
-
-    QString sNewCommitId = pNewCommit->generateId();
-    pNewCommit->toFile(composeCommitFileName(sNewCommitId));
-
-    // Update the current branch
-    m_pCurrentBranch->setTipCommitId(sNewCommitId);
-
-    delete pNewCommit;
-
-    return true;
+    return CCommitCommand(this, sAuthor, sMessage).execute();
 }
 
 //-------------------------------------------------------------------------------------------------
 
 QString CRepository::diff(const QString& sFirst, const QString& sSecond)
 {
-    QString sResult = "toto";
-    QString sFirstObject = sFirst;
-    QString sSecondObject = sSecond;
+    QString sReturnValue;
 
-    // Check presence of current branch
-    if (IS_NULL(m_pCurrentBranch))
+    if (CDiffCommand(this, sFirst, sSecond, &sReturnValue).execute())
     {
-        OUT_ERROR(CStrings::s_sTextNoCurrentBranch);
-        return "";
+        return sReturnValue;
     }
 
-    if (sFirstObject.isEmpty() && sSecondObject.isEmpty())
-    {
-        sFirstObject = m_pCurrentBranch->tipCommitId();
-    }
-
-    sFirstObject = processKeywords(sFirstObject);
-    sSecondObject = processKeywords(sSecondObject);
-
-    QString sFirstCommit = composeCommitFileName(sFirstObject);
-    QString sSecondCommit = composeCommitFileName(sSecondObject);
-
-    return sResult;
+    return "";
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -248,15 +170,11 @@ bool CRepository::readGeneralInfo()
 
 bool CRepository::readCurrentBranch()
 {
-    QString sFileName = QString("%1/%2.%3")
-            .arg(m_sBranchPath)
-            .arg(m_sCurrentBranchName)
-            .arg(CStrings::s_sCompressedXMLExtension);
-
+    QString sFileName = composeBranchFileName(m_sCurrentBranchName);
     setCurrentBranch(CBranch::fromNode(CXMLNode::load(sFileName)));
 
-    OUT_DEBUG(QString("Root: %1").arg(m_pCurrentBranch->rootCommitId()));
-    OUT_DEBUG(QString("Tip: %1").arg(m_pCurrentBranch->tipCommitId()));
+    OUT_DEBUG(QString("Current branch root: %1").arg(m_pCurrentBranch->rootCommitId()));
+    OUT_DEBUG(QString("Current branch tip: %1").arg(m_pCurrentBranch->tipCommitId()));
 
     return true;
 }
@@ -315,14 +233,9 @@ bool CRepository::writeGeneralInfo()
 
 bool CRepository::writeCurrentBranch()
 {
-    QString sFileName = QString("%1/%2.%3")
-            .arg(m_sBranchPath)
-            .arg(m_sCurrentBranchName)
-            .arg(CStrings::s_sCompressedXMLExtension);
-
     if (m_pCurrentBranch != nullptr)
     {
-        m_pCurrentBranch->toNode().save(sFileName);
+        m_pCurrentBranch->toNode().save(composeBranchFileName(m_sCurrentBranchName));
     }
 
     return true;
@@ -367,7 +280,7 @@ QString CRepository::getFileContentFromId(const QString& sId)
     sFileName = composeCommitFileName(sId);
 
     if (QFile(sFileName).exists())
-        return CUtils::getFileContent(sFileName);
+        return CUtils::getTextFileContent(sFileName);
 
     // Try in objects
     sFileName = composeObjectFileName(sId);
@@ -382,16 +295,29 @@ QString CRepository::getFileContentFromId(const QString& sId)
 
 QString CRepository::getFileContentFromFileName(const QString& sFileName)
 {
-    return CUtils::getFileContent(sFileName);
+    return CUtils::getTextFileContent(sFileName);
 }
 
 //-------------------------------------------------------------------------------------------------
 
-QString CRepository::composeCommitFileName(const QString& sId)
+QString CRepository::composeBranchFileName(const QString& sBranchName)
+{
+    if (m_sCurrentBranchName.isEmpty())
+        return "";
+
+    return QString("%1/%2.%3")
+            .arg(m_sBranchPath)
+            .arg(sBranchName)
+            .arg(CStrings::s_sCompressedXMLExtension);
+}
+
+//-------------------------------------------------------------------------------------------------
+
+QString CRepository::composeCommitFileName(const QString& sCommitId)
 {
     return QString("%1/%2.%3")
             .arg(m_sCommitPath)
-            .arg(sId)
+            .arg(sCommitId)
             .arg(CStrings::s_sCompressedXMLExtension);
 }
 
@@ -406,49 +332,75 @@ QString CRepository::composeObjectFileName(const QString& sId)
 
 //-------------------------------------------------------------------------------------------------
 
-bool CRepository::addSingleFile(QString sRelativeFileName)
-{
-    OUT_DEBUG(sRelativeFileName);
-
-    if (not IS_NULL(m_pStagingCommit))
-    {
-        if (CUtils::fileExists(m_sRootPath, sRelativeFileName))
-        {
-            QString sId = CUtils::idFromString(sRelativeFileName);
-            m_pStagingCommit->addFile(sRelativeFileName, sId);
-            return true;
-        }
-        else
-        {
-            OUT_ERROR(QString("%1: %2").arg(CStrings::s_sTextNoSuchFile).arg(sRelativeFileName));
-        }
-    }
-
-    return false;
-}
-
-//-------------------------------------------------------------------------------------------------
-
-bool CRepository::removeSingleFile(QString sRelativeFileName)
-{
-    OUT_DEBUG(sRelativeFileName);
-
-    return true;
-}
-
-//-------------------------------------------------------------------------------------------------
-
 QString CRepository::processKeywords(const QString& sText)
 {
-    if (sText == CStrings::s_sParamTip)
-        if (not IS_NULL(m_pCurrentBranch))
-            return m_pCurrentBranch->tipCommitId();
+    if (sText == CStrings::s_sParamTip && not IS_NULL(m_pCurrentBranch))
+        return m_pCurrentBranch->tipCommitId();
 
-    if (sText == CStrings::s_sParamRoot)
-        if (not IS_NULL(m_pCurrentBranch))
-            return m_pCurrentBranch->rootCommitId();
+    if (sText == CStrings::s_sParamRoot && not IS_NULL(m_pCurrentBranch))
+        return m_pCurrentBranch->rootCommitId();
 
-    return "";
+    return sText;
 }
+
+//-------------------------------------------------------------------------------------------------
+
+QString CRepository::processDeltas(const QString& sText, int& iDelta)
+{
+    if (sText.contains("-"))
+    {
+        QStringList lValues = sText.split("-");
+
+        if (lValues.count() > 1)
+            iDelta = lValues[1].toInt() * -1;
+
+        return lValues[0];
+    }
+
+    return sText;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+CCommit* CRepository::workingDirectoryAsCommit()
+{
+    CCommit* pNewCommit = new CCommit();
+    QStringList lFiles;
+
+    listFilesRecursive(lFiles, m_sRootPath, ".");
+
+    for (QString sFile : lFiles)
+    {
+        pNewCommit->addFile(sFile);
+    }
+
+    return pNewCommit;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+void CRepository::listFilesRecursive(QStringList& lStack, QString sRootDirectory, QString sCurrentDirectory)
+{
+    QStringList lFilter; lFilter << "*.*";
+
+    QDir dDirectory(sCurrentDirectory);
+    QFileInfoList lFiles = dDirectory.entryInfoList(lFilter, QDir::Files | QDir::NoSymLinks);
+
+    for (QFileInfo iFile : lFiles)
+    {
+        QString sFullName = QString("%1/%2").arg(iFile.absolutePath()).arg(iFile.fileName());
+        lStack << CUtils::relativeFileName(sRootDirectory, sFullName);
+    }
+
+    lFiles = dDirectory.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot | QDir::NoSymLinks);
+
+    for (QFileInfo iFile : lFiles)
+    {
+        QString sTargetDirectory = QString("%1/%2").arg(sCurrentDirectory).arg(iFile.fileName());
+        listFilesRecursive(lStack, sRootDirectory, sTargetDirectory);
+    }
+}
+
+//-------------------------------------------------------------------------------------------------
 
 }

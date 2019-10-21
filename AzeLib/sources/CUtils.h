@@ -37,7 +37,13 @@ public:
     static bool fileExists(const QString& sRootPath, const QString& sRelativeFileName);
 
     //!
-    static QString getFileContent(const QString& sFileName);
+    static QByteArray getBinaryFileContent(const QString& sFileName);
+
+    //!
+    static QString getTextFileContent(const QString& sFileName);
+
+    //!
+    static bool fileExistsInDB(const QString& sObjectPath, const QString& sId);
 
     //!
     static QByteArray getFileFromDB(const QString& sObjectPath, const QString& sId);
@@ -71,6 +77,9 @@ public:
 
     //!
     static void unpackIdAndFile(const QString& sPack, QString& sId, QString& sFilePath);
+
+    //!
+    static std::vector<std::string> textToStdStringVector(const QString& sText);
 };
 
 }

@@ -72,7 +72,7 @@ CXMLNode CUtils::nodeFromDictionary(const QDictionary& xDict)
 
 QString CUtils::serializeBase64(const QString& sText)
 {
-    return QString(CStrings::s_sBase64Marker) + QString(sText.toLatin1().toBase64());
+    return QString(CStrings::s_sBase64Marker) + QString(sText.toUtf8().toBase64());
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -141,7 +141,7 @@ void CUtils::unpackIdAndFile(const QString& sPack, QString& sId, QString& sFileP
 
 //-------------------------------------------------------------------------------------------------
 
-QString CUtils::getFileContent(const QString& sFileName)
+QByteArray CUtils::getBinaryFileContent(const QString& sFileName)
 {
     QByteArray baData;
     QFile tInputFile(sFileName);
@@ -155,7 +155,22 @@ QString CUtils::getFileContent(const QString& sFileName)
         }
     }
 
-    return QString(baData);
+    return baData;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+QString CUtils::getTextFileContent(const QString& sFileName)
+{
+    return QString(getBinaryFileContent(sFileName));
+}
+
+//-------------------------------------------------------------------------------------------------
+
+bool CUtils::fileExistsInDB(const QString& sObjectPath, const QString& sId)
+{
+    QString sStoredObjectFileName = QString("%1/%2").arg(sObjectPath).arg(sId);
+    return QFile(sStoredObjectFileName).exists();
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -225,6 +240,17 @@ QString CUtils::storeFileInDB(const QString& sObjectPath, const QString& sFileNa
     }
 
     return sId;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+std::vector<std::string> CUtils::textToStdStringVector(const QString& sText)
+{
+    std::vector<std::string> vReturnValue;
+    QStringList lLines = sText.split(CStrings::s_sNewLine);
+    for (QString sLine: lLines)
+        vReturnValue.push_back(sLine.toUtf8().constData());
+    return vReturnValue;
 }
 
 //-------------------------------------------------------------------------------------------------

@@ -9,6 +9,7 @@ DEFINES += CXMLNODE_USE_LIST
 
 # Dependencies
 INCLUDEPATH += $$PWD/../qt-plus/source/cpp
+INCLUDEPATH += $$PWD/../dtl/dtl
 
 # Sources
 include(AzeLib.pri)
