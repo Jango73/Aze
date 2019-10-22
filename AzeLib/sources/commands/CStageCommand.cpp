@@ -4,7 +4,7 @@
 #include <QDir>
 
 // Application
-#include "CRemoveCommand.h"
+#include "CStageCommand.h"
 #include "../CRepository.h"
 #include "../CUtils.h"
 
@@ -12,7 +12,7 @@ namespace Aze {
 
 //-------------------------------------------------------------------------------------------------
 
-CRemoveCommand::CRemoveCommand(CRepository* pRepository, const QStringList& lFileNames)
+CStageCommand::CStageCommand(CRepository* pRepository, const QStringList& lFileNames)
     : CBaseCommand(pRepository)
     , m_lFileNames(lFileNames)
 {
@@ -20,7 +20,7 @@ CRemoveCommand::CRemoveCommand(CRepository* pRepository, const QStringList& lFil
 
 //-------------------------------------------------------------------------------------------------
 
-bool CRemoveCommand::execute()
+bool CStageCommand::execute()
 {
     for (QString sFileName : m_lFileNames)
     {
@@ -28,7 +28,7 @@ bool CRemoveCommand::execute()
 
         OUT_DEBUG(sRelativeFileName);
 
-        if (not removeSingleFile(sRelativeFileName))
+        if (not addSingleFile(sRelativeFileName))
             return false;
     }
 
@@ -37,10 +37,8 @@ bool CRemoveCommand::execute()
 
 //-------------------------------------------------------------------------------------------------
 
-bool CRemoveCommand::removeSingleFile(QString sRelativeFileName)
+bool CStageCommand::addSingleFile(QString sRelativeFileName)
 {
-    OUT_DEBUG(sRelativeFileName);
-
     if (not IS_NULL(m_pRepository->stagingCommit()))
     {
         if (CUtils::fileExists(m_pRepository->database()->rootPath(), sRelativeFileName))

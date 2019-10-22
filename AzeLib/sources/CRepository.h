@@ -15,6 +15,7 @@
 #include "objects/CObject.h"
 #include "objects/CBranch.h"
 #include "objects/CCommit.h"
+#include "objects/CDatabase.h"
 #include "objects/CFile.h"
 #include "CEnums.h"
 #include "CStrings.h"
@@ -34,12 +35,7 @@ public:
     //-------------------------------------------------------------------------------------------------
 
     Q_FAST_PROPERTY(bool, b, ok, Ok)
-    Q_FAST_PROPERTY(QString, s, rootPath, RootPath)
-    Q_FAST_PROPERTY(QString, s, dataPath, DataPath)
-    Q_FAST_PROPERTY(QString, s, stashPath, StashPath)
-    Q_FAST_PROPERTY(QString, s, branchPath, BranchPath)
-    Q_FAST_PROPERTY(QString, s, commitPath, CommitPath)
-    Q_FAST_PROPERTY(QString, s, objectPath, ObjectPath)
+    Q_FAST_PROPERTY(CDatabase*, p, database, Database)
 
     Q_FAST_PROPERTY(QString, s, currentBranchName, CurrentBranchName)
     Q_FAST_PROPERTY(QString, s, stagingCommitFileName, StagingCommitFileName)
@@ -68,19 +64,22 @@ public:
     //!
     bool init();
 
-    //!
+    //! Creates a branch as sName
     bool createBranch(const QString& sName);
 
-    //!
-    bool add(const QStringList& lFileNames);
+    //! Stages all files listed in lFileNames
+    bool stage(const QStringList& lFileNames);
 
-    //!
+    //! Unstages all files listed in lFileNames
+    bool unstage(const QStringList& lFileNames);
+
+    //! Removes all files listed in lFileNames
     bool remove(const QStringList& lFileNames);
 
-    //!
+    //! Commits all files contained in the staging commit
     bool commit(const QString& sAuthor, const QString& sMessage);
 
-    //!
+    //! Makes a diff betweeen commits or files
     QString diff(const QString& sFirst, const QString& sSecond);
 
     //!
@@ -98,13 +97,16 @@ public:
     //! Reads general information
     bool readStage();
 
-    //!
+    //! Reads the current branch's root commit
+    bool readRootCommit();
+
+    //! Reads the current branch's tip commit
     bool readTipCommit();
 
-    //!
+    //! Writes the general info
     bool writeGeneralInfo();
 
-    //!
+    //! Writes the current branch
     bool writeCurrentBranch();
 
     //! Writes the stage commit
@@ -118,25 +120,13 @@ public:
     //-------------------------------------------------------------------------------------------------
 
     //!
-    QString getFileContentFromId(const QString& sId);
-
-    //!
-    QString getFileContentFromFileName(const QString& sFileName);
-
-    //!
-    QString composeBranchFileName(const QString& sBranchName);
-
-    //!
-    QString composeCommitFileName(const QString& sCommitId);
-
-    //!
-    QString composeObjectFileName(const QString& sId);
-
-    //!
     QString processKeywords(const QString& sText);
 
     //!
     QString processDeltas(const QString& sText, int& iDelta);
+
+    //!
+    CCommit* getCommitAncestor(CCommit* pCommit, int iDelta, QObject* parent);
 
     //!
     CCommit* workingDirectoryAsCommit();

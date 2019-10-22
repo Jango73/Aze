@@ -7,6 +7,9 @@
 // qt-plus
 #include <CXMLNode.h>
 
+// Aze
+#include "tests/CTestAze.h"
+
 // Application
 #include "AzeApp.h"
 
@@ -34,7 +37,7 @@ AzeApp::AzeApp(int argc, char *argv[])
     // Get some arguments from console if none provided
     if (lRawArguments.count() < 2)
     {
-        (*m_pOutStream) << QString("Please enter a command (%1)\n>").arg(m_pRepository->rootPath());
+        (*m_pOutStream) << QString("Please enter a command (%1)\n>").arg(m_pRepository->database()->rootPath());
         m_pOutStream->flush();
 
         QTextStream in(stdin);
@@ -106,6 +109,9 @@ int AzeApp::run()
     case CConstants::eCommandNone:
         break;
 
+    case CConstants::eCommandTest:
+        return test();
+
     case CConstants::eCommandInitRepository:
         return init();
 
@@ -115,8 +121,11 @@ int AzeApp::run()
     case CConstants::eCommandShowStatus:
         return status();
 
-    case CConstants::eCommandAdd:
-        return add();
+    case CConstants::eCommandStage:
+        return stage();
+
+    case CConstants::eCommandUnstage:
+        return unstage();
 
     case CConstants::eCommandMove:
         return move();
@@ -135,6 +144,89 @@ int AzeApp::run()
     }
 
     return 0;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+bool AzeApp::isASainRepository()
+{
+    if (not m_pRepository->ok())
+    {
+        OUT_ERROR("This is not an Aze repository.");
+
+        return false;
+    }
+
+    return true;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+void AzeApp::processWildCards()
+{
+    QStringList lItems = m_lFilesAndIds;
+
+    m_lFilesAndIds.clear();
+
+    for (QString sText : lItems)
+    {
+        QString sFullName = QString("%1/%2").arg(m_pRepository->database()->rootPath()).arg(sText);
+
+        if (QFile(sFullName).exists())
+        {
+            m_lFilesAndIds << sText;
+        }
+        else
+        {
+            QString sDirectory = sFullName;
+            QString sWildCard = "";
+
+            if (sFullName.contains("*"))
+            {
+                sWildCard = sFullName.split(Aze::CStrings::s_sPathSep).last();
+                sDirectory.replace(sWildCard, "");
+            }
+
+            OUT_DEBUG(QString("sDirectory: %1").arg(sDirectory));
+            OUT_DEBUG(QString("sWildCard: %1").arg(sWildCard));
+
+            processWildCardsRecurse(sDirectory, sWildCard);
+        }
+    }
+}
+
+//-------------------------------------------------------------------------------------------------
+
+void AzeApp::processWildCardsRecurse(const QString& sCurrentDirectory, const QString& sWildCard)
+{
+    QStringList lFilter;
+    lFilter << sWildCard;
+
+    QDir dDirectory(sCurrentDirectory);
+    QFileInfoList lFiles = dDirectory.entryInfoList(lFilter, QDir::Files | QDir::NoSymLinks);
+
+    for (QFileInfo iFile : lFiles)
+    {
+        QString sFile = QString("%1/%2").arg(iFile.absolutePath()).arg(iFile.fileName());
+        m_lFilesAndIds << sFile;
+    }
+
+    lFiles = dDirectory.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot | QDir::NoSymLinks);
+
+    for (QFileInfo iFile : lFiles)
+    {
+        QString sTargetDirectory = QString("%1/%2").arg(sCurrentDirectory).arg(iFile.fileName());
+        processWildCardsRecurse(sTargetDirectory, sWildCard);
+    }
+}
+
+//-------------------------------------------------------------------------------------------------
+
+int AzeApp::test()
+{
+    Aze::CTestAze test;
+    QTEST_SET_MAIN_SOURCE_PATH
+    return QTest::qExec(&test, 0, nullptr);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -173,7 +265,7 @@ int AzeApp::status()
 
 //-------------------------------------------------------------------------------------------------
 
-int AzeApp::add()
+int AzeApp::stage()
 {
     ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
 
@@ -183,7 +275,26 @@ int AzeApp::add()
 
     processWildCards();
 
-    ERROR_WHEN_FALSE(m_pRepository->add(m_lFilesAndIds), CConstants::s_iError_CouldNotAddFiles);
+    ERROR_WHEN_FALSE(m_pRepository->stage(m_lFilesAndIds), CConstants::s_iError_CouldNotAddFiles);
+
+    ERROR_WHEN_FALSE(m_pRepository->writeStage(), CConstants::s_iError_CouldNotWriteStage);
+
+    return CConstants::s_iError_None;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+int AzeApp::unstage()
+{
+    ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
+
+    ERROR_WHEN_FALSE(m_lFilesAndIds.count() > 0, CConstants::s_iError_NoFileNameGiven);
+
+    ERROR_WHEN_FALSE(m_pRepository->readStage(), CConstants::s_iError_CouldNotReadStage);
+
+    processWildCards();
+
+    ERROR_WHEN_FALSE(m_pRepository->unstage(m_lFilesAndIds), CConstants::s_iError_CouldNotAddFiles);
 
     ERROR_WHEN_FALSE(m_pRepository->writeStage(), CConstants::s_iError_CouldNotWriteStage);
 
@@ -265,84 +376,9 @@ int AzeApp::dump()
 
     for (QString sId : m_lFilesAndIds)
     {
-        QString sText = m_pRepository->getFileContentFromId(sId);
-
-        std::printf("%s", sText.toUtf8().constData());
+        (*m_pOutStream) << m_pRepository->database()->printableFileContentById(sId);
+        m_pOutStream->flush();
     }
 
     return CConstants::s_iError_None;
-}
-
-//-------------------------------------------------------------------------------------------------
-
-bool AzeApp::isASainRepository()
-{
-    if (not m_pRepository->ok())
-    {
-        OUT_ERROR("This is not an Aze repository.");
-
-        return false;
-    }
-
-    return true;
-}
-
-//-------------------------------------------------------------------------------------------------
-
-void AzeApp::processWildCards()
-{
-    QStringList lItems = m_lFilesAndIds;
-
-    m_lFilesAndIds.clear();
-
-    for (QString sText : lItems)
-    {
-        QString sFullName = QString("%1/%2").arg(m_pRepository->rootPath()).arg(sText);
-
-        if (QFile(sFullName).exists())
-        {
-            m_lFilesAndIds << sText;
-        }
-        else
-        {
-            QString sDirectory = sFullName;
-            QString sWildCard = "";
-
-            if (sFullName.contains("*"))
-            {
-                sWildCard = sFullName.split(Aze::CStrings::s_sPathSep).last();
-                sDirectory.replace(sWildCard, "");
-            }
-
-            OUT_DEBUG(QString("sDirectory: %1").arg(sDirectory));
-            OUT_DEBUG(QString("sWildCard: %1").arg(sWildCard));
-
-            processWildCardsRecurse(sDirectory, sWildCard);
-        }
-    }
-}
-
-//-------------------------------------------------------------------------------------------------
-
-void AzeApp::processWildCardsRecurse(const QString& sCurrentDirectory, const QString& sWildCard)
-{
-    QStringList lFilter;
-    lFilter << sWildCard;
-
-    QDir dDirectory(sCurrentDirectory);
-    QFileInfoList lFiles = dDirectory.entryInfoList(lFilter, QDir::Files | QDir::NoSymLinks);
-
-    for (QFileInfo iFile : lFiles)
-    {
-        QString sFile = QString("%1/%2").arg(iFile.absolutePath()).arg(iFile.fileName());
-        m_lFilesAndIds << sFile;
-    }
-
-    lFiles = dDirectory.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot | QDir::NoSymLinks);
-
-    for (QFileInfo iFile : lFiles)
-    {
-        QString sTargetDirectory = QString("%1/%2").arg(sCurrentDirectory).arg(iFile.fileName());
-        processWildCardsRecurse(sTargetDirectory, sWildCard);
-    }
 }

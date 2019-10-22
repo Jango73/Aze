@@ -21,10 +21,12 @@ public:
     enum ECommand
     {
         eCommandNone,
+        eCommandTest,
         eCommandInitRepository,
         eCommandCreateBranch,
         eCommandShowStatus,
-        eCommandAdd,
+        eCommandStage,
+        eCommandUnstage,
         eCommandMove,
         eCommandRemove,
         eCommandCommit,
@@ -33,10 +35,12 @@ public:
     };
 
     // Switches
+    static const char* s_sSwitchTest;
     static const char* s_sSwitchInitRepository;
     static const char* s_sSwitchCreateBranch;
     static const char* s_sSwitchShowStatus;
-    static const char* s_sSwitchAdd;
+    static const char* s_sSwitchStage;
+    static const char* s_sSwitchUnstage;
     static const char* s_sSwitchMove;
     static const char* s_sSwitchRemove;
     static const char* s_sSwitchCommit;
@@ -59,6 +63,7 @@ public:
     static const int s_iError_CouldNotRemoveFiles;
 
     static QMap<QString, CConstants::ECommand> s_mCommands;
+    static QMap<QString, QString> s_mHelp;
 
     //!
     static void initCommandMap();

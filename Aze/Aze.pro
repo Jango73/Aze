@@ -1,5 +1,5 @@
 
-QT += core xml
+QT += core xml testlib
 CONFIG += console
 
 TEMPLATE = app

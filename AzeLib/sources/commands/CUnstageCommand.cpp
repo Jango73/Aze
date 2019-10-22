@@ -4,7 +4,7 @@
 #include <QDir>
 
 // Application
-#include "CAddCommand.h"
+#include "CUnstageCommand.h"
 #include "../CRepository.h"
 #include "../CUtils.h"
 
@@ -12,7 +12,7 @@ namespace Aze {
 
 //-------------------------------------------------------------------------------------------------
 
-CAddCommand::CAddCommand(CRepository* pRepository, const QStringList& lFileNames)
+CUnstageCommand::CUnstageCommand(CRepository* pRepository, const QStringList& lFileNames)
     : CBaseCommand(pRepository)
     , m_lFileNames(lFileNames)
 {
@@ -20,15 +20,15 @@ CAddCommand::CAddCommand(CRepository* pRepository, const QStringList& lFileNames
 
 //-------------------------------------------------------------------------------------------------
 
-bool CAddCommand::execute()
+bool CUnstageCommand::execute()
 {
     for (QString sFileName : m_lFileNames)
     {
-        QString sRelativeFileName = CUtils::relativeFileName(m_pRepository->rootPath(), sFileName);
+        QString sRelativeFileName = m_pRepository->database()->relativeFileName(sFileName);
 
         OUT_DEBUG(sRelativeFileName);
 
-        if (not addSingleFile(sRelativeFileName))
+        if (not unstageSingleFile(sRelativeFileName))
             return false;
     }
 
@@ -37,22 +37,13 @@ bool CAddCommand::execute()
 
 //-------------------------------------------------------------------------------------------------
 
-bool CAddCommand::addSingleFile(QString sRelativeFileName)
+bool CUnstageCommand::unstageSingleFile(QString sRelativeFileName)
 {
     OUT_DEBUG(sRelativeFileName);
 
     if (not IS_NULL(m_pRepository->stagingCommit()))
     {
-        if (CUtils::fileExists(m_pRepository->rootPath(), sRelativeFileName))
-        {
-            QString sId = CUtils::idFromString(sRelativeFileName);
-            m_pRepository->stagingCommit()->addFile(sRelativeFileName, sId);
-            return true;
-        }
-        else
-        {
-            OUT_ERROR(QString("%1: %2").arg(CStrings::s_sTextNoSuchFile).arg(sRelativeFileName));
-        }
+        m_pRepository->stagingCommit()->removeFile(sRelativeFileName);
     }
 
     return false;

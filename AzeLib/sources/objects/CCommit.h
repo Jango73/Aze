@@ -14,6 +14,7 @@
 
 // Application
 #include "CObject.h"
+#include "CDatabase.h"
 #include "../CEnums.h"
 #include "../CStrings.h"
 
@@ -55,13 +56,16 @@ public:
     //-------------------------------------------------------------------------------------------------
 
     //!
-    CCommit* clone() const;
+    CCommit* clone(QObject* parent = nullptr) const;
 
     //!
     CXMLNode toNode() const override;
 
     //!
     bool toFile(const QString& sFileName) const;
+
+    //!
+    void clearParents();
 
     //!
     void addParent(const QString& sParentId);
@@ -73,10 +77,10 @@ public:
     bool removeFile(QString sRelativeFileName);
 
     //!
-    bool addCommit(const QString& sRootPath, const QString& sObjectPath, CCommit* pCommitToAdd);
+    bool addCommit(CDatabase* pDatabase, CCommit* pCommitToAdd);
 
     //!
-    QByteArray fileContent(const QString& sRootPath, const QString& sObjectPath, QString sName);
+    QByteArray fileContent(CDatabase* pDatabase, QString sFileName);
 
     //-------------------------------------------------------------------------------------------------
     // Static control methods
@@ -85,10 +89,13 @@ public:
 public:
 
     //!
-    static CCommit* fromNode(const CXMLNode& xNode);
+    static CCommit* fromNode(const CXMLNode& xNode, QObject* parent);
 
     //!
-    static CCommit* fromFile(const QString& sFileName);
+    static CCommit* fromFile(const QString& sFileName, QObject* parent);
+
+    //!
+    static QList<CCommit*> parentList(CDatabase* pDatabase, const CCommit* pCommit, QObject* parent);
 };
 
 }

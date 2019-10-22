@@ -43,15 +43,6 @@ public:
     static QString getTextFileContent(const QString& sFileName);
 
     //!
-    static bool fileExistsInDB(const QString& sObjectPath, const QString& sId);
-
-    //!
-    static QByteArray getFileFromDB(const QString& sObjectPath, const QString& sId);
-
-    //!
-    static QString storeFileInDB(const QString& sObjectPath, const QString& sFileName);
-
-    //!
     static QDictionary dictionaryFromNode(const CXMLNode& xNode);
 
     //!

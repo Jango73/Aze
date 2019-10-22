@@ -11,7 +11,7 @@
 
 namespace Aze {
 
-class AZE_SHARED_EXPORT CAddCommand : public CBaseCommand
+class AZE_SHARED_EXPORT CStageCommand : public CBaseCommand
 {
     Q_OBJECT
 
@@ -21,7 +21,7 @@ public:
     // Constructor
     //-------------------------------------------------------------------------------------------------
 
-    CAddCommand(CRepository* pRepository, const QStringList& lFileNames);
+    CStageCommand(CRepository* pRepository, const QStringList& lFileNames);
 
     //-------------------------------------------------------------------------------------------------
     // Control methods

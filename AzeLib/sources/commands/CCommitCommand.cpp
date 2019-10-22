@@ -49,18 +49,19 @@ bool CCommitCommand::execute()
     {
         OUT_DEBUG(QString("Existing tip commit id=%1").arg(m_pRepository->tipCommit()->id()));
 
-        pNewCommit = m_pRepository->tipCommit()->clone();
+        pNewCommit = m_pRepository->tipCommit()->clone(this);
+        pNewCommit->clearParents();
         pNewCommit->addParent(m_pRepository->tipCommit()->id());
     }
     else
     {
         OUT_DEBUG("No current tip commit");
 
-        pNewCommit = new CCommit();
+        pNewCommit = new CCommit(this);
     }
 
     // Add the staged commmit to this new commit
-    pNewCommit->addCommit(m_pRepository->rootPath(), m_pRepository->objectPath(), m_pRepository->stagingCommit());
+    pNewCommit->addCommit(m_pRepository->database(), m_pRepository->stagingCommit());
 
     // Finalize and save the commit
     // We need all the info to generate the commit's id
@@ -69,14 +70,19 @@ bool CCommitCommand::execute()
     pNewCommit->setMessage(m_sMessage);
 
     QString sNewCommitId = pNewCommit->generateId();
-    pNewCommit->toFile(m_pRepository->composeCommitFileName(sNewCommitId));
+    pNewCommit->toFile(m_pRepository->database()->composeCommitFileName(sNewCommitId));
 
     // Update the current branch
     m_pRepository->currentBranch()->setTipCommitId(sNewCommitId);
 
-    delete pNewCommit;
+    if (m_pRepository->currentBranch()->rootCommitId().isEmpty())
+    {
+        m_pRepository->currentBranch()->setRootCommitId(sNewCommitId);
+    }
 
     return true;
 }
+
+//-------------------------------------------------------------------------------------------------
 
 }

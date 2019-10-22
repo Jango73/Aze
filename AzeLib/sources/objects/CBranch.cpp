@@ -38,13 +38,13 @@ CXMLNode CBranch::toNode() const
 
 //-------------------------------------------------------------------------------------------------
 
-CBranch* CBranch::fromNode(const CXMLNode& xNode)
+CBranch* CBranch::fromNode(const CXMLNode& xNode, QObject* parent)
 {
     QDictionary mFiles;
     QString sId;
     QString sFilePath;
 
-    CBranch* pBranch = new CBranch();
+    CBranch* pBranch = new CBranch(parent);
 
     CXMLNode xInfo = xNode.getNodeByTagName(CStrings::s_sParamInfo);
 

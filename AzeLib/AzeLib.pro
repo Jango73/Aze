@@ -1,5 +1,5 @@
 
-QT += core xml
+QT += core xml testlib
 
 TEMPLATE = lib
 DEFINES += "AZELIB_VERSION_STRING=\"\\\"0.0.0.alpha.1\\\"\""

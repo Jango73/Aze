@@ -39,6 +39,22 @@ public:
     //!
     int run();
 
+    //!
+    bool isASainRepository();
+
+    //!
+    void processWildCards();
+
+    //!
+    void processWildCardsRecurse(const QString& sCurrentDirectory, const QString& sWildCard);
+
+    //-------------------------------------------------------------------------------------------------
+    // User commands
+    //-------------------------------------------------------------------------------------------------
+
+    //! Runs Aze unit tests
+    int test();
+
     //! Initializes a repository
     int init();
 
@@ -49,7 +65,10 @@ public:
     int status();
 
     //!
-    int add();
+    int stage();
+
+    //!
+    int unstage();
 
     //!
     int move();
@@ -65,15 +84,6 @@ public:
 
     //!
     int dump();
-
-    //!
-    bool isASainRepository();
-
-    //!
-    void processWildCards();
-
-    //!
-    void processWildCardsRecurse(const QString& sCurrentDirectory, const QString& sWildCard);
 
     //-------------------------------------------------------------------------------------------------
     // Properties

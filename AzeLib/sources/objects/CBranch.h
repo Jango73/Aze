@@ -54,7 +54,7 @@ public:
     //-------------------------------------------------------------------------------------------------
 
     //!
-    CXMLNode toNode() const;
+    virtual CXMLNode toNode() const override;
 
     //-------------------------------------------------------------------------------------------------
     // Static control methods
@@ -63,7 +63,7 @@ public:
 public:
 
     //!
-    static CBranch* fromNode(const CXMLNode& xNode);
+    static CBranch* fromNode(const CXMLNode& xNode, QObject* parent);
 };
 
 }
