@@ -47,7 +47,7 @@ public:
     CBranch(QObject* parent = nullptr);
 
     //!
-    ~CBranch();
+    virtual ~CBranch() override;
 
     //-------------------------------------------------------------------------------------------------
     // Control methods

@@ -79,14 +79,14 @@ public:
     //! Commits all files contained in the staging commit
     bool commit(const QString& sAuthor, const QString& sMessage);
 
+    //! Returns a list of files and their status
+    QList<CFile> fileStatus(const QStringList& lFileNames);
+
     //! Makes a diff betweeen commits or files
     QString diff(const QString& sFirst, const QString& sSecond);
 
     //!
     CCommit* getStagingCommit();
-
-    //!
-    QList<CFile> fileStatus();
 
     //! Reads the stage commit
     bool readGeneralInfo();
@@ -129,7 +129,7 @@ public:
     CCommit* getCommitAncestor(CCommit* pCommit, int iDelta, QObject* parent);
 
     //!
-    CCommit* workingDirectoryAsCommit();
+    CCommit* workingDirectoryAsCommit(QObject* parent);
 
     //!
     void listFilesRecursive(QStringList& lStack, QString sRootDirectory, QString sCurrentDirectory);

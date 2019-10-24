@@ -11,6 +11,7 @@
 #include "commands/CUnstageCommand.h"
 #include "commands/CRemoveCommand.h"
 #include "commands/CCommitCommand.h"
+#include "commands/CStatusCommand.h"
 #include "commands/CDiffCommand.h"
 
 namespace Aze {
@@ -132,9 +133,11 @@ QString CRepository::diff(const QString& sFirst, const QString& sSecond)
 
 //-------------------------------------------------------------------------------------------------
 
-QList<CFile> CRepository::fileStatus()
+QList<CFile> CRepository::fileStatus(const QStringList& lFileNames)
 {
     QList<CFile> lReturnValue;
+
+    CStatusCommand(this, lFileNames, &lReturnValue).execute();
 
     return lReturnValue;
 }
@@ -336,9 +339,9 @@ CCommit* CRepository::getCommitAncestor(CCommit* pCommit, int iDelta, QObject* p
 
 //-------------------------------------------------------------------------------------------------
 
-CCommit* CRepository::workingDirectoryAsCommit()
+CCommit* CRepository::workingDirectoryAsCommit(QObject* parent)
 {
-    CCommit* pNewCommit = new CCommit(this);
+    CCommit* pNewCommit = new CCommit(parent);
     QStringList lFiles;
 
     listFilesRecursive(lFiles, m_pDatabase->rootPath(), ".");

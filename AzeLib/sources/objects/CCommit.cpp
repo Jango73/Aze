@@ -85,8 +85,6 @@ void CCommit::clearParents()
 
 void CCommit::addParent(const QString& sParentId)
 {
-    OUT_DEBUG(QString("Adding parent %1 to commit").arg(sParentId));
-
     m_lParents << sParentId;
 }
 
@@ -94,8 +92,6 @@ void CCommit::addParent(const QString& sParentId)
 
 bool CCommit::addFile(QString sRelativeFileName, QString sId)
 {
-    OUT_DEBUG(QString("Adding file %1:%2 to commit").arg(sId).arg(sRelativeFileName));
-
     if (not m_mFiles.values().contains(sRelativeFileName))
     {
         if (sId.isEmpty())

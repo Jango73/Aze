@@ -19,4 +19,24 @@ CFile::~CFile()
 {
 }
 
+//-------------------------------------------------------------------------------------------------
+
+CFile::CFile(const CFile& target)
+    : QObject(target.parent())
+{
+    *this = target;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+CFile& CFile::operator = (const CFile& target)
+{
+    m_sRelativeName = target.m_sRelativeName;
+    m_eStatus = target.m_eStatus;
+
+    return *this;
+}
+
+//-------------------------------------------------------------------------------------------------
+
 } // namespace Aze

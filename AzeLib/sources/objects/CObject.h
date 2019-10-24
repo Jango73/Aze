@@ -41,7 +41,7 @@ public:
     CObject(QObject* parent = nullptr);
 
     //!
-    virtual ~CObject();
+    virtual ~CObject() override;
 
     //!
     QString generateId() const;

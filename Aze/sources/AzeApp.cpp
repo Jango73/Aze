@@ -259,7 +259,14 @@ int AzeApp::status()
 {
     ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
 
-    QList<Aze::CFile> lFiles = m_pRepository->fileStatus();
+    QList<Aze::CFile> lFiles = m_pRepository->fileStatus(m_lFilesAndIds);
+
+    for (Aze::CFile& file : lFiles)
+    {
+        (*m_pOutStream) << Aze::CEnums::FileStatusSymbol(file.status()) << " " << file.relativeName();
+        (*m_pOutStream) << "\n";
+    }
+
     return 0;
 }
 
