@@ -52,8 +52,10 @@ public:
 
     static const QString s_sDefaultBranchName;
 
+    static const QString s_sTextNotARepository;
     static const QString s_sTextNoSuchFile;
     static const QString s_sTextNoCurrentBranch;
+    static const QString s_sTextNoTipCommit;
     static const QString s_sTextCommitEmpty;
 };
 

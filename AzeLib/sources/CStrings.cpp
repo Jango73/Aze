@@ -46,8 +46,10 @@ const QString CStrings::s_sStagingCommitFileName    = "stage";
 
 const QString CStrings::s_sDefaultBranchName        = "trunk";
 
+const QString CStrings::s_sTextNotARepository       = tr("This is not an Aze repository.");
 const QString CStrings::s_sTextNoSuchFile           = tr("No such file");
 const QString CStrings::s_sTextNoCurrentBranch      = tr("No current branch");
+const QString CStrings::s_sTextNoTipCommit          = tr("No tip commit");
 const QString CStrings::s_sTextCommitEmpty          = tr("No files to commit");
 
 } // namespace Aze

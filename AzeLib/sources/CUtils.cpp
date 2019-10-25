@@ -1,4 +1,11 @@
 
+// std
+#include <string>
+#include <sstream>
+
+// dtl
+#include <dtl.hpp>
+
 // Qt
 #include <QDir>
 #include <QFile>
@@ -11,6 +18,8 @@
 #include "CStrings.h"
 
 namespace Aze {
+
+using dtl::Diff;
 
 //-------------------------------------------------------------------------------------------------
 
@@ -174,6 +183,24 @@ std::vector<std::string> CUtils::textToStdStringVector(const QString& sText)
     for (QString sLine: lLines)
         vReturnValue.push_back(sLine.toUtf8().constData());
     return vReturnValue;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+QString CUtils::unifiedDiff(const QString& sText1, const QString& sText2)
+{
+    std::vector<std::string> lText1 = CUtils::textToStdStringVector(sText1);
+    std::vector<std::string> lText2 = CUtils::textToStdStringVector(sText2);
+
+    std::stringstream strStream;
+
+    Diff<std::string> diff(lText1, lText2);
+    diff.onHuge();
+    diff.compose();
+    diff.composeUnifiedHunks();
+    diff.printUnifiedFormat(strStream);
+
+    return QString::fromUtf8(strStream.str().data());
 }
 
 //-------------------------------------------------------------------------------------------------

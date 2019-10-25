@@ -67,6 +67,9 @@ public:
     //! Creates a branch as sName
     bool createBranch(const QString& sName);
 
+    //! Sets the current branch to sName
+    bool switchToBranch(const QString& sName);
+
     //! Stages all files listed in lFileNames
     bool stage(const QStringList& lFileNames);
 
@@ -78,6 +81,9 @@ public:
 
     //! Commits all files contained in the staging commit
     bool commit(const QString& sAuthor, const QString& sMessage);
+
+    //! Returns a log
+    QString log(const QStringList& lFileNames);
 
     //! Returns a list of files and their status
     QList<CFile> fileStatus(const QStringList& lFileNames);
@@ -126,7 +132,7 @@ public:
     QString processDeltas(const QString& sText, int& iDelta);
 
     //!
-    CCommit* getCommitAncestor(CCommit* pCommit, int iDelta, QObject* parent);
+    CCommit* getCommitAncestor(CCommit* pCommit, QObject* parent = nullptr, int iDelta = 1);
 
     //!
     CCommit* workingDirectoryAsCommit(QObject* parent);

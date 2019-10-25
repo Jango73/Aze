@@ -12,6 +12,7 @@
 #include "commands/CRemoveCommand.h"
 #include "commands/CCommitCommand.h"
 #include "commands/CStatusCommand.h"
+#include "commands/CLogCommand.h"
 #include "commands/CDiffCommand.h"
 
 namespace Aze {
@@ -57,6 +58,7 @@ bool CRepository::init()
     if (m_pDatabase->init())
     {
         createBranch(CStrings::s_sDefaultBranchName);
+        switchToBranch(CStrings::s_sDefaultBranchName);
 
         writeGeneralInfo();
         writeCurrentBranch();
@@ -73,20 +75,34 @@ bool CRepository::init()
 
 bool CRepository::createBranch(const QString& sName)
 {
+    CBranch* pNewBranch = new CBranch(this);
+
     if (not IS_NULL(m_pCurrentBranch))
     {
-        m_pCurrentBranch->setRootCommitId(m_pCurrentBranch->tipCommitId());
-        m_pCurrentBranch->setType(CEnums::eBranch);
-    }
-    else
-    {
-        CBranch* pNewBranch = new CBranch(this);
-        setCurrentBranch(pNewBranch);
+        pNewBranch->setRootCommitId(m_pCurrentBranch->tipCommitId());
+        pNewBranch->setTipCommitId(m_pCurrentBranch->tipCommitId());
     }
 
-    setCurrentBranchName(sName);
+    pNewBranch->toNode().save(m_pDatabase->composeBranchFileName(sName));
 
     return true;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+bool CRepository::switchToBranch(const QString& sName)
+{
+    QString sFileName = m_pDatabase->composeBranchFileName(sName);
+
+    if (QFile(sFileName).exists())
+    {
+        setCurrentBranch(CBranch::fromNode(CXMLNode::load(sFileName), this));
+        setCurrentBranchName(sName);
+
+        return true;
+    }
+
+    return false;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -115,6 +131,20 @@ bool CRepository::remove(const QStringList& lFileNames)
 bool CRepository::commit(const QString& sAuthor, const QString& sMessage)
 {
     return CCommitCommand(this, sAuthor, sMessage).execute();
+}
+
+//-------------------------------------------------------------------------------------------------
+
+QString CRepository::log(const QStringList& lFileNames)
+{
+    QString sReturnValue;
+
+    if (CLogCommand(this, lFileNames, &sReturnValue).execute())
+    {
+        return sReturnValue;
+    }
+
+    return "";
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -177,7 +207,7 @@ bool CRepository::readStage()
 {
     if (IS_NULL(m_pStagingCommit))
     {
-        setStagingCommit(CCommit::fromFile(m_sStagingCommitFileName, this));
+        setStagingCommit(CCommit::fromFile(m_sStagingCommitFileName, this, ""));
     }
 
     return true;
@@ -191,10 +221,9 @@ bool CRepository::readRootCommit()
     {
         if (IS_NULL(m_pRootCommit))
         {
-            QString sRootId = m_pCurrentBranch->rootCommitId();
-            QString sTipFileName = m_pDatabase->composeCommitFileName(sRootId);
-            setRootCommit(CCommit::fromFile(sTipFileName, this));
-            m_pRootCommit->setId(sRootId);
+            QString sRootCommitId = m_pCurrentBranch->rootCommitId();
+            QString sTipFileName = m_pDatabase->composeCommitFileName(sRootCommitId);
+            setRootCommit(CCommit::fromFile(sTipFileName, this, sRootCommitId));
             return true;
         }
     }
@@ -210,10 +239,9 @@ bool CRepository::readTipCommit()
     {
         if (IS_NULL(m_pTipCommit))
         {
-            QString sTipId = m_pCurrentBranch->tipCommitId();
-            QString sTipFileName = m_pDatabase->composeCommitFileName(sTipId);
-            setTipCommit(CCommit::fromFile(sTipFileName, this));
-            m_pTipCommit->setId(sTipId);
+            QString sTipCommitId = m_pCurrentBranch->tipCommitId();
+            QString sTipFileName = m_pDatabase->composeCommitFileName(sTipCommitId);
+            setTipCommit(CCommit::fromFile(sTipFileName, this, sTipCommitId));
             return true;
         }
     }
@@ -245,9 +273,7 @@ bool CRepository::writeGeneralInfo()
 bool CRepository::writeCurrentBranch()
 {
     if (m_pCurrentBranch != nullptr)
-    {
         m_pCurrentBranch->toNode().save(m_pDatabase->composeBranchFileName(m_sCurrentBranchName));
-    }
 
     return true;
 }
@@ -314,24 +340,31 @@ QString CRepository::processDeltas(const QString& sText, int& iDelta)
 
 //-------------------------------------------------------------------------------------------------
 
-CCommit* CRepository::getCommitAncestor(CCommit* pCommit, int iDelta, QObject* parent)
+CCommit* CRepository::getCommitAncestor(CCommit* pCommit, QObject* parent, int iDelta)
 {
     CCommit* pAncestor = pCommit;
+    int iGuard = 999999;
 
     while (true)
     {
         QList<CCommit*> parents = CCommit::parentList(m_pDatabase, pAncestor, this);
 
-        if (parents.count() != 1 || iDelta == 0)
+        if (parents.count() == 0)
         {
             qDeleteAll(parents);
+            pAncestor = nullptr;
             break;
         }
 
+        // The first parent is the one to follow in order to stay on branch of pCommit
         pAncestor = parents[0]->clone(parent);
         iDelta--;
+        iGuard--;
 
         qDeleteAll(parents);
+
+        if (iDelta == 0 || iGuard == 0)
+            return pAncestor;
     }
 
     return pAncestor;

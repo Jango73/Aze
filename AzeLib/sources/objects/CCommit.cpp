@@ -9,6 +9,7 @@ namespace Aze {
 
 CCommit::CCommit(QObject* parent)
     : CObject(parent)
+    , m_sDate(QDateTime::currentDateTimeUtc().toString(Qt::ISODate))
 {
 }
 
@@ -24,6 +25,7 @@ CCommit* CCommit::clone(QObject* parent) const
 {
     CCommit* pResult = new CCommit(parent);
 
+    pResult->setId(m_sId);
     pResult->setAuthor(m_sAuthor);
     pResult->setDate(m_sDate);
     pResult->setMessage(m_sMessage);
@@ -176,7 +178,7 @@ QByteArray CCommit::fileContent(CDatabase* pDatabase, QString sFileName)
 
 //-------------------------------------------------------------------------------------------------
 
-CCommit* CCommit::fromNode(const CXMLNode& xNode, QObject* parent)
+CCommit* CCommit::fromNode(const CXMLNode& xNode, QObject* parent, QString sCommitId)
 {
     QDictionary mFiles;
     QString sId;
@@ -184,10 +186,16 @@ CCommit* CCommit::fromNode(const CXMLNode& xNode, QObject* parent)
 
     CCommit* pCommit = new CCommit(parent);
 
+    pCommit->setId(sCommitId);
+
     CXMLNode xInfo = xNode.getNodeByTagName(CStrings::s_sParamInfo);
     pCommit->setAuthor(xInfo.attributes()[CStrings::s_sParamAuthor]);
     pCommit->setDate(xInfo.attributes()[CStrings::s_sParamDate]);
-    pCommit->setParents(xInfo.attributes()[CStrings::s_sParamParents].split(CStrings::s_sItemSeparator));
+
+    QString sParents = xInfo.attributes()[CStrings::s_sParamParents];
+
+    if (not sParents.isEmpty())
+        pCommit->setParents(sParents.split(CStrings::s_sItemSeparator));
 
     CXMLNode xMessage = xNode.getNodeByTagName(CStrings::s_sParamMessage);
     pCommit->setMessage(xMessage.value());
@@ -212,9 +220,9 @@ CCommit* CCommit::fromNode(const CXMLNode& xNode, QObject* parent)
 
 //-------------------------------------------------------------------------------------------------
 
-CCommit* CCommit::fromFile(const QString& sFileName, QObject* parent)
+CCommit* CCommit::fromFile(const QString& sFileName, QObject* parent, QString sCommitId)
 {
-    return fromNode(CXMLNode::load(sFileName), parent);
+    return fromNode(CXMLNode::load(sFileName), parent, sCommitId);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -227,7 +235,7 @@ QList<CCommit*> CCommit::parentList(CDatabase* pDatabase, const CCommit* pCommit
     {
         QString sCommitFileName = pDatabase->composeCommitFileName(sParentId);
 
-        lParents << CCommit::fromFile(sCommitFileName, parent);
+        lParents << CCommit::fromFile(sCommitFileName, parent, sParentId);
     }
 
     return lParents;

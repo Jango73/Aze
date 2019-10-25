@@ -19,6 +19,7 @@ namespace Aze {
 
 CTestAze::CTestAze()
     : m_pRepository(nullptr)
+    , m_iCommitIndex(0)
 {
     m_sRootPath = QDir::currentPath();
     m_sRepoPath = "./.aze";
@@ -122,6 +123,39 @@ void CTestAze::commit(const QStringList& lStage, const QString& sAuthor, const Q
 
 //-------------------------------------------------------------------------------------------------
 
+void CTestAze::createManyFiles()
+{
+    QDir filesDir(m_sFilesFolderPath);
+
+    for (int iIndex = 0; iIndex < 5; iIndex++)
+    {
+        // Create some directory
+        QString sNewFolder = m_tTextGenerator.word();
+        QString sNewFolderPath = QString("%1/%2").arg(m_sFilesFolderName).arg(sNewFolder);
+
+        QDir newFolder(sNewFolderPath);
+        if (not newFolder.exists())
+            QVERIFY(filesDir.mkdir(sNewFolder));
+
+        // Create some files
+        lStage.clear();
+        QMap<QString, QString> mNewFiles = generateFiles(20 + rand() % 30);
+
+        for (QString sNewFile : mNewFiles.keys())
+        {
+            lStage << QString("%1/%2")
+                      .arg(sNewFolderPath)
+                      .arg(sNewFile);
+
+            QVERIFY(createFile(lStage.last(), mNewFiles[sNewFile]));
+        }
+
+        commit(lStage, m_sAuthor, QString("Commit%1\nMultiline commit").arg(m_iCommitIndex++));
+    }
+}
+
+//-------------------------------------------------------------------------------------------------
+
 void CTestAze::testAll()
 {
     clearRepository();
@@ -135,6 +169,7 @@ void CTestAze::testAll()
     // Create some files
     QString sFolder1Name = "Folder1";
     QString sFolder2Name = "Folder2";
+    QString sFolder3Name = "Folder3";
 
     QString sFile1Path = "./Files/File1.txt";
     QString sFile2Path = "./Files/File2.txt";
@@ -142,6 +177,8 @@ void CTestAze::testAll()
     QString sFile4Path = "./Files/Folder1/File4.txt";
     QString sFile5Path = "./Files/Folder2/File5.txt";
     QString sFile6Path = "./Files/Folder2/File6.txt";
+    QString sFile7Path = "./Files/Folder3/File7.txt";
+    QString sFile8Path = "./Files/Folder3/File8.txt";
 
     QDir rootDir(m_sRootPath);
     QVERIFY(rootDir.mkdir(m_sFilesFolderName));
@@ -149,6 +186,7 @@ void CTestAze::testAll()
     QDir filesDir(m_sFilesFolderPath);
     QVERIFY(filesDir.mkdir(sFolder1Name));
     QVERIFY(filesDir.mkdir(sFolder2Name));
+    QVERIFY(filesDir.mkdir(sFolder3Name));
 
     QVERIFY(createFile(sFile1Path, "File1"));
     QVERIFY(createFile(sFile2Path, "File2"));
@@ -156,6 +194,8 @@ void CTestAze::testAll()
     QVERIFY(createFile(sFile4Path, "File4"));
     QVERIFY(createFile(sFile5Path, "File5"));
     QVERIFY(createFile(sFile6Path, "File6"));
+    QVERIFY(createFile(sFile7Path, "File7"));
+    QVERIFY(createFile(sFile8Path, "File8"));
 
     // 1st commit
     lStage.clear();
@@ -248,6 +288,40 @@ void CTestAze::testAll()
     QVERIFY(m_pRepository->readStage());
     sActualDiff = m_pRepository->diff("tip~1", "tip");
     QVERIFY(sActualDiff == sExpectedDiff);
+
+    // Branch 1
+    CREATE_REPO;
+    QVERIFY(m_pRepository->createBranch("Branch1"));
+
+    CREATE_REPO;
+    QVERIFY(m_pRepository->switchToBranch("Branch1"));
+    QVERIFY(m_pRepository->writeCurrentBranch());
+    QVERIFY(m_pRepository->writeGeneralInfo());
+
+    // 5th commit
+    lStage.clear();
+    lStage << sFile7Path;
+    lStage << sFile8Path;
+
+    commit(lStage, m_sAuthor, "Commit5");
+
+    // Diff commits 4 and 5
+    sExpectedDiff = QStringList
+            ({
+                 "diff --aze Files/Folder3/File7.txt Files/Folder3/File7.txt",
+                 "@@ -1,1 +1,1 @@",
+                 "-",
+                 "+File7",
+                 "diff --aze Files/Folder3/File8.txt Files/Folder3/File8.txt",
+                 "@@ -1,1 +1,1 @@",
+                 "-",
+                 "+File8"
+             }).join(CStrings::s_sNewLine) + CStrings::s_sNewLine;
+
+    CREATE_REPO;
+    QVERIFY(m_pRepository->readStage());
+    sActualDiff = m_pRepository->diff("tip~1", "tip");
+    QVERIFY(sActualDiff == sExpectedDiff);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -262,22 +336,27 @@ void CTestAze::testHeavy()
     QDir rootDir(m_sRootPath);
     QVERIFY(rootDir.mkdir(m_sFilesFolderName));
 
-    for (int iIndex = 0; iIndex < 50; iIndex++)
-    {
-        int iFileCount = 10 + rand() % 10;
+    createManyFiles();
 
-        // Create some files
-        QMap<QString, QString> mFiles = generateFiles(iFileCount);
-        lStage.clear();
+    CREATE_REPO;
+    QVERIFY(m_pRepository->createBranch("Branch1"));
 
-        for (QString sFile : mFiles.keys())
-        {
-            lStage << QString("%1/%2").arg(m_sFilesFolderName).arg(sFile);
-            QVERIFY(createFile(QString("%1/%2").arg(m_sFilesFolderPath).arg(sFile), mFiles[sFile]));
-        }
+    CREATE_REPO;
+    QVERIFY(m_pRepository->switchToBranch("Branch1"));
+    QVERIFY(m_pRepository->writeCurrentBranch());
+    QVERIFY(m_pRepository->writeGeneralInfo());
 
-        commit(lStage, m_sAuthor, QString("Commit%1").arg(iIndex));
-    }
+    createManyFiles();
+
+    CREATE_REPO;
+    QVERIFY(m_pRepository->createBranch("Branch2"));
+
+    CREATE_REPO;
+    QVERIFY(m_pRepository->switchToBranch("Branch2"));
+    QVERIFY(m_pRepository->writeCurrentBranch());
+    QVERIFY(m_pRepository->writeGeneralInfo());
+
+    createManyFiles();
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -286,7 +365,7 @@ void CTestAze::testFinalize()
 {
     FINALIZE_REPO;
 
-//    clearRepository();
+    clearRepository();
 }
 
 //-------------------------------------------------------------------------------------------------

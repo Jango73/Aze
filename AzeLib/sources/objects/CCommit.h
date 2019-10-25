@@ -32,6 +32,7 @@ public:
     // QML properties
     //-------------------------------------------------------------------------------------------------
 
+    Q_FAST_PROPERTY(QString, b, isMerge, IsMerge)
     Q_FAST_PROPERTY(QString, s, author, Author)
     Q_FAST_PROPERTY(QString, s, date, Date)
     Q_FAST_PROPERTY(QString, s, message, Message)
@@ -89,10 +90,10 @@ public:
 public:
 
     //!
-    static CCommit* fromNode(const CXMLNode& xNode, QObject* parent);
+    static CCommit* fromNode(const CXMLNode& xNode, QObject* parent, QString sCommitId);
 
     //!
-    static CCommit* fromFile(const QString& sFileName, QObject* parent);
+    static CCommit* fromFile(const QString& sFileName, QObject* parent, QString sCommitId);
 
     //!
     static QList<CCommit*> parentList(CDatabase* pDatabase, const CCommit* pCommit, QObject* parent);

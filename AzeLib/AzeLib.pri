@@ -8,6 +8,7 @@ HEADERS += \
     sources/commands/CRemoveCommand.h \
     sources/commands/CCommitCommand.h \
     sources/commands/CStatusCommand.h \
+    sources/commands/CLogCommand.h \
     sources/commands/CDiffCommand.h \
     sources/objects/CBranch.h \
     sources/objects/CCommit.h \
@@ -29,6 +30,7 @@ SOURCES += \
     sources/commands/CRemoveCommand.cpp \
     sources/commands/CCommitCommand.cpp \
     sources/commands/CStatusCommand.cpp \
+    sources/commands/CLogCommand.cpp \
     sources/commands/CDiffCommand.cpp \
     sources/objects/CBranch.cpp \
     sources/objects/CCommit.cpp \

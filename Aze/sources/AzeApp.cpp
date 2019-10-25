@@ -118,6 +118,9 @@ int AzeApp::run()
     case CConstants::eCommandCreateBranch:
         return createBranch();
 
+    case CConstants::eCommandSwitchToBranch:
+        return switchToBranch();
+
     case CConstants::eCommandShowStatus:
         return status();
 
@@ -136,11 +139,17 @@ int AzeApp::run()
     case CConstants::eCommandCommit:
         return commit();
 
+    case CConstants::eCommandLog:
+        return log();
+
     case CConstants::eCommandDiff:
         return diff();
 
     case CConstants::eCommandDump:
         return dump();
+
+    case CConstants::eCommandHelp:
+        return help();
     }
 
     return 0;
@@ -152,7 +161,7 @@ bool AzeApp::isASainRepository()
 {
     if (not m_pRepository->ok())
     {
-        OUT_ERROR("This is not an Aze repository.");
+        OUT_ERROR(Aze::CStrings::s_sTextNotARepository);
 
         return false;
     }
@@ -170,13 +179,13 @@ void AzeApp::processWildCards()
 
     for (QString sText : lItems)
     {
-        QString sFullName = QString("%1/%2").arg(m_pRepository->database()->rootPath()).arg(sText);
+        OUT_DEBUG(sText);
 
-        if (QFile(sFullName).exists())
-        {
-            m_lFilesAndIds << sText;
-        }
-        else
+        QString sFullName = QString("%1/%2")
+                .arg(m_pRepository->database()->rootPath())
+                .arg(sText);
+
+        if (QDir(sFullName).exists())
         {
             QString sDirectory = sFullName;
             QString sWildCard = "";
@@ -192,6 +201,10 @@ void AzeApp::processWildCards()
 
             processWildCardsRecurse(sDirectory, sWildCard);
         }
+        else if (QFile(sFullName).exists())
+        {
+            m_lFilesAndIds << sText;
+        }
     }
 }
 
@@ -199,6 +212,8 @@ void AzeApp::processWildCards()
 
 void AzeApp::processWildCardsRecurse(const QString& sCurrentDirectory, const QString& sWildCard)
 {
+    OUT_DEBUG(QString("Processing dir %1").arg(sCurrentDirectory));
+
     QStringList lFilter;
     lFilter << sWildCard;
 
@@ -207,6 +222,8 @@ void AzeApp::processWildCardsRecurse(const QString& sCurrentDirectory, const QSt
 
     for (QFileInfo iFile : lFiles)
     {
+        OUT_DEBUG(QString("Processing file %1").arg(iFile.fileName()));
+
         QString sFile = QString("%1/%2").arg(iFile.absolutePath()).arg(iFile.fileName());
         m_lFilesAndIds << sFile;
     }
@@ -245,6 +262,19 @@ int AzeApp::createBranch()
     ERROR_WHEN_FALSE(m_lFilesAndIds.count() > 0, CConstants::s_iError_NoBranchNameGiven);
 
     ERROR_WHEN_FALSE(m_pRepository->createBranch(m_lFilesAndIds[0]), CConstants::s_iError_CouldNotCreateBranch);
+
+    return CConstants::s_iError_None;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+int AzeApp::switchToBranch()
+{
+    ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
+
+    ERROR_WHEN_FALSE(m_lFilesAndIds.count() > 0, CConstants::s_iError_NoBranchNameGiven);
+
+    ERROR_WHEN_FALSE(m_pRepository->switchToBranch(m_lFilesAndIds[0]), CConstants::s_iError_CouldNotSetCurrentBranch);
 
     ERROR_WHEN_FALSE(m_pRepository->writeCurrentBranch(), CConstants::s_iError_CouldNotWriteCurrentBranch);
 
@@ -360,6 +390,18 @@ int AzeApp::commit()
 
 //-------------------------------------------------------------------------------------------------
 
+int AzeApp::log()
+{
+    ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
+
+    (*m_pOutStream) << m_pRepository->log(m_lFilesAndIds);
+    m_pOutStream->flush();
+
+    return CConstants::s_iError_None;
+}
+
+//-------------------------------------------------------------------------------------------------
+
 int AzeApp::diff()
 {
     ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
@@ -385,6 +427,20 @@ int AzeApp::dump()
     {
         (*m_pOutStream) << m_pRepository->database()->printableFileContentById(sId);
         m_pOutStream->flush();
+    }
+
+    return CConstants::s_iError_None;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+int AzeApp::help()
+{
+    (*m_pOutStream) << CConstants::s_sTextCommands << ":\n\n";
+
+    for (QString sKey : CConstants::s_mHelp.keys())
+    {
+        (*m_pOutStream) << QString(" %1  %2\n").arg(sKey, -15).arg(CConstants::s_mHelp[sKey]);
     }
 
     return CConstants::s_iError_None;

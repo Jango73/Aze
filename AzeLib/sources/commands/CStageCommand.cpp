@@ -26,8 +26,6 @@ bool CStageCommand::execute()
     {
         QString sRelativeFileName = m_pRepository->database()->relativeFileName(sFileName);
 
-        OUT_DEBUG(sRelativeFileName);
-
         if (not addSingleFile(sRelativeFileName))
             return false;
     }

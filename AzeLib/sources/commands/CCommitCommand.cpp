@@ -65,7 +65,6 @@ bool CCommitCommand::execute()
 
     // Finalize and save the commit
     // We need all the info to generate the commit's id
-    pNewCommit->setDate(QDateTime::currentDateTimeUtc().toString(Qt::ISODate));
     pNewCommit->setAuthor(m_sAuthor);
     pNewCommit->setMessage(m_sMessage);
 

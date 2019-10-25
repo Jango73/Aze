@@ -1,14 +1,7 @@
 
-// std
-#include <string>
-#include <sstream>
-
 // Qt
 #include <QDebug>
 #include <QDir>
-
-// dtl
-#include <dtl.hpp>
 
 // Application
 #include "CDiffCommand.h"
@@ -16,8 +9,6 @@
 #include "../CUtils.h"
 
 namespace Aze {
-
-using dtl::Diff;
 
 //-------------------------------------------------------------------------------------------------
 
@@ -33,9 +24,6 @@ CDiffCommand::CDiffCommand(CRepository* pRepository, const QString& sFirst, cons
 
 bool CDiffCommand::execute()
 {
-    OUT_DEBUG(QString("Begin"));
-
-    QString sResult;
     QString sObject1 = m_sFirst;
     QString sObject2 = m_sSecond;
     int iDelta1 = 0;
@@ -66,16 +54,21 @@ bool CDiffCommand::execute()
     OUT_DEBUG(QString("sCommitFileName1: %1").arg(sCommitFileName1));
     OUT_DEBUG(QString("sCommitFileName2: %1").arg(sCommitFileName2));
 
+    // Work on commits if both object names are existing files
     if (QFile(sCommitFileName1).exists() && QFile(sCommitFileName2).exists())
     {
         bWorkOnCommits = true;
     }
 
+    // Work on commits if object 1 is an existing file and object 2 is empty
+    // We assume object 2 to be current stage
     if (QFile(sCommitFileName1).exists() && sObject2.isEmpty())
     {
         bWorkOnCommits = true;
     }
 
+    // Work on commits if object 2 is an existing file and object 1 is empty
+    // We assume object 1 to be current stage
     if (QFile(sCommitFileName2).exists() && sObject1.isEmpty())
     {
         bWorkOnCommits = true;
@@ -89,15 +82,15 @@ bool CDiffCommand::execute()
 
         if (not sObject1.isEmpty() && not sObject2.isEmpty())
         {
-            pCommit1 = CCommit::fromFile(sCommitFileName1, this);
-            pCommit2 = CCommit::fromFile(sCommitFileName2, this);
+            pCommit1 = CCommit::fromFile(sCommitFileName1, this, sObject1);
+            pCommit2 = CCommit::fromFile(sCommitFileName2, this, sObject2);
         }
         else if (not sObject1.isEmpty() && sObject2.isEmpty())
         {
             if (IS_NULL(m_pRepository->stagingCommit()))
                 return false;
 
-            pCommit1 = CCommit::fromFile(sCommitFileName1, this);
+            pCommit1 = CCommit::fromFile(sCommitFileName1, this, sObject1);
             pCommit2 = m_pRepository->stagingCommit()->clone();
         }
         else if (sObject1.isEmpty() && not sObject2.isEmpty())
@@ -105,59 +98,45 @@ bool CDiffCommand::execute()
             if (IS_NULL(m_pRepository->stagingCommit()))
                 return false;
 
-            pCommit1 = CCommit::fromFile(sCommitFileName2, this);
+            pCommit1 = CCommit::fromFile(sCommitFileName2, this, sObject2);
             pCommit2 = m_pRepository->stagingCommit()->clone();
         }
 
         if (not IS_NULL(pCommit1) && not IS_NULL(pCommit2))
         {
-            if (iDelta1 != 0)
-            {
-                pCommit1 = m_pRepository->getCommitAncestor(pCommit1, iDelta1, this);
-            }
-
-            if (iDelta2 != 0)
-            {
-                pCommit2 = m_pRepository->getCommitAncestor(pCommit2, iDelta2, this);
-            }
-
-            for (QString sName : pCommit2->files().values())
-            {
-                QByteArray baContent1 = pCommit1->fileContent(m_pRepository->database(), sName);
-                QByteArray baContent2 = pCommit2->fileContent(m_pRepository->database(), sName);
-
-                QString sText1(baContent1);
-                QString sText2(baContent2);
-
-                std::vector<std::string> lText1 = CUtils::textToStdStringVector(QString(baContent1));
-                std::vector<std::string> lText2 = CUtils::textToStdStringVector(QString(baContent2));
-
-                std::stringstream strStream;
-
-                Diff<std::string> diff(lText1, lText2);
-                diff.onHuge();
-                diff.compose();
-                diff.composeUnifiedHunks();
-                diff.printUnifiedFormat(strStream);
-
-                QString sDiffText = QString::fromUtf8(strStream.str().data());
-
-                if (not sDiffText.isEmpty())
-                {
-                    sResult += QString("diff --aze %1 %2%3")
-                            .arg(sName)
-                            .arg(sName)
-                            .arg(CStrings::s_sNewLine);
-
-                    sResult += sDiffText;
-                }
-            }
+            diffCommits(pCommit1, pCommit2, iDelta1, iDelta2);
         }
     }
 
-    (*m_pResult) = sResult;
-
     return true;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+void CDiffCommand::diffCommits(CCommit* pCommit1, CCommit* pCommit2, int iDelta1, int iDelta2)
+{
+    if (iDelta1 != 0)
+        pCommit1 = m_pRepository->getCommitAncestor(pCommit1, this, iDelta1);
+
+    if (iDelta2 != 0)
+        pCommit2 = m_pRepository->getCommitAncestor(pCommit2, this, iDelta2);
+
+    for (QString sName : pCommit2->files().values())
+    {
+        QByteArray baContent1 = pCommit1->fileContent(m_pRepository->database(), sName);
+        QByteArray baContent2 = pCommit2->fileContent(m_pRepository->database(), sName);
+
+        QString sDiffText = CUtils::unifiedDiff(QString(baContent1), QString(baContent2));
+
+        if (not sDiffText.isEmpty())
+        {
+            (*m_pResult) += QString("diff --aze %1 %2%3%4")
+                    .arg(sName)
+                    .arg(sName)
+                    .arg(CStrings::s_sNewLine)
+                    .arg(sDiffText);
+        }
+    }
 }
 
 }

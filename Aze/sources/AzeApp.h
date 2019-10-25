@@ -62,6 +62,9 @@ public:
     int createBranch();
 
     //!
+    int switchToBranch();
+
+    //!
     int status();
 
     //!
@@ -80,10 +83,16 @@ public:
     int commit();
 
     //!
+    int log();
+
+    //!
     int diff();
 
     //!
     int dump();
+
+    //!
+    int help();
 
     //-------------------------------------------------------------------------------------------------
     // Properties

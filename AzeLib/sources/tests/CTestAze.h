@@ -41,6 +41,8 @@ private:
 
     void commit(const QStringList& lStage, const QString& m_sAuthor, const QString& sMessage);
 
+    void createManyFiles();
+
     //-------------------------------------------------------------------------------------------------
     // Slots
     //-------------------------------------------------------------------------------------------------
@@ -69,6 +71,7 @@ private:
     QString m_sTrunkPath;
     QString m_sFilesFolderName;
     QString m_sFilesFolderPath;
+    int m_iCommitIndex;
 };
 
 }

@@ -6,13 +6,12 @@
 
 // Application
 #include "CBaseCommand.h"
-#include "../objects/CCommit.h"
 
 //-------------------------------------------------------------------------------------------------
 
 namespace Aze {
 
-class AZE_SHARED_EXPORT CDiffCommand : public CBaseCommand
+class AZE_SHARED_EXPORT CLogCommand : public CBaseCommand
 {
     Q_OBJECT
 
@@ -22,7 +21,7 @@ public:
     // Constructor
     //-------------------------------------------------------------------------------------------------
 
-    CDiffCommand(CRepository* pRepository, const QString& sAuthor, const QString& sMessage, QString* pResult);
+    CLogCommand(CRepository* pRepository, const QStringList& lFileNames, QString* pResult);
 
     //-------------------------------------------------------------------------------------------------
     // Control methods
@@ -32,22 +31,12 @@ public:
     virtual bool execute() override;
 
     //-------------------------------------------------------------------------------------------------
-    // Protected control methods
-    //-------------------------------------------------------------------------------------------------
-
-protected:
-
-    //!
-    void diffCommits(CCommit* pCommit1, CCommit* pCommit2, int iDelta1, int iDelta2);
-
-    //-------------------------------------------------------------------------------------------------
     // Properties
     //-------------------------------------------------------------------------------------------------
 
 protected:
 
-    QString     m_sFirst;
-    QString     m_sSecond;
+    QStringList m_lFileNames;
     QString*    m_pResult;
 };
 

@@ -10,6 +10,7 @@ namespace Aze {
 CBranch::CBranch(QObject* parent)
     : CObject(parent)
     , m_eType(CEnums::eBranch)
+    , m_sDate(QDateTime::currentDateTimeUtc().toString(Qt::ISODate))
 {
 }
 

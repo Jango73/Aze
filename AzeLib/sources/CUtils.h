@@ -71,6 +71,9 @@ public:
 
     //!
     static std::vector<std::string> textToStdStringVector(const QString& sText);
+
+    //!
+    static QString unifiedDiff(const QString& sText1, const QString& sText2);
 };
 
 }
