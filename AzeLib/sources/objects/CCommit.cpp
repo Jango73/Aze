@@ -1,6 +1,7 @@
 
 // Application
 #include "CCommit.h"
+#include "CDatabase.h"
 #include "../CUtils.h"
 
 namespace Aze {
@@ -26,6 +27,7 @@ CCommit* CCommit::clone(QObject* parent) const
     CCommit* pResult = new CCommit(parent);
 
     pResult->setId(m_sId);
+    pResult->setIsMerge(m_bIsMerge);
     pResult->setAuthor(m_sAuthor);
     pResult->setDate(m_sDate);
     pResult->setMessage(m_sMessage);
@@ -109,8 +111,6 @@ bool CCommit::addFile(QString sRelativeFileName, QString sId)
 
 bool CCommit::removeFile(QString sRelativeFileName)
 {
-    OUT_DEBUG(QString("Removing file %1 from commit").arg(sRelativeFileName));
-
     QString sKey = mapKeyForValue(m_mFiles, sRelativeFileName);
 
     if (not sKey.isEmpty())
@@ -128,25 +128,16 @@ bool CCommit::addCommit(CDatabase* pDatabase, CCommit* pCommitToAdd)
         QString sRelativeFileName = pCommitToAdd->m_mFiles[sAddKey];
         QString sAbsoluteFileName = pDatabase->absoluteFileName(sRelativeFileName);
 
-        OUT_DEBUG(QString("sRelativeFileName=%1").arg(sRelativeFileName));
-        OUT_DEBUG(QString("sAbsoluteFileName=%1").arg(sAbsoluteFileName));
-
         if (CUtils::fileExists(pDatabase->rootPath(), sRelativeFileName))
         {
             // This file exists in working directory
             QString sExistingId = mapKeyForValue(m_mFiles, sRelativeFileName);
-
-            OUT_DEBUG(QString("sExistingId=%1").arg(sExistingId));
-
             QString sNewId = CUtils::idFromFile(sAbsoluteFileName);
 
             if (sExistingId.isEmpty() || sExistingId != sNewId)
             {
                 // File object does not exist
-
                 QString sNewObjectId = pDatabase->storeFile(sAbsoluteFileName);
-
-                OUT_DEBUG(QString("sNewObjectId=%1").arg(sNewObjectId));
 
                 if (not sNewObjectId.isEmpty())
                 {
@@ -168,7 +159,7 @@ QByteArray CCommit::fileContent(CDatabase* pDatabase, QString sFileName)
 
     if (pDatabase->fileWithIdExists(sId))
     {
-        return pDatabase->fileContent(sId);
+        return pDatabase->getObject(sId);
     }
 
     QString sFullName = pDatabase->composeLocalFileName(sFileName);
@@ -240,5 +231,7 @@ QList<CCommit*> CCommit::parentList(CDatabase* pDatabase, const CCommit* pCommit
 
     return lParents;
 }
+
+//-------------------------------------------------------------------------------------------------
 
 } // namespace Aze

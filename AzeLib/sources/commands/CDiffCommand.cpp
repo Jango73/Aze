@@ -51,9 +51,6 @@ bool CDiffCommand::execute()
     QString sCommitFileName1 = m_pRepository->database()->composeCommitFileName(sObject1);
     QString sCommitFileName2 = m_pRepository->database()->composeCommitFileName(sObject2);
 
-    OUT_DEBUG(QString("sCommitFileName1: %1").arg(sCommitFileName1));
-    OUT_DEBUG(QString("sCommitFileName2: %1").arg(sCommitFileName2));
-
     // Work on commits if both object names are existing files
     if (QFile(sCommitFileName1).exists() && QFile(sCommitFileName2).exists())
     {

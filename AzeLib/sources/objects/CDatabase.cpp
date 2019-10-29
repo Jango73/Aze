@@ -15,15 +15,49 @@ CDatabase::CDatabase(const QString& sRootPath, QObject* parent)
     : QObject(parent)
     , m_sRootPath(sRootPath)
 {
+    if (m_sRootPath.endsWith(CStrings::s_sPathSep))
+        m_sRootPath.remove(m_sRootPath.count() - 1, 1);
+
     m_sDataPath = QString("%1/%2").arg(m_sRootPath).arg(CStrings::s_sPathAzeDataRoot);
     m_sBranchPath = QString("%1/%2").arg(m_sDataPath).arg(CStrings::s_sPathAzeBranchPath);
     m_sCommitPath = QString("%1/%2").arg(m_sDataPath).arg(CStrings::s_sPathAzeCommitPath);
     m_sObjectPath = QString("%1/%2").arg(m_sDataPath).arg(CStrings::s_sPathAzeObjectPath);
+}
 
-    OUT_DEBUG(QString("m_sDataPath: %1").arg(m_sDataPath));
-    OUT_DEBUG(QString("m_sBranchPath: %1").arg(m_sBranchPath));
-    OUT_DEBUG(QString("m_sCommitPath: %1").arg(m_sCommitPath));
-    OUT_DEBUG(QString("m_sObjectPath: %1").arg(m_sObjectPath));
+//-------------------------------------------------------------------------------------------------
+
+CBranch* CDatabase::getBranch(const QString& sName, QObject* parent)
+{
+    return CBranch::fromFile(composeBranchFileName(sName), parent);
+}
+
+//-------------------------------------------------------------------------------------------------
+
+CCommit* CDatabase::getCommit(const QString& sId, QObject* parent)
+{
+    return CCommit::fromFile(composeCommitFileName(sId), parent, sId);
+}
+
+//-------------------------------------------------------------------------------------------------
+
+QByteArray CDatabase::getObject(const QString& sId)
+{
+    QByteArray baData;
+
+    QFile tOutputFile(composeObjectFileName(sId));
+
+    // Does the object file exist?
+    if (tOutputFile.exists())
+    {
+        if (tOutputFile.open(QIODevice::ReadOnly))
+        {
+            // Uncompress object file data
+            baData = qUncompress(tOutputFile.readAll());
+            tOutputFile.close();
+        }
+    }
+
+    return baData;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -117,8 +151,6 @@ QString CDatabase::storeFile(const QString& sFileName)
             // If it does not exist, compress it and store it in objects folder
             if (not tOutputFile.exists())
             {
-                OUT_DEBUG(QString("Creating : %1").arg(sStoredObjectFileName));
-
                 baData = qCompress(baData);
 
                 if (tOutputFile.open(QIODevice::WriteOnly))
@@ -151,28 +183,6 @@ bool CDatabase::fileWithIdExists(const QString& sId)
 
 //-------------------------------------------------------------------------------------------------
 
-QByteArray CDatabase::fileContent(const QString& sId)
-{
-    QByteArray baData;
-
-    QFile tOutputFile(composeObjectFileName(sId));
-
-    // Does the object file exist?
-    if (tOutputFile.exists())
-    {
-        if (tOutputFile.open(QIODevice::ReadOnly))
-        {
-            // Uncompress object file data
-            baData = qUncompress(tOutputFile.readAll());
-            tOutputFile.close();
-        }
-    }
-
-    return baData;
-}
-
-//-------------------------------------------------------------------------------------------------
-
 QString CDatabase::printableFileContentById(const QString& sId)
 {
     QString sText;
@@ -188,7 +198,7 @@ QString CDatabase::printableFileContentById(const QString& sId)
     sFileName = composeObjectFileName(sId);
 
     if (QFile(sFileName).exists())
-        return QString(fileContent(sId));
+        return QString(getObject(sId));
 
     return sText;
 }

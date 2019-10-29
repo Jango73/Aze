@@ -14,13 +14,14 @@
 
 // Application
 #include "CObject.h"
-#include "CDatabase.h"
 #include "../CEnums.h"
 #include "../CStrings.h"
 
 //-------------------------------------------------------------------------------------------------
 
 namespace Aze {
+
+class CDatabase;
 
 class AZE_SHARED_EXPORT CCommit : public CObject
 {

@@ -22,17 +22,12 @@ CCommitCommand::CCommitCommand(CRepository* pRepository, const QString& sAuthor,
 
 bool CCommitCommand::execute()
 {
-    OUT_DEBUG(QString("sAuthor=%1").arg(m_sAuthor));
-    OUT_DEBUG(QString("sMessage=%1").arg(m_sMessage));
-
     // Check presence of current branch
     if (IS_NULL(m_pRepository->currentBranch()))
     {
         OUT_ERROR(CStrings::s_sTextNoCurrentBranch);
         return false;
     }
-
-    OUT_DEBUG(QString("current branch=%1").arg(m_pRepository->currentBranchName()));
 
     // Check presence and relevancy of staging commmit
     if (IS_NULL(m_pRepository->stagingCommit()) || m_pRepository->stagingCommit()->files().count() == 0)
@@ -47,16 +42,12 @@ bool CCommitCommand::execute()
     // Read the tip commit of the current branch
     if (not IS_NULL(m_pRepository->tipCommit()))
     {
-        OUT_DEBUG(QString("Existing tip commit id=%1").arg(m_pRepository->tipCommit()->id()));
-
         pNewCommit = m_pRepository->tipCommit()->clone(this);
         pNewCommit->clearParents();
         pNewCommit->addParent(m_pRepository->tipCommit()->id());
     }
     else
     {
-        OUT_DEBUG("No current tip commit");
-
         pNewCommit = new CCommit(this);
     }
 

@@ -10,6 +10,7 @@ HEADERS += \
     sources/commands/CStatusCommand.h \
     sources/commands/CLogCommand.h \
     sources/commands/CDiffCommand.h \
+    sources/commands/CMergeCommand.h \
     sources/objects/CBranch.h \
     sources/objects/CCommit.h \
     sources/objects/CDatabase.h \
@@ -32,6 +33,7 @@ SOURCES += \
     sources/commands/CStatusCommand.cpp \
     sources/commands/CLogCommand.cpp \
     sources/commands/CDiffCommand.cpp \
+    sources/commands/CMergeCommand.cpp \
     sources/objects/CBranch.cpp \
     sources/objects/CCommit.cpp \
     sources/objects/CDatabase.cpp \

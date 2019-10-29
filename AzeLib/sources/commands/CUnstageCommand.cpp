@@ -26,8 +26,6 @@ bool CUnstageCommand::execute()
     {
         QString sRelativeFileName = m_pRepository->database()->relativeFileName(sFileName);
 
-        OUT_DEBUG(sRelativeFileName);
-
         if (not unstageSingleFile(sRelativeFileName))
             return false;
     }
@@ -39,14 +37,15 @@ bool CUnstageCommand::execute()
 
 bool CUnstageCommand::unstageSingleFile(QString sRelativeFileName)
 {
-    OUT_DEBUG(sRelativeFileName);
-
     if (not IS_NULL(m_pRepository->stagingCommit()))
     {
         m_pRepository->stagingCommit()->removeFile(sRelativeFileName);
+        return true;
     }
 
     return false;
 }
+
+//-------------------------------------------------------------------------------------------------
 
 }

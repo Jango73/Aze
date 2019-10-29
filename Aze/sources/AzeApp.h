@@ -37,6 +37,12 @@ public:
     QString getArgumentValue(const QString& sName);
 
     //!
+    bool getSwitch(const QString& sName);
+
+    //!
+    bool checkRemainingSwitches();
+
+    //!
     int run();
 
     //!
@@ -44,9 +50,6 @@ public:
 
     //!
     void processWildCards();
-
-    //!
-    void processWildCardsRecurse(const QString& sCurrentDirectory, const QString& sWildCard);
 
     //-------------------------------------------------------------------------------------------------
     // User commands
@@ -89,6 +92,9 @@ public:
     int diff();
 
     //!
+    int merge();
+
+    //!
     int dump();
 
     //!
@@ -100,10 +106,10 @@ public:
 
 protected:
 
-    QStringList                             m_lArguments;
-    QStringList                             m_lSwitches;
-    QStringList                             m_lFilesAndIds;
-    CConstants::ECommand                    m_eCommand;
-    QTextStream*                            m_pOutStream;
-    Aze::CRepository*                       m_pRepository;
+    QStringList             m_lArguments;
+    QStringList             m_lSwitches;
+    QStringList             m_lFilesAndIds;
+    CConstants::ECommand    m_eCommand;
+    QTextStream*            m_pOutStream;
+    Aze::CRepository*       m_pRepository;
 };

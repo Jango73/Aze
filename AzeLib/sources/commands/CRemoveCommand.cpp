@@ -26,8 +26,6 @@ bool CRemoveCommand::execute()
     {
         QString sRelativeFileName = m_pRepository->database()->relativeFileName(sFileName);
 
-        OUT_DEBUG(sRelativeFileName);
-
         if (not removeSingleFile(sRelativeFileName))
             return false;
     }

@@ -10,12 +10,14 @@ QString CEnums::FileStatusSymbol(EFileStatus eStatus)
 {
     switch (eStatus)
     {
-    case eLoose: return "?";
+    case eLoose: return "~";
     case eClean: return " ";
-    case eModified: return "M";
+    case eModified: return "*";
     case eAdded: return "+";
     case eDeleted: return "-";
+    case eMissing: return "?";
     case eIgnored: return "!";
+    case eAll: return " ";
     }
 
     return "";

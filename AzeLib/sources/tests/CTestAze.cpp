@@ -322,6 +322,22 @@ void CTestAze::testAll()
     QVERIFY(m_pRepository->readStage());
     sActualDiff = m_pRepository->diff("tip~1", "tip");
     QVERIFY(sActualDiff == sExpectedDiff);
+
+    // Modify files
+    QVERIFY(createFile(sFile7Path, "File7-bis"));
+    QVERIFY(createFile(sFile8Path, "File8-bis"));
+
+    // 6th commit
+    lStage.clear();
+    lStage << sFile7Path;
+    lStage << sFile8Path;
+
+    commit(lStage, m_sAuthor, "Commit6");
+
+    // Merge Branch1 on trunk
+    CREATE_REPO;
+    QVERIFY(m_pRepository->readStage());
+    QVERIFY(m_pRepository->merge("Branch1"));
 }
 
 //-------------------------------------------------------------------------------------------------

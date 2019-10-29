@@ -35,7 +35,9 @@ public:
         eModified,
         eAdded,
         eDeleted,
-        eIgnored
+        eMissing,
+        eIgnored,
+        eAll
     };
 
     Q_ENUM(EBranchType)

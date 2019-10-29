@@ -21,7 +21,7 @@ public:
     enum ECommand
     {
         eCommandNone,
-        eCommandTest,
+        eCommandRunTests,
         eCommandInitRepository,
         eCommandCreateBranch,
         eCommandSwitchToBranch,
@@ -33,12 +33,13 @@ public:
         eCommandCommit,
         eCommandLog,
         eCommandDiff,
+        eCommandMerge,
         eCommandDump,
         eCommandHelp
     };
 
     // Commands
-    static const char* s_sSwitchTest;
+    static const char* s_sSwitchRunTests;
     static const char* s_sSwitchInitRepository;
     static const char* s_sSwitchCreateBranch;
     static const char* s_sSwitchSwitchToBranch;
@@ -50,15 +51,25 @@ public:
     static const char* s_sSwitchCommit;
     static const char* s_sSwitchLog;
     static const char* s_sSwitchDiff;
+    static const char* s_sSwitchMerge;
     static const char* s_sSwitchDump;
     static const char* s_sSwitchHelp;
 
     // Switches
     static const char* s_sSwitchAuthor;
     static const char* s_sSwitchMessage;
+    static const char* s_sSwitchAll;
+    static const char* s_sSwitchLoose;
+    static const char* s_sSwitchClean;
+    static const char* s_sSwitchModified;
+    static const char* s_sSwitchAdded;
+    static const char* s_sSwitchDeleted;
+    static const char* s_sSwitchMissing;
+    static const char* s_sSwitchIgnored;
 
     // Error codes
     static const int s_iError_None;
+    static const int s_iError_UnknownSwitch;
     static const int s_iError_NotARepository;
     static const int s_iError_NoBranchNameGiven;
     static const int s_iError_NoFileNameGiven;
@@ -70,6 +81,7 @@ public:
     static const int s_iError_CouldNotAddFiles;
     static const int s_iError_CouldNotMoveFiles;
     static const int s_iError_CouldNotRemoveFiles;
+    static const int s_iError_CouldNotMerge;
 
     // Other text strings
     static const QString s_sTextCommands;

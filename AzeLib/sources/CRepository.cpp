@@ -14,6 +14,7 @@
 #include "commands/CStatusCommand.h"
 #include "commands/CLogCommand.h"
 #include "commands/CDiffCommand.h"
+#include "commands/CMergeCommand.h"
 
 namespace Aze {
 
@@ -29,8 +30,6 @@ CRepository::CRepository(const QString& sRootPath, QObject* parent)
     , m_pTipCommit(nullptr)
 {
     m_sStagingCommitFileName = m_pDatabase->composeCommitFileName(CStrings::s_sStagingCommitFileName);
-
-    OUT_DEBUG(QString("m_sStagingCommitFileName: %1").arg(m_sStagingCommitFileName));
 
     // Check if repository is ok
     QDir dataPath(m_pDatabase->dataPath());
@@ -163,6 +162,13 @@ QString CRepository::diff(const QString& sFirst, const QString& sSecond)
 
 //-------------------------------------------------------------------------------------------------
 
+bool CRepository::merge(const QString& sName)
+{
+    return CMergeCommand(this, sName).execute();
+}
+
+//-------------------------------------------------------------------------------------------------
+
 QList<CFile> CRepository::fileStatus(const QStringList& lFileNames)
 {
     QList<CFile> lReturnValue;
@@ -195,9 +201,6 @@ bool CRepository::readCurrentBranch()
     QString sFileName = m_pDatabase->composeBranchFileName(m_sCurrentBranchName);
     setCurrentBranch(CBranch::fromNode(CXMLNode::load(sFileName), this));
 
-    OUT_DEBUG(QString("Current branch root: %1").arg(m_pCurrentBranch->rootCommitId()));
-    OUT_DEBUG(QString("Current branch tip: %1").arg(m_pCurrentBranch->tipCommitId()));
-
     return true;
 }
 
@@ -221,9 +224,7 @@ bool CRepository::readRootCommit()
     {
         if (IS_NULL(m_pRootCommit))
         {
-            QString sRootCommitId = m_pCurrentBranch->rootCommitId();
-            QString sTipFileName = m_pDatabase->composeCommitFileName(sRootCommitId);
-            setRootCommit(CCommit::fromFile(sTipFileName, this, sRootCommitId));
+            setRootCommit(m_pDatabase->getCommit(m_pCurrentBranch->rootCommitId(), this));
             return true;
         }
     }
@@ -239,9 +240,7 @@ bool CRepository::readTipCommit()
     {
         if (IS_NULL(m_pTipCommit))
         {
-            QString sTipCommitId = m_pCurrentBranch->tipCommitId();
-            QString sTipFileName = m_pDatabase->composeCommitFileName(sTipCommitId);
-            setTipCommit(CCommit::fromFile(sTipFileName, this, sTipCommitId));
+            setTipCommit(m_pDatabase->getCommit(m_pCurrentBranch->tipCommitId(), this));
             return true;
         }
     }
@@ -357,6 +356,7 @@ CCommit* CRepository::getCommitAncestor(CCommit* pCommit, QObject* parent, int i
         }
 
         // The first parent is the one to follow in order to stay on branch of pCommit
+        SAFE_DELETE(pAncestor);
         pAncestor = parents[0]->clone(parent);
         iDelta--;
         iGuard--;
@@ -372,6 +372,66 @@ CCommit* CRepository::getCommitAncestor(CCommit* pCommit, QObject* parent, int i
 
 //-------------------------------------------------------------------------------------------------
 
+QList<CCommit*> CRepository::getCommitAncestorList(CCommit* pCommit, QObject* parent, int iMaxCount)
+{
+    QList<CCommit*> lReturnValue;
+    CCommit* pAncestor = pCommit;
+    int iGuard = iMaxCount == 0 ? 999999 : iMaxCount;
+
+    while (true)
+    {
+        QList<CCommit*> parents = CCommit::parentList(m_pDatabase, pAncestor, this);
+
+        if (parents.count() == 0)
+        {
+            qDeleteAll(parents);
+            break;
+        }
+
+        // The first parent is the one to follow in order to stay on branch of pCommit
+        pAncestor = parents[0]->clone(parent);
+        lReturnValue << pAncestor;
+        iGuard--;
+
+        qDeleteAll(parents);
+
+        if (iGuard == 0)
+            break;
+    }
+
+    return lReturnValue;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+CCommit* CRepository::getCommitsCommonAncestor(CCommit* pCommit1, CCommit* pCommit2, QObject* parent)
+{
+    CCommit* pAncestor = nullptr;
+    QList<CCommit*> pAncestors1 = getCommitAncestorList(pCommit1, parent);
+    QList<CCommit*> pAncestors2 = getCommitAncestorList(pCommit2, parent);
+
+    for (CCommit* pCommit1 : pAncestors1)
+    {
+        QString sId = pCommit1->id();
+
+        for (CCommit* pCommit2 : pAncestors2)
+        {
+            if (sId == pCommit2->id())
+            {
+                pAncestor = pCommit1->clone(parent);
+                break;
+            }
+        }
+    }
+
+    qDeleteAll(pAncestors1);
+    qDeleteAll(pAncestors2);
+
+    return pAncestor;
+}
+
+//-------------------------------------------------------------------------------------------------
+
 CCommit* CRepository::workingDirectoryAsCommit(QObject* parent)
 {
     CCommit* pNewCommit = new CCommit(parent);
@@ -380,9 +440,7 @@ CCommit* CRepository::workingDirectoryAsCommit(QObject* parent)
     listFilesRecursive(lFiles, m_pDatabase->rootPath(), ".");
 
     for (QString sFile : lFiles)
-    {
         pNewCommit->addFile(sFile);
-    }
 
     return pNewCommit;
 }

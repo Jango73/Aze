@@ -64,6 +64,9 @@ public:
     static QString idFromFile(const QString& sFilename);
 
     //!
+    static bool idValid(const QString& sId);
+
+    //!
     static QString packIdAndFile(const QString& sId, const QString& sFilePath);
 
     //!

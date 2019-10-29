@@ -26,33 +26,51 @@ bool CStatusCommand::execute()
     if (IS_NULL(m_pResult))
         return false;
 
-    if (IS_NULL(m_pRepository->tipCommit()))
+    if (IS_NULL(m_pRepository->stagingCommit()))
         return false;
-
-    //    for (QString sFileName : m_lFileNames)
-    //    {
-    //        QString sRelativeFileName = m_pRepository->database()->relativeFileName(sFileName);
-
-    //        OUT_DEBUG(sRelativeFileName);
-    //    }
 
     QList<CFile> lReturnValue;
 
-    CCommit* pWorkCommit = m_pRepository->workingDirectoryAsCommit(this);
-    CCommit* pFromCommit = m_pRepository->tipCommit();
+    CCommit* pStageCommit = m_pRepository->stagingCommit();
+    CCommit* pFromCommit = nullptr;
 
-    for (QString sIdInWork : pWorkCommit->files().keys())
+    if (not IS_NULL(m_pRepository->tipCommit()))
     {
-        QString sRelativeName = pWorkCommit->files()[sIdInWork];
+        pFromCommit = m_pRepository->tipCommit();
+    }
+    else
+    {
+        pFromCommit = new CCommit(this);
+    }
+
+    CCommit* pWorkCommit = m_pRepository->workingDirectoryAsCommit(this);
+
+    QStringList lWorkFiles = pWorkCommit->files().values();
+    lWorkFiles.sort();
+
+    for (QString sRelativeName : lWorkFiles)
+    {
+        QString sIdInFrom = mapKeyForValue(pFromCommit->files(), sRelativeName);
+        QString sIdInWork = mapKeyForValue(pWorkCommit->files(), sRelativeName);
+        QString sIdInStage = mapKeyForValue(pStageCommit->files(), sRelativeName);
 
         CFile file;
         file.setRelativeName(sRelativeName);
 
-        QString sIdInFrom = mapKeyForValue(pFromCommit->files(), sRelativeName);
-
-        if (sIdInFrom.isEmpty())
+        if (not CUtils::idValid(sIdInFrom) && not CUtils::idValid(sIdInWork))
         {
-            file.setStatus(CEnums::eAdded);
+            file.setStatus(CEnums::eLoose);
+        }
+        else if (not CUtils::idValid(sIdInFrom) && CUtils::idValid(sIdInWork))
+        {
+            if (CUtils::idValid(sIdInStage))
+            {
+                file.setStatus(CEnums::eAdded);
+            }
+        }
+        else if (CUtils::idValid(sIdInFrom) && not CUtils::idValid(sIdInWork))
+        {
+            file.setStatus(CEnums::eDeleted);
         }
         else
         {
@@ -67,10 +85,6 @@ bool CStatusCommand::execute()
         }
 
         (*m_pResult) << file;
-    }
-
-    for (QString sIdInFrom : pFromCommit->files().keys())
-    {
     }
 
     return true;

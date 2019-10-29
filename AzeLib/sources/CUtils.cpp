@@ -131,6 +131,14 @@ QString CUtils::idFromFile(const QString& sFilename)
 
 //-------------------------------------------------------------------------------------------------
 
+bool CUtils::idValid(const QString& sId)
+{
+    // In hex strings, there are 2 characters per byte
+    return (sId.count() / 2) == QCryptographicHash::hashLength(QCryptographicHash::Sha1);
+}
+
+//-------------------------------------------------------------------------------------------------
+
 QString CUtils::packIdAndFile(const QString& sId, const QString& sFilePath)
 {
     return QString("%1%2%3").arg(sId).arg(CStrings::s_sPathIdSeparator).arg(sFilePath);

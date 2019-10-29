@@ -54,4 +54,6 @@ bool CStageCommand::addSingleFile(QString sRelativeFileName)
     return false;
 }
 
+//-------------------------------------------------------------------------------------------------
+
 }

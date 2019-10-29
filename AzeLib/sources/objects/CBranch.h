@@ -64,6 +64,9 @@ public:
 
     //!
     static CBranch* fromNode(const CXMLNode& xNode, QObject* parent);
+
+    //!
+    static CBranch* fromFile(const QString& sFileName, QObject* parent);
 };
 
 }

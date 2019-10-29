@@ -57,6 +57,9 @@ public:
     static const QString s_sTextNoCurrentBranch;
     static const QString s_sTextNoTipCommit;
     static const QString s_sTextCommitEmpty;
+    static const QString s_sTextBranchNameEmpty;
+    static const QString s_sTextNoSuchBranch;
+    static const QString s_sTextNoCommonAncestor;
 };
 
 }

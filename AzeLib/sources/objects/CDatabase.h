@@ -13,6 +13,8 @@
 // Application
 #include "../CEnums.h"
 #include "../CStrings.h"
+#include "CBranch.h"
+#include "CCommit.h"
 
 //-------------------------------------------------------------------------------------------------
 
@@ -45,6 +47,19 @@ public:
     CDatabase(const QString& sRootPath, QObject* parent = nullptr);
 
     //-------------------------------------------------------------------------------------------------
+    // Getters
+    //-------------------------------------------------------------------------------------------------
+
+    //!
+    CBranch* getBranch(const QString& sName, QObject* parent);
+
+    //!
+    CCommit* getCommit(const QString& sId, QObject* parent);
+
+    //!
+    QByteArray getObject(const QString& sId);
+
+    //-------------------------------------------------------------------------------------------------
     // Control methods
     //-------------------------------------------------------------------------------------------------
 
@@ -74,9 +89,6 @@ public:
 
     //!
     bool fileWithIdExists(const QString& sId);
-
-    //!
-    QByteArray fileContent(const QString& sId);
 
     //!
     QString printableFileContentById(const QString& sId);

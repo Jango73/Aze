@@ -6,6 +6,7 @@
 
 // qt-plus
 #include <CXMLNode.h>
+#include <File/CFileUtilities.h>
 
 // Aze
 #include "tests/CTestAze.h"
@@ -29,23 +30,28 @@ AzeApp::AzeApp(int argc, char *argv[])
 {
     CConstants::initCommandMap();
 
+    // Prepare arguments
     QStringList lRawArguments;
 
-    for (int Index = 0; Index < argc; Index++)
+    for (int Index = 1; Index < argc; Index++)
+    {
         lRawArguments << QString(argv[Index]);
+    }
+
+    QString lConcatenatedArguments = lRawArguments.join(" ");
 
     // Get some arguments from console if none provided
-    if (lRawArguments.count() < 2)
+    if (lRawArguments.count() < 1)
     {
         (*m_pOutStream) << QString("Please enter a command (%1)\n>").arg(m_pRepository->database()->rootPath());
         m_pOutStream->flush();
 
         QTextStream in(stdin);
-        QString value = in.readLine();
-
-        // Get arguments by splitting on space except for quoted strings
-        lRawArguments << value.split(QRegExp(" (?=[^\"]*(\"[^\"]*\"[^\"]*)*$)"));
+        lConcatenatedArguments = in.readLine();
     }
+
+    // Get arguments by splitting on space except for quoted strings
+    lRawArguments = lConcatenatedArguments.split(QRegExp(" (?=[^\"]*(\"[^\"]*\"[^\"]*)*$)"));
 
     // Remove quotes when needed
     for (QString sArg : lRawArguments)
@@ -59,11 +65,12 @@ AzeApp::AzeApp(int argc, char *argv[])
         m_lArguments << sArg;
     }
 
-    // Remove executable name
-    m_lArguments.takeFirst();
-
     // Get command
-    m_eCommand = CConstants::s_mCommands[m_lArguments.takeFirst().toLower()];
+    if (m_lArguments.count() > 0)
+    {
+        QString sCommand = m_lArguments.takeFirst().toLower();
+        m_eCommand = CConstants::s_mCommands[sCommand];
+    }
 
     // Split switches and files
     for (QString sArgument : m_lArguments)
@@ -102,6 +109,35 @@ QString AzeApp::getArgumentValue(const QString& sName)
 
 //-------------------------------------------------------------------------------------------------
 
+bool AzeApp::getSwitch(const QString& sName)
+{
+    for (int iIndex = 0; iIndex < m_lArguments.count(); iIndex++)
+    {
+        if (m_lArguments[iIndex] == sName)
+        {
+            m_lArguments.takeAt(iIndex);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+bool AzeApp::checkRemainingSwitches()
+{
+    if (m_lArguments.count() > 0)
+    {
+        OUT_ERROR(QString(tr("Unknown argument: %1")).arg(m_lArguments[0]));
+        return false;
+    }
+
+    return true;
+}
+
+//-------------------------------------------------------------------------------------------------
+
 int AzeApp::run()
 {
     switch (m_eCommand)
@@ -109,7 +145,7 @@ int AzeApp::run()
     case CConstants::eCommandNone:
         break;
 
-    case CConstants::eCommandTest:
+    case CConstants::eCommandRunTests:
         return test();
 
     case CConstants::eCommandInitRepository:
@@ -145,6 +181,9 @@ int AzeApp::run()
     case CConstants::eCommandDiff:
         return diff();
 
+    case CConstants::eCommandMerge:
+        return merge();
+
     case CConstants::eCommandDump:
         return dump();
 
@@ -173,68 +212,10 @@ bool AzeApp::isASainRepository()
 
 void AzeApp::processWildCards()
 {
-    QStringList lItems = m_lFilesAndIds;
-
-    m_lFilesAndIds.clear();
-
-    for (QString sText : lItems)
-    {
-        OUT_DEBUG(sText);
-
-        QString sFullName = QString("%1/%2")
-                .arg(m_pRepository->database()->rootPath())
-                .arg(sText);
-
-        if (QDir(sFullName).exists())
-        {
-            QString sDirectory = sFullName;
-            QString sWildCard = "";
-
-            if (sFullName.contains("*"))
-            {
-                sWildCard = sFullName.split(Aze::CStrings::s_sPathSep).last();
-                sDirectory.replace(sWildCard, "");
-            }
-
-            OUT_DEBUG(QString("sDirectory: %1").arg(sDirectory));
-            OUT_DEBUG(QString("sWildCard: %1").arg(sWildCard));
-
-            processWildCardsRecurse(sDirectory, sWildCard);
-        }
-        else if (QFile(sFullName).exists())
-        {
-            m_lFilesAndIds << sText;
-        }
-    }
-}
-
-//-------------------------------------------------------------------------------------------------
-
-void AzeApp::processWildCardsRecurse(const QString& sCurrentDirectory, const QString& sWildCard)
-{
-    OUT_DEBUG(QString("Processing dir %1").arg(sCurrentDirectory));
-
-    QStringList lFilter;
-    lFilter << sWildCard;
-
-    QDir dDirectory(sCurrentDirectory);
-    QFileInfoList lFiles = dDirectory.entryInfoList(lFilter, QDir::Files | QDir::NoSymLinks);
-
-    for (QFileInfo iFile : lFiles)
-    {
-        OUT_DEBUG(QString("Processing file %1").arg(iFile.fileName()));
-
-        QString sFile = QString("%1/%2").arg(iFile.absolutePath()).arg(iFile.fileName());
-        m_lFilesAndIds << sFile;
-    }
-
-    lFiles = dDirectory.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot | QDir::NoSymLinks);
-
-    for (QFileInfo iFile : lFiles)
-    {
-        QString sTargetDirectory = QString("%1/%2").arg(sCurrentDirectory).arg(iFile.fileName());
-        processWildCardsRecurse(sTargetDirectory, sWildCard);
-    }
+    m_lFilesAndIds = CFileUtilities::getInstance()->concernedFiles(
+                m_pRepository->database()->rootPath(),
+                m_lFilesAndIds
+                );
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -289,12 +270,45 @@ int AzeApp::status()
 {
     ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
 
+    ERROR_WHEN_FALSE(m_pRepository->readStage(), CConstants::s_iError_CouldNotReadStage);
+
+    (*m_pOutStream) << "Status of working directory files, on branch " << m_pRepository->currentBranchName() << ":\n";
+
+    QMap<Aze::CEnums::EFileStatus, bool> bVisibility;
+
+    bVisibility[Aze::CEnums::eLoose] = getSwitch(CConstants::s_sSwitchLoose);
+    bVisibility[Aze::CEnums::eClean] = getSwitch(CConstants::s_sSwitchClean);
+    bVisibility[Aze::CEnums::eModified] = getSwitch(CConstants::s_sSwitchModified);
+    bVisibility[Aze::CEnums::eAdded] = getSwitch(CConstants::s_sSwitchAdded);
+    bVisibility[Aze::CEnums::eDeleted] = getSwitch(CConstants::s_sSwitchDeleted);
+    bVisibility[Aze::CEnums::eMissing] = getSwitch(CConstants::s_sSwitchMissing);
+    bVisibility[Aze::CEnums::eIgnored] = getSwitch(CConstants::s_sSwitchIgnored);
+    bVisibility[Aze::CEnums::eAll] = getSwitch(CConstants::s_sSwitchAll);
+
+    ERROR_WHEN_FALSE(checkRemainingSwitches(), CConstants::s_iError_UnknownSwitch);
+
+    bool bAtLeastOneSwitchTrue = false;
+    for (bool bSwitch : bVisibility.values())
+        if (bSwitch)
+            bAtLeastOneSwitchTrue = true;
+
+    if (not bAtLeastOneSwitchTrue)
+    {
+        bVisibility[Aze::CEnums::eAdded] = true;
+        bVisibility[Aze::CEnums::eDeleted] = true;
+        bVisibility[Aze::CEnums::eModified] = true;
+        bVisibility[Aze::CEnums::eMissing] = true;
+    }
+
     QList<Aze::CFile> lFiles = m_pRepository->fileStatus(m_lFilesAndIds);
 
     for (Aze::CFile& file : lFiles)
     {
-        (*m_pOutStream) << Aze::CEnums::FileStatusSymbol(file.status()) << " " << file.relativeName();
-        (*m_pOutStream) << "\n";
+        if (bVisibility[Aze::CEnums::eAll] || bVisibility[file.status()])
+        {
+            (*m_pOutStream) << Aze::CEnums::FileStatusSymbol(file.status()) << " " << file.relativeName();
+            (*m_pOutStream) << "\n";
+        }
     }
 
     return 0;
@@ -413,6 +427,30 @@ int AzeApp::diff()
 
     (*m_pOutStream) << m_pRepository->diff(sFirst, sSecond);
     m_pOutStream->flush();
+
+    return CConstants::s_iError_None;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+int AzeApp::merge()
+{
+    ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
+
+    ERROR_WHEN_FALSE(m_pRepository->readStage(), CConstants::s_iError_CouldNotReadStage);
+
+    ERROR_WHEN_FALSE(m_lFilesAndIds.count() > 0, CConstants::s_iError_NoBranchNameGiven);
+
+    QString sBranchName = m_lFilesAndIds.takeFirst();
+
+    if (sBranchName == m_pRepository->currentBranchName())
+    {
+        (*m_pOutStream) << "Sorry, you can't merge a branch on itself..." << "\n";
+        m_pOutStream->flush();
+        return CConstants::s_iError_CouldNotMerge;
+    }
+
+    ERROR_WHEN_FALSE(m_pRepository->merge(sBranchName), CConstants::s_iError_CouldNotMerge);
 
     return CConstants::s_iError_None;
 }

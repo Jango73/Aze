@@ -92,6 +92,9 @@ public:
     QString diff(const QString& sFirst, const QString& sSecond);
 
     //!
+    bool merge(const QString& sName);
+
+    //!
     CCommit* getStagingCommit();
 
     //! Reads the stage commit
@@ -133,6 +136,12 @@ public:
 
     //!
     CCommit* getCommitAncestor(CCommit* pCommit, QObject* parent = nullptr, int iDelta = 1);
+
+    //!
+    QList<CCommit*> getCommitAncestorList(CCommit* pCommit, QObject* parent = nullptr, int iMaxCount = 0);
+
+    //!
+    CCommit* getCommitsCommonAncestor(CCommit* pCommit1, CCommit* pCommit2, QObject* parent = nullptr);
 
     //!
     CCommit* workingDirectoryAsCommit(QObject* parent);
