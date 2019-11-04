@@ -6,6 +6,7 @@
 // Application
 #include "CTestAze.h"
 #include "../CRepository.h"
+#include "../CUtils.h"
 
 namespace Aze {
 
@@ -180,6 +181,24 @@ void CTestAze::testAll()
     QString sFile7Path = "./Files/Folder3/File7.txt";
     QString sFile8Path = "./Files/Folder3/File8.txt";
 
+    QString sFile1Content1 = "File1";
+    QString sFile2Content1 = "File2";
+    QString sFile3Content1 = "File3";
+    QString sFile4Content1 = "File4";
+    QString sFile5Content1 = "File5";
+    QString sFile6Content1 = "File6";
+    QString sFile7Content1 = "File7";
+    QString sFile8Content1 = "File8";
+
+    QString sFile1Content2 = "File1-bis";
+    QString sFile2Content2 = "File2-bis";
+    QString sFile3Content2 = "File3-bis";
+    QString sFile4Content2 = "File4-bis";
+    QString sFile5Content2 = "File5-bis";
+    QString sFile6Content2 = "File6-bis";
+    QString sFile7Content2 = "File7-bis";
+    QString sFile8Content2 = "File8-bis";
+
     QDir rootDir(m_sRootPath);
     QVERIFY(rootDir.mkdir(m_sFilesFolderName));
 
@@ -188,14 +207,12 @@ void CTestAze::testAll()
     QVERIFY(filesDir.mkdir(sFolder2Name));
     QVERIFY(filesDir.mkdir(sFolder3Name));
 
-    QVERIFY(createFile(sFile1Path, "File1"));
-    QVERIFY(createFile(sFile2Path, "File2"));
-    QVERIFY(createFile(sFile3Path, "File3"));
-    QVERIFY(createFile(sFile4Path, "File4"));
-    QVERIFY(createFile(sFile5Path, "File5"));
-    QVERIFY(createFile(sFile6Path, "File6"));
-    QVERIFY(createFile(sFile7Path, "File7"));
-    QVERIFY(createFile(sFile8Path, "File8"));
+    QVERIFY(createFile(sFile1Path, sFile1Content1));
+    QVERIFY(createFile(sFile2Path, sFile2Content1));
+    QVERIFY(createFile(sFile3Path, sFile3Content1));
+    QVERIFY(createFile(sFile4Path, sFile4Content1));
+    QVERIFY(createFile(sFile5Path, sFile5Content1));
+    QVERIFY(createFile(sFile6Path, sFile6Content1));
 
     // 1st commit
     lStage.clear();
@@ -207,8 +224,8 @@ void CTestAze::testAll()
     commit(lStage, m_sAuthor, "Commit1");
 
     // Modify files
-    QVERIFY(createFile(sFile1Path, "File1-bis"));
-    QVERIFY(createFile(sFile2Path, "File2-bis"));
+    QVERIFY(createFile(sFile1Path, sFile1Content2));
+    QVERIFY(createFile(sFile2Path, sFile2Content2));
 
     // 2nd commit
     lStage.clear();
@@ -218,26 +235,18 @@ void CTestAze::testAll()
     commit(lStage, m_sAuthor, "Commit2");
 
     // Diff commits 1 and 2
-    QString sExpectedDiff = QStringList
-            ({
-                 "diff --aze Files/File2.txt Files/File2.txt",
-                 "@@ -1,1 +1,1 @@",
-                 "-File2",
-                 "+File2-bis",
-                 "diff --aze Files/File1.txt Files/File1.txt",
-                 "@@ -1,1 +1,1 @@",
-                 "-File1",
-                 "+File1-bis"
-             }).join(CStrings::s_sNewLine) + CStrings::s_sNewLine;
-
     CREATE_REPO;
     QVERIFY(m_pRepository->readStage());
     QString sActualDiff = m_pRepository->diff("root", "tip");
-    QVERIFY(sActualDiff == sExpectedDiff);
+
+//    QString sFile1Patched = CUtils::applyUnifiedDiff(sFile1Content1, sActualDiff);
+//    QString sFile2Patched = CUtils::applyUnifiedDiff(sFile2Content1, sActualDiff);
+//    QVERIFY(sFile1Content2 == sFile1Patched);
+//    QVERIFY(sFile2Content2 == sFile2Patched);
 
     // Modify files
-    QVERIFY(createFile(sFile3Path, "File3-bis"));
-    QVERIFY(createFile(sFile4Path, "File4-bis"));
+    QVERIFY(createFile(sFile3Path, sFile3Content2));
+    QVERIFY(createFile(sFile4Path, sFile4Content2));
 
     // 3rd commit
     lStage.clear();
@@ -247,22 +256,13 @@ void CTestAze::testAll()
     commit(lStage, m_sAuthor, "Commit3");
 
     // Diff commits 2 and 3
-    sExpectedDiff = QStringList
-            ({
-                 "diff --aze Files/Folder1/File4.txt Files/Folder1/File4.txt",
-                 "@@ -1,1 +1,1 @@",
-                 "-File4",
-                 "+File4-bis",
-                 "diff --aze Files/Folder1/File3.txt Files/Folder1/File3.txt",
-                 "@@ -1,1 +1,1 @@",
-                 "-File3",
-                 "+File3-bis"
-             }).join(CStrings::s_sNewLine) + CStrings::s_sNewLine;
-
-    CREATE_REPO;
-    QVERIFY(m_pRepository->readStage());
-    sActualDiff = m_pRepository->diff("tip~1", "tip");
-    QVERIFY(sActualDiff == sExpectedDiff);
+//    CREATE_REPO;
+//    QVERIFY(m_pRepository->readStage());
+//    sActualDiff = m_pRepository->diff("tip~1", "tip");
+//    QString sFile3Patched = CUtils::applyUnifiedDiff(sFile3Content1, sActualDiff);
+//    QString sFile4Patched = CUtils::applyUnifiedDiff(sFile4Content1, sActualDiff);
+//    QVERIFY(sFile3Content2 == sFile3Patched);
+//    QVERIFY(sFile4Content2 == sFile4Patched);
 
     // 4th commit
     lStage.clear();
@@ -272,31 +272,27 @@ void CTestAze::testAll()
     commit(lStage, m_sAuthor, "Commit4");
 
     // Diff commits 3 and 4
-    sExpectedDiff = QStringList
-            ({
-                 "diff --aze Files/Folder2/File6.txt Files/Folder2/File6.txt",
-                 "@@ -1,1 +1,1 @@",
-                 "-",
-                 "+File6",
-                 "diff --aze Files/Folder2/File5.txt Files/Folder2/File5.txt",
-                 "@@ -1,1 +1,1 @@",
-                 "-",
-                 "+File5"
-             }).join(CStrings::s_sNewLine) + CStrings::s_sNewLine;
+//    CREATE_REPO;
+//    QVERIFY(m_pRepository->readStage());
+//    sActualDiff = m_pRepository->diff("tip~1", "tip");
+//    QString sFile5Patched = CUtils::applyUnifiedDiff(sFile5Content1, sActualDiff);
+//    QString sFile6Patched = CUtils::applyUnifiedDiff(sFile6Content1, sActualDiff);
+//    QVERIFY(sFile5Content2 == sFile5Patched);
+//    QVERIFY(sFile6Content2 == sFile6Patched);
 
-    CREATE_REPO;
-    QVERIFY(m_pRepository->readStage());
-    sActualDiff = m_pRepository->diff("tip~1", "tip");
-    QVERIFY(sActualDiff == sExpectedDiff);
-
-    // Branch 1
+    // Create branch 1
     CREATE_REPO;
     QVERIFY(m_pRepository->createBranch("Branch1"));
 
+    // Switch to branch 1
     CREATE_REPO;
     QVERIFY(m_pRepository->switchToBranch("Branch1"));
     QVERIFY(m_pRepository->writeCurrentBranch());
     QVERIFY(m_pRepository->writeGeneralInfo());
+
+    // Create files
+    QVERIFY(createFile(sFile7Path, sFile7Content1));
+    QVERIFY(createFile(sFile8Path, sFile8Content1));
 
     // 5th commit
     lStage.clear();
@@ -306,26 +302,11 @@ void CTestAze::testAll()
     commit(lStage, m_sAuthor, "Commit5");
 
     // Diff commits 4 and 5
-    sExpectedDiff = QStringList
-            ({
-                 "diff --aze Files/Folder3/File7.txt Files/Folder3/File7.txt",
-                 "@@ -1,1 +1,1 @@",
-                 "-",
-                 "+File7",
-                 "diff --aze Files/Folder3/File8.txt Files/Folder3/File8.txt",
-                 "@@ -1,1 +1,1 @@",
-                 "-",
-                 "+File8"
-             }).join(CStrings::s_sNewLine) + CStrings::s_sNewLine;
-
-    CREATE_REPO;
-    QVERIFY(m_pRepository->readStage());
-    sActualDiff = m_pRepository->diff("tip~1", "tip");
-    QVERIFY(sActualDiff == sExpectedDiff);
+    // TODO
 
     // Modify files
-    QVERIFY(createFile(sFile7Path, "File7-bis"));
-    QVERIFY(createFile(sFile8Path, "File8-bis"));
+    QVERIFY(createFile(sFile7Path, sFile7Content2));
+    QVERIFY(createFile(sFile8Path, sFile8Content2));
 
     // 6th commit
     lStage.clear();
@@ -334,10 +315,24 @@ void CTestAze::testAll()
 
     commit(lStage, m_sAuthor, "Commit6");
 
+    // Switch to trunk
+    CREATE_REPO;
+    QVERIFY(m_pRepository->switchToBranch("trunk"));
+    QVERIFY(m_pRepository->writeCurrentBranch());
+    QVERIFY(m_pRepository->writeGeneralInfo());
+
     // Merge Branch1 on trunk
     CREATE_REPO;
-    QVERIFY(m_pRepository->readStage());
     QVERIFY(m_pRepository->merge("Branch1"));
+
+    // Check merged files content
+    QString sMergedFile7Content;
+    QString sMergedFile8Content;
+    readFile(sFile7Path, sMergedFile7Content);
+    readFile(sFile8Path, sMergedFile8Content);
+
+    QVERIFY(sMergedFile7Content == sFile7Content2);
+    QVERIFY(sMergedFile8Content == sFile8Content2);
 }
 
 //-------------------------------------------------------------------------------------------------

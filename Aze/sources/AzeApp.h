@@ -77,6 +77,9 @@ public:
     int unstage();
 
     //!
+    int revert();
+
+    //!
     int move();
 
     //!

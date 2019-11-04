@@ -6,12 +6,13 @@
 
 // Application
 #include "CBaseCommand.h"
+#include "../objects/CCommit.h"
 
 //-------------------------------------------------------------------------------------------------
 
 namespace Aze {
 
-class AZE_SHARED_EXPORT CLogCommand : public CBaseCommand
+class AZE_SHARED_EXPORT CRevertCommand : public CBaseCommand
 {
     Q_OBJECT
 
@@ -21,7 +22,11 @@ public:
     // Constructor
     //-------------------------------------------------------------------------------------------------
 
-    CLogCommand(CRepository* pRepository, const QStringList& lFileNames, QString* pResult, int iStart = 0, int iCount = 0);
+    //!
+    CRevertCommand(CRepository* pRepository, const QStringList& lFileNames);
+
+    //!
+    CRevertCommand(CRepository* pRepository, CCommit* pWorkingDirectory);
 
     //-------------------------------------------------------------------------------------------------
     // Control methods
@@ -30,16 +35,17 @@ public:
     //!
     virtual bool execute() override;
 
+    //!
+    bool revertSingleFile(QString sRelativeFileName);
+
     //-------------------------------------------------------------------------------------------------
     // Properties
     //-------------------------------------------------------------------------------------------------
 
 protected:
 
-    QStringList m_lFileNames;
-    QString*    m_pResult;
-    int         m_iStart;
-    int         m_iCount;
+    CCommit*        m_pWorkingDirectory;
+    QStringList     m_lFileNames;
 };
 
 }

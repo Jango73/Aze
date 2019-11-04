@@ -14,6 +14,7 @@ const char* CConstants::s_sSwitchSwitchToBranch             = "set-branch";
 const char* CConstants::s_sSwitchShowStatus                 = "status";
 const char* CConstants::s_sSwitchStage                      = "stage";
 const char* CConstants::s_sSwitchUnstage                    = "unstage";
+const char* CConstants::s_sSwitchRevert                     = "revert";
 const char* CConstants::s_sSwitchMove                       = "move";
 const char* CConstants::s_sSwitchRemove                     = "remove";
 const char* CConstants::s_sSwitchCommit                     = "commit";
@@ -33,6 +34,8 @@ const char* CConstants::s_sSwitchAdded                      = "--added";
 const char* CConstants::s_sSwitchDeleted                    = "--deleted";
 const char* CConstants::s_sSwitchMissing                    = "--missing";
 const char* CConstants::s_sSwitchIgnored                    = "--ignored";
+const char* CConstants::s_sSwitchStart                      = "--start";
+const char* CConstants::s_sSwitchCount                      = "--count";
 
 const int CConstants::s_iError_None                         = 0;
 const int CConstants::s_iError_UnknownSwitch                = 1;
@@ -45,11 +48,14 @@ const int CConstants::s_iError_CouldNotReadStage            = 7;
 const int CConstants::s_iError_CouldNotWriteStage           = 8;
 const int CConstants::s_iError_CouldNotWriteCurrentBranch   = 9;
 const int CConstants::s_iError_CouldNotAddFiles             = 10;
-const int CConstants::s_iError_CouldNotMoveFiles            = 11;
-const int CConstants::s_iError_CouldNotRemoveFiles          = 12;
-const int CConstants::s_iError_CouldNotMerge                = 13;
+const int CConstants::s_iError_CouldNotRevertFiles          = 11;
+const int CConstants::s_iError_CouldNotMoveFiles            = 12;
+const int CConstants::s_iError_CouldNotRemoveFiles          = 13;
+const int CConstants::s_iError_CouldNotMerge                = 14;
 
 const QString CConstants::s_sTextCommands                   = tr("Commands");
+const QString CConstants::s_sTextYouAreNowOnBranch          = tr("You are now on branch %1.");
+const QString CConstants::s_sTextYouAreAlreadyOnBranch      = tr("You are already on branch %1.");
 
 QMap<QString, CConstants::ECommand> CConstants::s_mCommands;
 QMap<QString, QString> CConstants::s_mHelp;
@@ -65,6 +71,7 @@ void CConstants::initCommandMap()
     s_mCommands[CConstants::s_sSwitchShowStatus]        = CConstants::eCommandShowStatus;
     s_mCommands[CConstants::s_sSwitchStage]             = CConstants::eCommandStage;
     s_mCommands[CConstants::s_sSwitchUnstage]           = CConstants::eCommandUnstage;
+    s_mCommands[CConstants::s_sSwitchRevert]            = CConstants::eCommandRevert;
     s_mCommands[CConstants::s_sSwitchMove]              = CConstants::eCommandMove;
     s_mCommands[CConstants::s_sSwitchRemove]            = CConstants::eCommandRemove;
     s_mCommands[CConstants::s_sSwitchCommit]            = CConstants::eCommandCommit;
@@ -81,6 +88,7 @@ void CConstants::initCommandMap()
     s_mHelp[CConstants::s_sSwitchShowStatus]            = tr("Shows status of files.");
     s_mHelp[CConstants::s_sSwitchStage]                 = tr("Adds some files to the staged.");
     s_mHelp[CConstants::s_sSwitchUnstage]               = tr("Removes some files from the stage.");
+    s_mHelp[CConstants::s_sSwitchRevert]                = tr("Reverts some files using tip commit.");
     s_mHelp[CConstants::s_sSwitchMove]                  = tr("Moves some files.");
     s_mHelp[CConstants::s_sSwitchRemove]                = tr("Removes some files from tracking.");
     s_mHelp[CConstants::s_sSwitchCommit]                = tr("Creates a commit from the stage.");

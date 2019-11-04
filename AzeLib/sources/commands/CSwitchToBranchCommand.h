@@ -6,12 +6,13 @@
 
 // Application
 #include "CBaseCommand.h"
+#include "../objects/CCommit.h"
 
 //-------------------------------------------------------------------------------------------------
 
 namespace Aze {
 
-class AZE_SHARED_EXPORT CLogCommand : public CBaseCommand
+class AZE_SHARED_EXPORT CSwitchToBranchCommand : public CBaseCommand
 {
     Q_OBJECT
 
@@ -21,7 +22,7 @@ public:
     // Constructor
     //-------------------------------------------------------------------------------------------------
 
-    CLogCommand(CRepository* pRepository, const QStringList& lFileNames, QString* pResult, int iStart = 0, int iCount = 0);
+    CSwitchToBranchCommand(CRepository* pRepository, const QString& sBranchName);
 
     //-------------------------------------------------------------------------------------------------
     // Control methods
@@ -36,10 +37,7 @@ public:
 
 protected:
 
-    QStringList m_lFileNames;
-    QString*    m_pResult;
-    int         m_iStart;
-    int         m_iCount;
+    QString     m_sBranchName;
 };
 
 }

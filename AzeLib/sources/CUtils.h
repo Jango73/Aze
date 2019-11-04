@@ -43,6 +43,12 @@ public:
     static QString getTextFileContent(const QString& sFileName);
 
     //!
+    static bool putBinaryFileContent(const QString& sFileName, const QByteArray& baContent);
+
+    //!
+    static bool putTextFileContent(const QString& sFileName, const QString& sContent);
+
+    //!
     static QDictionary dictionaryFromNode(const CXMLNode& xNode);
 
     //!
@@ -61,7 +67,7 @@ public:
     static QString idFromString(const QString& sText);
 
     //!
-    static QString idFromFile(const QString& sFilename);
+    static QString idFromFileContent(const QString& sFilename);
 
     //!
     static bool idValid(const QString& sId);
@@ -76,7 +82,16 @@ public:
     static std::vector<std::string> textToStdStringVector(const QString& sText);
 
     //!
+    static QString fileDiffHeader(const QString& sLeft, const QString& sRight);
+
+    //!
     static QString unifiedDiff(const QString& sText1, const QString& sText2);
+
+    //!
+    static QString applyUnifiedDiff(const QString& sText, const QString& sDiff);
+
+    //!
+    static QString printableUnifiedDiff(const QString& sText);
 };
 
 }

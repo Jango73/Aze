@@ -56,11 +56,11 @@ bool CCommitCommand::execute()
 
     // Finalize and save the commit
     // We need all the info to generate the commit's id
+    pNewCommit->setIsMerge(m_pRepository->stagingCommit()->isMerge());
     pNewCommit->setAuthor(m_sAuthor);
     pNewCommit->setMessage(m_sMessage);
 
-    QString sNewCommitId = pNewCommit->generateId();
-    pNewCommit->toFile(m_pRepository->database()->composeCommitFileName(sNewCommitId));
+    QString sNewCommitId = m_pRepository->database()->storeCommit(pNewCommit);
 
     // Update the current branch
     m_pRepository->currentBranch()->setTipCommitId(sNewCommitId);

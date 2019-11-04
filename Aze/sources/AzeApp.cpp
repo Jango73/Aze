@@ -10,6 +10,7 @@
 
 // Aze
 #include "tests/CTestAze.h"
+#include "CUtils.h"
 
 // Application
 #include "AzeApp.h"
@@ -166,6 +167,9 @@ int AzeApp::run()
     case CConstants::eCommandUnstage:
         return unstage();
 
+    case CConstants::eCommandRevert:
+        return revert();
+
     case CConstants::eCommandMove:
         return move();
 
@@ -255,11 +259,21 @@ int AzeApp::switchToBranch()
 
     ERROR_WHEN_FALSE(m_lFilesAndIds.count() > 0, CConstants::s_iError_NoBranchNameGiven);
 
-    ERROR_WHEN_FALSE(m_pRepository->switchToBranch(m_lFilesAndIds[0]), CConstants::s_iError_CouldNotSetCurrentBranch);
+    QString sBranchName = m_lFilesAndIds[0];
+
+    ERROR_WHEN_FALSE_PRINT(
+                sBranchName != m_pRepository->currentBranchName(),
+                QString(CConstants::s_sTextYouAreAlreadyOnBranch).arg(sBranchName),
+                CConstants::s_iError_None
+                );
+
+    ERROR_WHEN_FALSE(m_pRepository->switchToBranch(sBranchName), CConstants::s_iError_CouldNotSetCurrentBranch);
 
     ERROR_WHEN_FALSE(m_pRepository->writeCurrentBranch(), CConstants::s_iError_CouldNotWriteCurrentBranch);
 
     ERROR_WHEN_FALSE(m_pRepository->writeGeneralInfo(), CConstants::s_iError_CouldNotWriteCurrentBranch);
+
+    (*m_pOutStream) << QString(CConstants::s_sTextYouAreNowOnBranch).arg(sBranchName) << "\n";
 
     return CConstants::s_iError_None;
 }
@@ -272,42 +286,49 @@ int AzeApp::status()
 
     ERROR_WHEN_FALSE(m_pRepository->readStage(), CConstants::s_iError_CouldNotReadStage);
 
-    (*m_pOutStream) << "Status of working directory files, on branch " << m_pRepository->currentBranchName() << ":\n";
-
-    QMap<Aze::CEnums::EFileStatus, bool> bVisibility;
-
-    bVisibility[Aze::CEnums::eLoose] = getSwitch(CConstants::s_sSwitchLoose);
-    bVisibility[Aze::CEnums::eClean] = getSwitch(CConstants::s_sSwitchClean);
-    bVisibility[Aze::CEnums::eModified] = getSwitch(CConstants::s_sSwitchModified);
-    bVisibility[Aze::CEnums::eAdded] = getSwitch(CConstants::s_sSwitchAdded);
-    bVisibility[Aze::CEnums::eDeleted] = getSwitch(CConstants::s_sSwitchDeleted);
-    bVisibility[Aze::CEnums::eMissing] = getSwitch(CConstants::s_sSwitchMissing);
-    bVisibility[Aze::CEnums::eIgnored] = getSwitch(CConstants::s_sSwitchIgnored);
-    bVisibility[Aze::CEnums::eAll] = getSwitch(CConstants::s_sSwitchAll);
-
-    ERROR_WHEN_FALSE(checkRemainingSwitches(), CConstants::s_iError_UnknownSwitch);
-
-    bool bAtLeastOneSwitchTrue = false;
-    for (bool bSwitch : bVisibility.values())
-        if (bSwitch)
-            bAtLeastOneSwitchTrue = true;
-
-    if (not bAtLeastOneSwitchTrue)
-    {
-        bVisibility[Aze::CEnums::eAdded] = true;
-        bVisibility[Aze::CEnums::eDeleted] = true;
-        bVisibility[Aze::CEnums::eModified] = true;
-        bVisibility[Aze::CEnums::eMissing] = true;
-    }
-
     QList<Aze::CFile> lFiles = m_pRepository->fileStatus(m_lFilesAndIds);
 
-    for (Aze::CFile& file : lFiles)
+    if (lFiles.isEmpty())
     {
-        if (bVisibility[Aze::CEnums::eAll] || bVisibility[file.status()])
+        (*m_pOutStream) << "All files are clean, on branch " << m_pRepository->currentBranchName() << "\n";
+    }
+    else
+    {
+        (*m_pOutStream) << "Status of working directory files, on branch " << m_pRepository->currentBranchName() << ":\n";
+
+        QMap<Aze::CEnums::EFileStatus, bool> bVisibility;
+
+        bVisibility[Aze::CEnums::eLoose] = getSwitch(CConstants::s_sSwitchLoose);
+        bVisibility[Aze::CEnums::eClean] = getSwitch(CConstants::s_sSwitchClean);
+        bVisibility[Aze::CEnums::eModified] = getSwitch(CConstants::s_sSwitchModified);
+        bVisibility[Aze::CEnums::eAdded] = getSwitch(CConstants::s_sSwitchAdded);
+        bVisibility[Aze::CEnums::eDeleted] = getSwitch(CConstants::s_sSwitchDeleted);
+        bVisibility[Aze::CEnums::eMissing] = getSwitch(CConstants::s_sSwitchMissing);
+        bVisibility[Aze::CEnums::eIgnored] = getSwitch(CConstants::s_sSwitchIgnored);
+        bVisibility[Aze::CEnums::eAll] = getSwitch(CConstants::s_sSwitchAll);
+
+        ERROR_WHEN_FALSE(checkRemainingSwitches(), CConstants::s_iError_UnknownSwitch);
+
+        bool bAtLeastOneSwitchTrue = false;
+        for (bool bSwitch : bVisibility.values())
+            if (bSwitch)
+                bAtLeastOneSwitchTrue = true;
+
+        if (not bAtLeastOneSwitchTrue)
         {
-            (*m_pOutStream) << Aze::CEnums::FileStatusSymbol(file.status()) << " " << file.relativeName();
-            (*m_pOutStream) << "\n";
+            bVisibility[Aze::CEnums::eAdded] = true;
+            bVisibility[Aze::CEnums::eDeleted] = true;
+            bVisibility[Aze::CEnums::eModified] = true;
+            bVisibility[Aze::CEnums::eMissing] = true;
+        }
+
+        for (Aze::CFile& file : lFiles)
+        {
+            if (bVisibility[Aze::CEnums::eAll] || bVisibility[file.status()])
+            {
+                (*m_pOutStream) << Aze::CEnums::FileStatusSymbol(file.status()) << " " << file.relativeName();
+                (*m_pOutStream) << "\n";
+            }
         }
     }
 
@@ -348,6 +369,21 @@ int AzeApp::unstage()
     ERROR_WHEN_FALSE(m_pRepository->unstage(m_lFilesAndIds), CConstants::s_iError_CouldNotAddFiles);
 
     ERROR_WHEN_FALSE(m_pRepository->writeStage(), CConstants::s_iError_CouldNotWriteStage);
+
+    return CConstants::s_iError_None;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+int AzeApp::revert()
+{
+    ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
+
+    ERROR_WHEN_FALSE(m_lFilesAndIds.count() > 0, CConstants::s_iError_NoFileNameGiven);
+
+    processWildCards();
+
+    ERROR_WHEN_FALSE(m_pRepository->revert(m_lFilesAndIds), CConstants::s_iError_CouldNotRevertFiles);
 
     return CConstants::s_iError_None;
 }
@@ -408,7 +444,10 @@ int AzeApp::log()
 {
     ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
 
-    (*m_pOutStream) << m_pRepository->log(m_lFilesAndIds);
+    int iStart = getArgumentValue(CConstants::s_sSwitchStart).toInt();
+    int iCount = getArgumentValue(CConstants::s_sSwitchCount).toInt();
+
+    (*m_pOutStream) << m_pRepository->log(m_lFilesAndIds, iStart, iCount);
     m_pOutStream->flush();
 
     return CConstants::s_iError_None;
@@ -425,7 +464,7 @@ int AzeApp::diff()
     QString sFirst = m_lFilesAndIds.isEmpty() ? "" : m_lFilesAndIds.takeFirst();
     QString sSecond = m_lFilesAndIds.isEmpty() ? "" : m_lFilesAndIds.takeFirst();
 
-    (*m_pOutStream) << m_pRepository->diff(sFirst, sSecond);
+    (*m_pOutStream) << Aze::CUtils::printableUnifiedDiff(m_pRepository->diff(sFirst, sSecond));
     m_pOutStream->flush();
 
     return CConstants::s_iError_None;

@@ -1,17 +1,23 @@
 
 // std
-#include <string>
-#include <sstream>
-
-// dtl
-#include <dtl.hpp>
+//#include <string>
+//#include <sstream>
 
 // Qt
+#include <QString>
+#include <QList>
+#include <QMap>
+#include <QPair>
+#include <QVariant>
 #include <QDir>
 #include <QFile>
 #include <QBuffer>
 #include <QDataStream>
 #include <QCryptographicHash>
+
+// diff-match-patch
+// https://github.com/google/diff-match-patch
+#include "diff_match_patch.h"
 
 // Application
 #include "CUtils.h"
@@ -19,7 +25,7 @@
 
 namespace Aze {
 
-using dtl::Diff;
+//using dtl::Diff;
 
 //-------------------------------------------------------------------------------------------------
 
@@ -116,7 +122,7 @@ QString CUtils::idFromString(const QString& sText)
 
 //-------------------------------------------------------------------------------------------------
 
-QString CUtils::idFromFile(const QString& sFilename)
+QString CUtils::idFromFileContent(const QString& sFilename)
 {
     QString sId;
     QFile file(sFilename);
@@ -184,6 +190,30 @@ QString CUtils::getTextFileContent(const QString& sFileName)
 
 //-------------------------------------------------------------------------------------------------
 
+bool CUtils::putBinaryFileContent(const QString& sFileName, const QByteArray& baData)
+{
+    QFile tInputFile(sFileName);
+
+    if (tInputFile.open(QIODevice::WriteOnly))
+    {
+        tInputFile.write(baData);
+        tInputFile.close();
+
+        return true;
+    }
+
+    return false;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+bool CUtils::putTextFileContent(const QString& sFileName, const QString& sContent)
+{
+    return putBinaryFileContent(sFileName, sContent.toUtf8());
+}
+
+//-------------------------------------------------------------------------------------------------
+
 std::vector<std::string> CUtils::textToStdStringVector(const QString& sText)
 {
     std::vector<std::string> vReturnValue;
@@ -195,20 +225,67 @@ std::vector<std::string> CUtils::textToStdStringVector(const QString& sText)
 
 //-------------------------------------------------------------------------------------------------
 
+QString CUtils::fileDiffHeader(const QString& sLeft, const QString& sRight)
+{
+    QString sOutput;
+
+    sOutput += QString("%1 %2 %3%4")
+            .arg(CStrings::s_sDiffChunkHeader)
+            .arg(sLeft)
+            .arg(sRight)
+            .arg(CStrings::s_sNewLine);
+
+    sOutput += QString("--- %1%2")
+            .arg(sLeft)
+            .arg(CStrings::s_sNewLine);
+
+    sOutput += QString("+++ %1%2")
+            .arg(sRight)
+            .arg(CStrings::s_sNewLine);
+
+    return sOutput;
+}
+
+//-------------------------------------------------------------------------------------------------
+
 QString CUtils::unifiedDiff(const QString& sText1, const QString& sText2)
 {
-    std::vector<std::string> lText1 = CUtils::textToStdStringVector(sText1);
-    std::vector<std::string> lText2 = CUtils::textToStdStringVector(sText2);
+//    std::wstring wText1 = sText1.toStdWString();
+//    std::wstring wText2 = sText2.toStdWString();
+//    diff_match_patch<std::wstring> dmp;
+//    return QString::fromStdWString(dmp.patch_toText(dmp.patch_make(wText1, wText2)));
+    diff_match_patch diff;
+    return diff.patch_toText(diff.patch_make(sText1, sText2));
+}
 
-    std::stringstream strStream;
+//-------------------------------------------------------------------------------------------------
 
-    Diff<std::string> diff(lText1, lText2);
-    diff.onHuge();
-    diff.compose();
-    diff.composeUnifiedHunks();
-    diff.printUnifiedFormat(strStream);
+QString CUtils::applyUnifiedDiff(const QString& sText, const QString& sDiff)
+{
+//    std::wstring wText1 = sText.toStdWString();
+//    std::wstring wText2 = sDiff.toStdWString();
+//    diff_match_patch<std::wstring> dmp;
+//    std::pair<std::wstring, std::vector<bool> > out = dmp.patch_apply(dmp.patch_fromText(wText2), wText1);
+//    return QString::fromStdWString(out.first);
+    diff_match_patch diff;
+    QList<Patch> patches = diff.patch_fromText(sDiff);
+    return diff.patch_apply(patches, sText).first;
+}
 
-    return QString::fromUtf8(strStream.str().data());
+//-------------------------------------------------------------------------------------------------
+
+QString CUtils::printableUnifiedDiff(const QString& sText)
+{
+    QString sReturnValue(sText);
+    QRegExp tRegExp(QString("(%[a-fA-F0-9]{2})"));
+
+    while (tRegExp.indexIn(sReturnValue) != -1)
+    {
+        int iChar = tRegExp.cap(1).right(2).toInt();
+        sReturnValue.replace(tRegExp.cap(1), QChar(iChar));
+    }
+
+    return sReturnValue;
 }
 
 //-------------------------------------------------------------------------------------------------

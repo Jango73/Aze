@@ -7,7 +7,9 @@
 
 //-------------------------------------------------------------------------------------------------
 
-#define ERROR_WHEN_FALSE(a,b)    if ((a) == false) return b;
+#define ERROR_WHEN_FALSE(a,b)           if ((a) == false) return b;
+
+#define ERROR_WHEN_FALSE_PRINT(a,b,c)   if ((a) == false) { OUT_ERROR(b); return c; }
 
 //-------------------------------------------------------------------------------------------------
 
@@ -28,6 +30,7 @@ public:
         eCommandShowStatus,
         eCommandStage,
         eCommandUnstage,
+        eCommandRevert,
         eCommandMove,
         eCommandRemove,
         eCommandCommit,
@@ -46,6 +49,7 @@ public:
     static const char* s_sSwitchShowStatus;
     static const char* s_sSwitchStage;
     static const char* s_sSwitchUnstage;
+    static const char* s_sSwitchRevert;
     static const char* s_sSwitchMove;
     static const char* s_sSwitchRemove;
     static const char* s_sSwitchCommit;
@@ -66,6 +70,8 @@ public:
     static const char* s_sSwitchDeleted;
     static const char* s_sSwitchMissing;
     static const char* s_sSwitchIgnored;
+    static const char* s_sSwitchStart;
+    static const char* s_sSwitchCount;
 
     // Error codes
     static const int s_iError_None;
@@ -79,12 +85,15 @@ public:
     static const int s_iError_CouldNotWriteStage;
     static const int s_iError_CouldNotWriteCurrentBranch;
     static const int s_iError_CouldNotAddFiles;
+    static const int s_iError_CouldNotRevertFiles;
     static const int s_iError_CouldNotMoveFiles;
     static const int s_iError_CouldNotRemoveFiles;
     static const int s_iError_CouldNotMerge;
 
-    // Other text strings
+    // Text strings
     static const QString s_sTextCommands;
+    static const QString s_sTextYouAreNowOnBranch;
+    static const QString s_sTextYouAreAlreadyOnBranch;
 
     static QMap<QString, CConstants::ECommand> s_mCommands;
     static QMap<QString, QString> s_mHelp;

@@ -33,7 +33,7 @@ public:
     // QML properties
     //-------------------------------------------------------------------------------------------------
 
-    Q_FAST_PROPERTY(QString, b, isMerge, IsMerge)
+    Q_FAST_PROPERTY(bool, b, isMerge, IsMerge)
     Q_FAST_PROPERTY(QString, s, author, Author)
     Q_FAST_PROPERTY(QString, s, date, Date)
     Q_FAST_PROPERTY(QString, s, message, Message)

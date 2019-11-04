@@ -51,6 +51,13 @@ bool CMergeCommand::execute()
         return false;
     }
 
+    //
+    if (pFromBranch->tipCommitId() == m_pRepository->tipCommit()->id())
+    {
+        OUT_ERROR(CStrings::s_sTextCannotMergeSameCommits);
+        return false;
+    }
+
     CCommit* pFromTipCommit = m_pRepository->database()->getCommit(pFromBranch->tipCommitId(), this);
 
     // Check presence of 'from' branch tip commit
@@ -73,7 +80,29 @@ bool CMergeCommand::execute()
         return false;
     }
 
-    OUT_DEBUG(pCommonAncestor->id());
+    // Check relevancy of 'from' commit
+    if (pCommonAncestor == pFromTipCommit)
+    {
+        OUT_ERROR(CStrings::s_sTextNoCommitToMerge);
+        return false;
+    }
+
+//    OUT_DEBUG(pCommonAncestor->id());
+
+    // Get a diff between the two commits
+    QString sDiff;
+    m_pRepository->diffCommits(sDiff, pCommonAncestor, pFromTipCommit);
+
+    if (sDiff.isEmpty())
+    {
+        OUT_ERROR("Diff is empty");
+        return false;
+    }
+
+    if (m_pRepository->applyDiff(sDiff) == false)
+    {
+        return false;
+    }
 
     return true;
 }

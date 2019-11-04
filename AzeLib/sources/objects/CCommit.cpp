@@ -10,6 +10,7 @@ namespace Aze {
 
 CCommit::CCommit(QObject* parent)
     : CObject(parent)
+    , m_bIsMerge(false)
     , m_sDate(QDateTime::currentDateTimeUtc().toString(Qt::ISODate))
 {
 }
@@ -45,6 +46,7 @@ CXMLNode CCommit::toNode() const
     CXMLNode xNode(CStrings::s_sParamCommit);
 
     CXMLNode xInfo(CStrings::s_sParamInfo);
+    xInfo.attributes()[CStrings::s_sParamIsMerge] = QString("%1").arg(int(m_bIsMerge));
     xInfo.attributes()[CStrings::s_sParamAuthor] = m_sAuthor;
     xInfo.attributes()[CStrings::s_sParamDate] = m_sDate;
     xInfo.attributes()[CStrings::s_sParamParents] = m_lParents.join(",");
@@ -99,7 +101,7 @@ bool CCommit::addFile(QString sRelativeFileName, QString sId)
     if (not m_mFiles.values().contains(sRelativeFileName))
     {
         if (sId.isEmpty())
-            sId = CUtils::idFromFile(sRelativeFileName);
+            sId = CUtils::idFromFileContent(sRelativeFileName);
 
         m_mFiles[sId] = sRelativeFileName;
     }
@@ -132,7 +134,7 @@ bool CCommit::addCommit(CDatabase* pDatabase, CCommit* pCommitToAdd)
         {
             // This file exists in working directory
             QString sExistingId = mapKeyForValue(m_mFiles, sRelativeFileName);
-            QString sNewId = CUtils::idFromFile(sAbsoluteFileName);
+            QString sNewId = CUtils::idFromFileContent(sAbsoluteFileName);
 
             if (sExistingId.isEmpty() || sExistingId != sNewId)
             {
@@ -177,23 +179,30 @@ CCommit* CCommit::fromNode(const CXMLNode& xNode, QObject* parent, QString sComm
 
     CCommit* pCommit = new CCommit(parent);
 
+    // Set the id
     pCommit->setId(sCommitId);
 
+    // Read general information
     CXMLNode xInfo = xNode.getNodeByTagName(CStrings::s_sParamInfo);
+    pCommit->setIsMerge(bool(xInfo.attributes()[CStrings::s_sParamAuthor].toInt()));
     pCommit->setAuthor(xInfo.attributes()[CStrings::s_sParamAuthor]);
     pCommit->setDate(xInfo.attributes()[CStrings::s_sParamDate]);
 
+    // Read parents
     QString sParents = xInfo.attributes()[CStrings::s_sParamParents];
 
     if (not sParents.isEmpty())
         pCommit->setParents(sParents.split(CStrings::s_sItemSeparator));
 
+    // Read message
     CXMLNode xMessage = xNode.getNodeByTagName(CStrings::s_sParamMessage);
     pCommit->setMessage(xMessage.value());
 
+    // Read user data
     CXMLNode xUser = xNode.getNodeByTagName(CStrings::s_sParamUser);
     pCommit->setUser(CUtils::dictionaryFromNode(xUser));
 
+    // Read files
     CXMLNode xFiles = xNode.getNodeByTagName(CStrings::s_sParamFiles);
     QStringList sLines = xFiles.value().split(CStrings::s_sNewLine);
 

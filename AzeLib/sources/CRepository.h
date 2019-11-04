@@ -82,8 +82,14 @@ public:
     //! Commits all files contained in the staging commit
     bool commit(const QString& sAuthor, const QString& sMessage);
 
+    //! Reverts all files listed in lFileNames
+    bool revert(const QStringList& lFileNames);
+
+    //! Reverts all files listed in the commit
+    bool revert(CCommit* pWorkingDirectory);
+
     //! Returns a log
-    QString log(const QStringList& lFileNames);
+    QString log(const QStringList& lFileNames, int iStart = 0, int iCount = 0);
 
     //! Returns a list of files and their status
     QList<CFile> fileStatus(const QStringList& lFileNames);
@@ -93,6 +99,9 @@ public:
 
     //!
     bool merge(const QString& sName);
+
+    //! Applies a diff to the working directory
+    bool applyDiff(const QString& sDiff);
 
     //!
     CCommit* getStagingCommit();
@@ -148,6 +157,9 @@ public:
 
     //!
     void listFilesRecursive(QStringList& lStack, QString sRootDirectory, QString sCurrentDirectory);
+
+    //!
+    void diffCommits(QString& sOutput, CCommit* pCommit1, CCommit* pCommit2, int iDelta1 = 0, int iDelta2 = 0);
 };
 
 }

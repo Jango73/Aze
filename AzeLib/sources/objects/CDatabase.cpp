@@ -62,6 +62,23 @@ QByteArray CDatabase::getObject(const QString& sId)
 
 //-------------------------------------------------------------------------------------------------
 
+QString CDatabase::storeCommit(const CCommit* pCommit, const QString& sId)
+{
+    if (IS_NULL(pCommit))
+        return "";
+
+    QString sIdToUse = sId;
+
+    if (sIdToUse.isEmpty())
+        sIdToUse = pCommit->generateId();
+
+    pCommit->toFile(composeCommitFileName(sIdToUse));
+
+    return sIdToUse;
+}
+
+//-------------------------------------------------------------------------------------------------
+
 bool CDatabase::init()
 {
     QDir rootDir(m_sRootPath);

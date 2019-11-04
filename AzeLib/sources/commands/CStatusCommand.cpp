@@ -2,6 +2,7 @@
 // Qt
 #include <QDebug>
 #include <QDir>
+#include <QHash>
 
 // Application
 #include "CStatusCommand.h"
@@ -23,6 +24,8 @@ CStatusCommand::CStatusCommand(CRepository* pRepository, const QStringList& lFil
 
 bool CStatusCommand::execute()
 {
+    QHash<QString, int> lProcessed;
+
     if (IS_NULL(m_pResult))
         return false;
 
@@ -48,6 +51,8 @@ bool CStatusCommand::execute()
     QStringList lWorkFiles = pWorkCommit->files().values();
     lWorkFiles.sort();
 
+    // Traverse working directory files
+    // Check how each file differs from the tip commit
     for (QString sRelativeName : lWorkFiles)
     {
         QString sIdInFrom = mapKeyForValue(pFromCommit->files(), sRelativeName);
@@ -84,7 +89,27 @@ bool CStatusCommand::execute()
             }
         }
 
+        lProcessed[sRelativeName] = 0;
         (*m_pResult) << file;
+    }
+
+    // Traverse tip commit files
+    // Every file in the tip not existing in working directory is considered missing
+    // TODO: Unless marked as deleted
+    if (IS_NOT_NULL(m_pRepository->tipCommit()))
+    {
+        for (QString sRelativeName : m_pRepository->tipCommit()->files().values())
+        {
+            if (not lProcessed.contains(sRelativeName))
+            {
+                CFile file;
+                file.setRelativeName(sRelativeName);
+                file.setStatus(CEnums::eMissing);
+
+                lProcessed[sRelativeName] = 0;
+                (*m_pResult) << file;
+            }
+        }
     }
 
     return true;

@@ -2,11 +2,14 @@
 HEADERS += \
     ../qt-plus/source/cpp/CXMLNode.h \
     ../qt-plus/source/cpp/CTextGenerator.h \
+    sources/google/diff_match_patch.h \
     sources/commands/CBaseCommand.h \
+    sources/commands/CSwitchToBranchCommand.h \
     sources/commands/CStageCommand.h \
     sources/commands/CUnstageCommand.h \
     sources/commands/CRemoveCommand.h \
     sources/commands/CCommitCommand.h \
+    sources/commands/CRevertCommand.h \
     sources/commands/CStatusCommand.h \
     sources/commands/CLogCommand.h \
     sources/commands/CDiffCommand.h \
@@ -25,11 +28,14 @@ HEADERS += \
 SOURCES += \
     ../qt-plus/source/cpp/CXMLNode.cpp \
     ../qt-plus/source/cpp/CTextGenerator.cpp \
+    sources/google/diff_match_patch.cpp \
     sources/commands/CBaseCommand.cpp \
+    sources/commands/CSwitchToBranchCommand.cpp \
     sources/commands/CStageCommand.cpp \
     sources/commands/CUnstageCommand.cpp \
     sources/commands/CRemoveCommand.cpp \
     sources/commands/CCommitCommand.cpp \
+    sources/commands/CRevertCommand.cpp \
     sources/commands/CStatusCommand.cpp \
     sources/commands/CLogCommand.cpp \
     sources/commands/CDiffCommand.cpp \

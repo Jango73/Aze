@@ -7,10 +7,12 @@
 #include "CRepository.h"
 #include "CUtils.h"
 
+#include "commands/CSwitchToBranchCommand.h"
 #include "commands/CStageCommand.h"
 #include "commands/CUnstageCommand.h"
 #include "commands/CRemoveCommand.h"
 #include "commands/CCommitCommand.h"
+#include "commands/CRevertCommand.h"
 #include "commands/CStatusCommand.h"
 #include "commands/CLogCommand.h"
 #include "commands/CDiffCommand.h"
@@ -57,7 +59,10 @@ bool CRepository::init()
     if (m_pDatabase->init())
     {
         createBranch(CStrings::s_sDefaultBranchName);
-        switchToBranch(CStrings::s_sDefaultBranchName);
+
+        QString sBranchFileName = m_pDatabase->composeBranchFileName(CStrings::s_sDefaultBranchName);
+        setCurrentBranch(CBranch::fromNode(CXMLNode::load(sBranchFileName), this));
+        setCurrentBranchName(CStrings::s_sDefaultBranchName);
 
         writeGeneralInfo();
         writeCurrentBranch();
@@ -91,17 +96,7 @@ bool CRepository::createBranch(const QString& sName)
 
 bool CRepository::switchToBranch(const QString& sName)
 {
-    QString sFileName = m_pDatabase->composeBranchFileName(sName);
-
-    if (QFile(sFileName).exists())
-    {
-        setCurrentBranch(CBranch::fromNode(CXMLNode::load(sFileName), this));
-        setCurrentBranchName(sName);
-
-        return true;
-    }
-
-    return false;
+    return CSwitchToBranchCommand(this, sName).execute();
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -134,11 +129,25 @@ bool CRepository::commit(const QString& sAuthor, const QString& sMessage)
 
 //-------------------------------------------------------------------------------------------------
 
-QString CRepository::log(const QStringList& lFileNames)
+bool CRepository::revert(const QStringList& lFileNames)
+{
+    return CRevertCommand(this, lFileNames).execute();
+}
+
+//-------------------------------------------------------------------------------------------------
+
+bool CRepository::revert(CCommit* pWorkingDirectory)
+{
+    return CRevertCommand(this, pWorkingDirectory).execute();
+}
+
+//-------------------------------------------------------------------------------------------------
+
+QString CRepository::log(const QStringList& lFileNames, int iStart, int iCount)
 {
     QString sReturnValue;
 
-    if (CLogCommand(this, lFileNames, &sReturnValue).execute())
+    if (CLogCommand(this, lFileNames, &sReturnValue, iStart, iCount).execute())
     {
         return sReturnValue;
     }
@@ -165,6 +174,42 @@ QString CRepository::diff(const QString& sFirst, const QString& sSecond)
 bool CRepository::merge(const QString& sName)
 {
     return CMergeCommand(this, sName).execute();
+}
+
+//-------------------------------------------------------------------------------------------------
+
+bool CRepository::applyDiff(const QString& sFullDiff)
+{
+    QString sRegEx1(QString("%1\\s+[a-zA-Z0-9\\.\\/\\+-_]+\\s+[a-zA-Z0-9\\.\\/\\+-_]+\\s*\\r*\\n")
+                    .arg(CStrings::s_sDiffChunkHeader)
+                    );
+    QStringList lFileDiffs = sFullDiff.split(QRegExp(sRegEx1), QString::SkipEmptyParts);
+
+    for (QString sFileDiff : lFileDiffs)
+    {
+        QRegExp tRegExp2(QString("---\\s+([a-zA-Z0-9\\.\\/\\+-_]+)\\s*\\r*\\n"));
+        QRegExp tRegExp3(QString("\\+\\+\\+\\s+([a-zA-Z0-9\\.\\/\\+-_]+)\\s*\\r*\\n"));
+
+        if (tRegExp2.indexIn(sFileDiff) != -1)
+        {
+            QString sFileName = tRegExp2.cap(1).trimmed();
+
+            if (not sFileName.isEmpty())
+            {
+                // Remove things not expected by diff-match-patch
+                sFileDiff.replace(tRegExp2, "");
+                sFileDiff.replace(tRegExp3, "");
+
+                // Read the file, apply the diff and write back
+                QString sFullName = m_pDatabase->composeLocalFileName(sFileName);
+                QString sContent = CUtils::getTextFileContent(sFullName);
+                sContent = CUtils::applyUnifiedDiff(sContent, sFileDiff);
+                CUtils::putTextFileContent(sFullName, sContent);
+            }
+        }
+    }
+
+    return true;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -222,11 +267,9 @@ bool CRepository::readRootCommit()
 {
     if (not m_pCurrentBranch->rootCommitId().isEmpty())
     {
-        if (IS_NULL(m_pRootCommit))
-        {
-            setRootCommit(m_pDatabase->getCommit(m_pCurrentBranch->rootCommitId(), this));
-            return true;
-        }
+        delete m_pRootCommit;
+        setRootCommit(m_pDatabase->getCommit(m_pCurrentBranch->rootCommitId(), this));
+        return true;
     }
 
     return false;
@@ -238,11 +281,9 @@ bool CRepository::readTipCommit()
 {
     if (not m_pCurrentBranch->tipCommitId().isEmpty())
     {
-        if (IS_NULL(m_pTipCommit))
-        {
-            setTipCommit(m_pDatabase->getCommit(m_pCurrentBranch->tipCommitId(), this));
-            return true;
-        }
+        delete m_pTipCommit;
+        setTipCommit(m_pDatabase->getCommit(m_pCurrentBranch->tipCommitId(), this));
+        return true;
     }
 
     return false;
@@ -356,7 +397,7 @@ CCommit* CRepository::getCommitAncestor(CCommit* pCommit, QObject* parent, int i
         }
 
         // The first parent is the one to follow in order to stay on branch of pCommit
-        SAFE_DELETE(pAncestor);
+        delete pAncestor;
         pAncestor = parents[0]->clone(parent);
         iDelta--;
         iGuard--;
@@ -410,6 +451,12 @@ CCommit* CRepository::getCommitsCommonAncestor(CCommit* pCommit1, CCommit* pComm
     QList<CCommit*> pAncestors1 = getCommitAncestorList(pCommit1, parent);
     QList<CCommit*> pAncestors2 = getCommitAncestorList(pCommit2, parent);
 
+    // Add commits themselves to lists
+    pAncestors1.prepend(pCommit1->clone());
+    pAncestors2.prepend(pCommit2->clone());
+
+    bool bFound = false;
+
     for (CCommit* pCommit1 : pAncestors1)
     {
         QString sId = pCommit1->id();
@@ -419,9 +466,13 @@ CCommit* CRepository::getCommitsCommonAncestor(CCommit* pCommit1, CCommit* pComm
             if (sId == pCommit2->id())
             {
                 pAncestor = pCommit1->clone(parent);
+                bFound = true;
                 break;
             }
         }
+
+        if (bFound)
+            break;
     }
 
     qDeleteAll(pAncestors1);
@@ -439,6 +490,8 @@ CCommit* CRepository::workingDirectoryAsCommit(QObject* parent)
 
     listFilesRecursive(lFiles, m_pDatabase->rootPath(), ".");
 
+    // Add agregated files to the commit
+    // The id will be generated from the file's contents
     for (QString sFile : lFiles)
         pNewCommit->addFile(sFile);
 
@@ -466,6 +519,31 @@ void CRepository::listFilesRecursive(QStringList& lStack, QString sRootDirectory
     {
         QString sTargetDirectory = QString("%1/%2").arg(sCurrentDirectory).arg(iFile.fileName());
         listFilesRecursive(lStack, sRootDirectory, sTargetDirectory);
+    }
+}
+
+//-------------------------------------------------------------------------------------------------
+
+void CRepository::diffCommits(QString& sOutput, CCommit* pCommit1, CCommit* pCommit2, int iDelta1, int iDelta2)
+{
+    if (iDelta1 != 0)
+        pCommit1 = getCommitAncestor(pCommit1, this, iDelta1);
+
+    if (iDelta2 != 0)
+        pCommit2 = getCommitAncestor(pCommit2, this, iDelta2);
+
+    for (QString sName : pCommit2->files().values())
+    {
+        QByteArray baContent1 = pCommit1->fileContent(m_pDatabase, sName);
+        QByteArray baContent2 = pCommit2->fileContent(m_pDatabase, sName);
+
+        QString sDiffText = CUtils::unifiedDiff(QString(baContent1), QString(baContent2));
+
+        if (not sDiffText.isEmpty())
+        {
+            sOutput += CUtils::fileDiffHeader(sName, sName);
+            sOutput += sDiffText;
+        }
     }
 }
 

@@ -25,6 +25,7 @@ public:
     static const QString s_sPathIdSeparator;
     static const QString s_sItemSeparator;
     static const QString s_sCompressedXMLExtension;
+    static const QString s_sDiffChunkHeader;
 
     static const QString s_sParamAuthor;
     static const QString s_sParamBranch;
@@ -34,6 +35,7 @@ public:
     static const QString s_sParamDate;
     static const QString s_sParamFiles;
     static const QString s_sParamInfo;
+    static const QString s_sParamIsMerge;
     static const QString s_sParamMessage;
     static const QString s_sParamParents;
     static const QString s_sParamRoot;
@@ -60,6 +62,9 @@ public:
     static const QString s_sTextBranchNameEmpty;
     static const QString s_sTextNoSuchBranch;
     static const QString s_sTextNoCommonAncestor;
+    static const QString s_sTextNoStagingCommit;
+    static const QString s_sTextNoCommitToMerge;
+    static const QString s_sTextCannotMergeSameCommits;
 };
 
 }

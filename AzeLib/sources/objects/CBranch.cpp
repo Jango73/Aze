@@ -71,4 +71,6 @@ CBranch* CBranch::fromFile(const QString& sFileName, QObject* parent)
     return fromNode(CXMLNode::load(sFileName), parent);
 }
 
+//-------------------------------------------------------------------------------------------------
+
 } // namespace Aze

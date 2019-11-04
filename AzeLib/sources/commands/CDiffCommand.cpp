@@ -101,7 +101,7 @@ bool CDiffCommand::execute()
 
         if (not IS_NULL(pCommit1) && not IS_NULL(pCommit2))
         {
-            diffCommits(pCommit1, pCommit2, iDelta1, iDelta2);
+            m_pRepository->diffCommits(*m_pResult, pCommit1, pCommit2, iDelta1, iDelta2);
         }
     }
 
@@ -109,31 +109,5 @@ bool CDiffCommand::execute()
 }
 
 //-------------------------------------------------------------------------------------------------
-
-void CDiffCommand::diffCommits(CCommit* pCommit1, CCommit* pCommit2, int iDelta1, int iDelta2)
-{
-    if (iDelta1 != 0)
-        pCommit1 = m_pRepository->getCommitAncestor(pCommit1, this, iDelta1);
-
-    if (iDelta2 != 0)
-        pCommit2 = m_pRepository->getCommitAncestor(pCommit2, this, iDelta2);
-
-    for (QString sName : pCommit2->files().values())
-    {
-        QByteArray baContent1 = pCommit1->fileContent(m_pRepository->database(), sName);
-        QByteArray baContent2 = pCommit2->fileContent(m_pRepository->database(), sName);
-
-        QString sDiffText = CUtils::unifiedDiff(QString(baContent1), QString(baContent2));
-
-        if (not sDiffText.isEmpty())
-        {
-            (*m_pResult) += QString("diff --aze %1 %2%3%4")
-                    .arg(sName)
-                    .arg(sName)
-                    .arg(CStrings::s_sNewLine)
-                    .arg(sDiffText);
-        }
-    }
-}
 
 }
