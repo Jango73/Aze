@@ -1,8 +1,4 @@
 
-// std
-//#include <string>
-//#include <sstream>
-
 // Qt
 #include <QString>
 #include <QList>
@@ -25,7 +21,28 @@
 
 namespace Aze {
 
-//using dtl::Diff;
+//-------------------------------------------------------------------------------------------------
+
+void CUtils::ensureFilePathExists(const QString& sFilePath)
+{
+    if (sFilePath.contains(CStrings::s_sPathSep))
+    {
+        QString sFile = sFilePath.split(CStrings::s_sPathSep).last();
+        QString sPath = sFilePath;
+        sPath.replace(sFile, "");
+        QDir().mkpath(sPath);
+    }
+}
+
+//-------------------------------------------------------------------------------------------------
+
+bool CUtils::moveFile(const QString& sSource, const QString& sTarget)
+{
+    QFile target(sTarget);
+    target.remove();
+    QFile source(sSource);
+    return source.rename(sTarget);
+}
 
 //-------------------------------------------------------------------------------------------------
 
@@ -169,13 +186,10 @@ QByteArray CUtils::getBinaryFileContent(const QString& sFileName)
     QByteArray baData;
     QFile tInputFile(sFileName);
 
-    if (tInputFile.exists())
+    if (tInputFile.exists() && tInputFile.open(QIODevice::ReadOnly))
     {
-        if (tInputFile.open(QIODevice::ReadOnly))
-        {
-            baData = tInputFile.readAll();
-            tInputFile.close();
-        }
+        baData = tInputFile.readAll();
+        tInputFile.close();
     }
 
     return baData;
@@ -192,6 +206,8 @@ QString CUtils::getTextFileContent(const QString& sFileName)
 
 bool CUtils::putBinaryFileContent(const QString& sFileName, const QByteArray& baData)
 {
+    ensureFilePathExists(sFileName);
+
     QFile tInputFile(sFileName);
 
     if (tInputFile.open(QIODevice::WriteOnly))
@@ -250,11 +266,10 @@ QString CUtils::fileDiffHeader(const QString& sLeft, const QString& sRight)
 
 QString CUtils::unifiedDiff(const QString& sText1, const QString& sText2)
 {
-//    std::wstring wText1 = sText1.toStdWString();
-//    std::wstring wText2 = sText2.toStdWString();
-//    diff_match_patch<std::wstring> dmp;
-//    return QString::fromStdWString(dmp.patch_toText(dmp.patch_make(wText1, wText2)));
     diff_match_patch diff;
+    diff.Match_Threshold = 0.1f;
+    diff.Patch_DeleteThreshold = 0.1f;
+
     return diff.patch_toText(diff.patch_make(sText1, sText2));
 }
 
@@ -262,14 +277,17 @@ QString CUtils::unifiedDiff(const QString& sText1, const QString& sText2)
 
 QString CUtils::applyUnifiedDiff(const QString& sText, const QString& sDiff)
 {
-//    std::wstring wText1 = sText.toStdWString();
-//    std::wstring wText2 = sDiff.toStdWString();
-//    diff_match_patch<std::wstring> dmp;
-//    std::pair<std::wstring, std::vector<bool> > out = dmp.patch_apply(dmp.patch_fromText(wText2), wText1);
-//    return QString::fromStdWString(out.first);
     diff_match_patch diff;
+    diff.Match_Threshold = 0.1f;
+    diff.Patch_DeleteThreshold = 0.1f;
+
     QList<Patch> patches = diff.patch_fromText(sDiff);
-    return diff.patch_apply(patches, sText).first;
+    QPair<QString, QVector<bool> > returnValue = diff.patch_apply(patches, sText);
+
+    if (returnValue.second.contains(false))
+        return "";
+
+    return returnValue.first;
 }
 
 //-------------------------------------------------------------------------------------------------

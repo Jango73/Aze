@@ -45,6 +45,7 @@ public:
 
     static const QString s_sPathAzeDataRoot;
     static const QString s_sPathAzeStashPath;
+    static const QString s_sPathAzeMergePath;
     static const QString s_sPathAzeBranchPath;
     static const QString s_sPathAzeCommitPath;
     static const QString s_sPathAzeObjectPath;
@@ -54,17 +55,23 @@ public:
 
     static const QString s_sDefaultBranchName;
 
-    static const QString s_sTextNotARepository;
-    static const QString s_sTextNoSuchFile;
-    static const QString s_sTextNoCurrentBranch;
-    static const QString s_sTextNoTipCommit;
-    static const QString s_sTextCommitEmpty;
-    static const QString s_sTextBranchNameEmpty;
-    static const QString s_sTextNoSuchBranch;
-    static const QString s_sTextNoCommonAncestor;
-    static const QString s_sTextNoStagingCommit;
-    static const QString s_sTextNoCommitToMerge;
     static const QString s_sTextCannotMergeSameCommits;
+    static const QString s_sTextCommitEmpty;
+    static const QString s_sTextCommonAncestor;
+    static const QString s_sTextCouldNotApplyPatch;
+    static const QString s_sTextBranchAlreadyExists;
+    static const QString s_sTextBranchNameEmpty;
+    static const QString s_sTextMergeFailed;
+    static const QString s_sTextNotARepository;
+    static const QString s_sTextNoCommitToMerge;
+    static const QString s_sTextNoCommonAncestor;
+    static const QString s_sTextNoCurrentBranch;
+    static const QString s_sTextNoFileSpecified;
+    static const QString s_sTextNoStagingCommit;
+    static const QString s_sTextNoSuchBranch;
+    static const QString s_sTextNoSuchFile;
+    static const QString s_sTextNoTipCommit;
+    static const QString s_sTextMergeWorkingDirectoryNotClean;
 };
 
 }

@@ -12,8 +12,9 @@ namespace Aze {
 
 //-------------------------------------------------------------------------------------------------
 
-CSwitchToBranchCommand::CSwitchToBranchCommand(CRepository* pRepository, const QString& sBranchName)
+CSwitchToBranchCommand::CSwitchToBranchCommand(CRepository* pRepository, const QString& sBranchName, bool bAllowFileDelete)
     : CBaseCommand(pRepository)
+    , m_bAllowFileDelete(bAllowFileDelete)
     , m_sBranchName(sBranchName)
 {
 }
@@ -34,17 +35,23 @@ bool CSwitchToBranchCommand::execute()
     if (not QFile(sFileName).exists())
         return false;
 
-    // Get diffs between last commit and working directory
+    QStringList lLooseFiles = m_pRepository->getLooseFiles();
+
+    // Save stash : diffs between last commit and working directory
     QString sDiff;
     CCommit* pFromCommit = nullptr;
     CCommit* pToCommit = nullptr;
 
     if (not m_pRepository->currentBranch()->tipCommitId().isEmpty())
     {
+        // Get the current branch tip commit
         pFromCommit = m_pRepository->database()->getCommit(m_pRepository->currentBranch()->tipCommitId(), this);
-        pToCommit = m_pRepository->workingDirectoryAsCommit(this);
 
-        m_pRepository->diffCommits(sDiff, pFromCommit, pToCommit);
+        // Get the working directory as commit
+        pToCommit = m_pRepository->commitFunctions()->directoryAsCommit(this);
+
+        // Diff the current tip commit and the working directory
+        m_pRepository->commitFunctions()->diffCommits(sDiff, pFromCommit, pToCommit, lLooseFiles);
     }
 
     // Make the branch switch
@@ -52,15 +59,15 @@ bool CSwitchToBranchCommand::execute()
     m_pRepository->readCurrentBranch();
     m_pRepository->readTipCommit();
 
-    // Revert files to their last committed state
+    // Revert local files to their last committed state
     if (IS_NOT_NULL(pToCommit))
     {
-        m_pRepository->revert(pToCommit);
+        m_pRepository->revert(pToCommit, m_bAllowFileDelete);
     }
 
-    // Apply the diff
+    // Apply the stash
     if (not sDiff.isEmpty())
-        m_pRepository->applyDiff(sDiff);
+        return m_pRepository->applyDiff(sDiff);
 
     return true;
 }

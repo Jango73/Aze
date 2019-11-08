@@ -22,7 +22,7 @@ public:
     // Constructor
     //-------------------------------------------------------------------------------------------------
 
-    CStatusCommand(CRepository* pRepository, const QStringList& lFileNames, QList<CFile>* pResult);
+    CStatusCommand(CRepository* pRepository, const QStringList& lFileNames, QList<CFile>* pFileStatus, CEnums::EFileStatus* pGeneralStatus);
 
     //-------------------------------------------------------------------------------------------------
     // Control methods
@@ -37,8 +37,9 @@ public:
 
 protected:
 
-    QStringList     m_lFileNames;
-    QList<CFile>*   m_pResult;
+    QStringList             m_lFileNames;
+    QList<CFile>*           m_pFileStatus;
+    CEnums::EFileStatus*    m_pGeneralStatus;
 };
 
 }

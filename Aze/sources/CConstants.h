@@ -34,14 +34,17 @@ public:
         eCommandMove,
         eCommandRemove,
         eCommandCommit,
+        eCommandCleanUp,
         eCommandLog,
         eCommandDiff,
         eCommandMerge,
-        eCommandDump,
-        eCommandHelp
+        eCommandDump
     };
 
+    static const char* s_sContextMain;
+
     // Commands
+    static const char* s_sSwitchHelpOn;
     static const char* s_sSwitchRunTests;
     static const char* s_sSwitchInitRepository;
     static const char* s_sSwitchCreateBranch;
@@ -53,11 +56,11 @@ public:
     static const char* s_sSwitchMove;
     static const char* s_sSwitchRemove;
     static const char* s_sSwitchCommit;
+    static const char* s_sSwitchCleanUp;
     static const char* s_sSwitchLog;
     static const char* s_sSwitchDiff;
     static const char* s_sSwitchMerge;
     static const char* s_sSwitchDump;
-    static const char* s_sSwitchHelp;
 
     // Switches
     static const char* s_sSwitchAuthor;
@@ -72,9 +75,12 @@ public:
     static const char* s_sSwitchIgnored;
     static const char* s_sSwitchStart;
     static const char* s_sSwitchCount;
+    static const char* s_sSwitchAllowFileDelete;
+    static const char* s_sSwitchGraph;
 
     // Error codes
     static const int s_iError_None;
+    static const int s_iError_UnknownCommand;
     static const int s_iError_UnknownSwitch;
     static const int s_iError_NotARepository;
     static const int s_iError_NoBranchNameGiven;
@@ -91,6 +97,8 @@ public:
     static const int s_iError_CouldNotMerge;
 
     // Text strings
+    static const QString s_sAllFilesAreClean;
+    static const QString s_sStatusOfFiles;
     static const QString s_sTextCommands;
     static const QString s_sTextYouAreNowOnBranch;
     static const QString s_sTextYouAreAlreadyOnBranch;

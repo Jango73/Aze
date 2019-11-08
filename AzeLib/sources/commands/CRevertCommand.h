@@ -23,10 +23,10 @@ public:
     //-------------------------------------------------------------------------------------------------
 
     //!
-    CRevertCommand(CRepository* pRepository, const QStringList& lFileNames);
+    CRevertCommand(CRepository* pRepository, const QStringList& lFileNames, bool bAllowFileDelete = false);
 
     //!
-    CRevertCommand(CRepository* pRepository, CCommit* pWorkingDirectory);
+    CRevertCommand(CRepository* pRepository, CCommit* pWorkingDirectory, bool bAllowFileDeleted = false);
 
     //-------------------------------------------------------------------------------------------------
     // Control methods
@@ -44,6 +44,7 @@ public:
 
 protected:
 
+    bool            m_bAllowFileDelete;
     CCommit*        m_pWorkingDirectory;
     QStringList     m_lFileNames;
 };

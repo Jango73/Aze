@@ -54,9 +54,13 @@ bool CCommitCommand::execute()
     // Add the staged commmit to this new commit
     pNewCommit->addCommit(m_pRepository->database(), m_pRepository->stagingCommit());
 
+    if (m_sMessage.isEmpty())
+        m_sMessage = m_pRepository->stagingCommit()->message();
+
     // Finalize and save the commit
     // We need all the info to generate the commit's id
     pNewCommit->setIsMerge(m_pRepository->stagingCommit()->isMerge());
+    pNewCommit->setDateToNow();
     pNewCommit->setAuthor(m_sAuthor);
     pNewCommit->setMessage(m_sMessage);
 

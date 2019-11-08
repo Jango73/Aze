@@ -30,6 +30,7 @@ public:
     // File status
     enum EFileStatus
     {
+        eUnknown,
         eLoose,
         eClean,
         eModified,

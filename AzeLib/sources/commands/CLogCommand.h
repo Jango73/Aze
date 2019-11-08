@@ -6,10 +6,15 @@
 
 // Application
 #include "CBaseCommand.h"
+#include "../objects/CCommit.h"
 
 //-------------------------------------------------------------------------------------------------
 
 namespace Aze {
+
+class AZE_SHARED_EXPORT CLogEntry : public CBaseCommand
+{
+};
 
 class AZE_SHARED_EXPORT CLogCommand : public CBaseCommand
 {
@@ -21,7 +26,7 @@ public:
     // Constructor
     //-------------------------------------------------------------------------------------------------
 
-    CLogCommand(CRepository* pRepository, const QStringList& lFileNames, QString* pResult, int iStart = 0, int iCount = 0);
+    CLogCommand(CRepository* pRepository, const QStringList& lFileNames, QString* pResult, bool bGraph = false, int iStart = 0, int iCount = 0);
 
     //-------------------------------------------------------------------------------------------------
     // Control methods
@@ -31,15 +36,26 @@ public:
     virtual bool execute() override;
 
     //-------------------------------------------------------------------------------------------------
+    // Protected control methods
+    //-------------------------------------------------------------------------------------------------
+
+protected:
+
+    //!
+    void outputBranches(int iCurrentBranch);
+
+    //-------------------------------------------------------------------------------------------------
     // Properties
     //-------------------------------------------------------------------------------------------------
 
 protected:
 
-    QStringList m_lFileNames;
-    QString*    m_pResult;
-    int         m_iStart;
-    int         m_iCount;
+    QStringList         m_lFileNames;
+    QMap<int, CCommit*> m_mBranches;
+    QString*            m_pResult;
+    bool                m_bGraph;
+    int                 m_iStart;
+    int                 m_iCount;
 };
 
 }

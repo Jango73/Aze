@@ -22,6 +22,7 @@ HEADERS += \
     sources/tests/CTestAze.h \
     sources/CEnums.h \
     sources/CRepository.h \
+    sources/CCommitFunctions.h \
     sources/CStrings.h \
     sources/CUtils.h \
 
@@ -48,5 +49,6 @@ SOURCES += \
     sources/tests/CTestAze.cpp \
     sources/CEnums.cpp \
     sources/CRepository.cpp \
+    sources/CCommitFunctions.cpp \
     sources/CStrings.cpp \
     sources/CUtils.cpp \

@@ -23,15 +23,15 @@ CTestAze::CTestAze()
     , m_iCommitIndex(0)
 {
     m_sRootPath = QDir::currentPath();
-    m_sRepoPath = "./.aze";
+    m_sDataPath = "./.aze";
     m_sAuthor = "CTestAze";
 
     m_sInfoPath = QString("%1/%2")
-            .arg(m_sRepoPath)
+            .arg(m_sDataPath)
             .arg(CStrings::s_sGeneralInfoFileName);
 
     m_sTrunkPath = QString("%1/%2/%3.%4")
-            .arg(m_sRepoPath)
+            .arg(m_sDataPath)
             .arg(CStrings::s_sPathAzeBranchPath)
             .arg(CStrings::s_sDefaultBranchName)
             .arg(CStrings::s_sCompressedXMLExtension);
@@ -45,7 +45,7 @@ CTestAze::CTestAze()
 void CTestAze::clearRepository()
 {
     // Remove repo
-    QDir repo(m_sRepoPath);
+    QDir repo(m_sDataPath);
     if (repo.exists())
         repo.removeRecursively();
 
@@ -172,14 +172,14 @@ void CTestAze::testAll()
     QString sFolder2Name = "Folder2";
     QString sFolder3Name = "Folder3";
 
-    QString sFile1Path = "./Files/File1.txt";
-    QString sFile2Path = "./Files/File2.txt";
-    QString sFile3Path = "./Files/Folder1/File3.txt";
-    QString sFile4Path = "./Files/Folder1/File4.txt";
-    QString sFile5Path = "./Files/Folder2/File5.txt";
-    QString sFile6Path = "./Files/Folder2/File6.txt";
-    QString sFile7Path = "./Files/Folder3/File7.txt";
-    QString sFile8Path = "./Files/Folder3/File8.txt";
+    QString sFile1Path = "Files/File1.txt";
+    QString sFile2Path = "Files/File2.txt";
+    QString sFile3Path = "Files/Folder1/File3.txt";
+    QString sFile4Path = "Files/Folder1/File4.txt";
+    QString sFile5Path = "Files/Folder2/File5.txt";
+    QString sFile6Path = "Files/Folder2/File6.txt";
+    QString sFile7Path = "Files/Folder3/File7.txt";
+    QString sFile8Path = "Files/Folder3/File8.txt";
 
     QString sFile1Content1 = "File1";
     QString sFile2Content1 = "File2";
@@ -237,10 +237,10 @@ void CTestAze::testAll()
     // Diff commits 1 and 2
     CREATE_REPO;
     QVERIFY(m_pRepository->readStage());
-    QString sActualDiff = m_pRepository->diff("root", "tip");
+    QList<QPair<QString, QString> > mFileDiffs = m_pRepository->splitDiff(m_pRepository->diff("root", "tip"));
 
-//    QString sFile1Patched = CUtils::applyUnifiedDiff(sFile1Content1, sActualDiff);
-//    QString sFile2Patched = CUtils::applyUnifiedDiff(sFile2Content1, sActualDiff);
+//    QString sFile1Patched = CUtils::applyUnifiedDiff(sFile1Content1, mFileDiffs[sFile1Path]);
+//    QString sFile2Patched = CUtils::applyUnifiedDiff(sFile2Content1, mFileDiffs[sFile2Path]);
 //    QVERIFY(sFile1Content2 == sFile1Patched);
 //    QVERIFY(sFile2Content2 == sFile2Patched);
 
@@ -286,6 +286,7 @@ void CTestAze::testAll()
 
     // Switch to branch 1
     CREATE_REPO;
+    QVERIFY(m_pRepository->readStage());
     QVERIFY(m_pRepository->switchToBranch("Branch1"));
     QVERIFY(m_pRepository->writeCurrentBranch());
     QVERIFY(m_pRepository->writeGeneralInfo());
@@ -301,8 +302,8 @@ void CTestAze::testAll()
 
     commit(lStage, m_sAuthor, "Commit5");
 
-    // Diff commits 4 and 5
-    // TODO
+//    // Diff commits 4 and 5
+//    // TODO
 
     // Modify files
     QVERIFY(createFile(sFile7Path, sFile7Content2));
@@ -317,19 +318,39 @@ void CTestAze::testAll()
 
     // Switch to trunk
     CREATE_REPO;
-    QVERIFY(m_pRepository->switchToBranch("trunk"));
+    QVERIFY(m_pRepository->readStage());
+    QVERIFY(m_pRepository->switchToBranch("trunk", true));
     QVERIFY(m_pRepository->writeCurrentBranch());
     QVERIFY(m_pRepository->writeGeneralInfo());
 
     // Merge Branch1 on trunk
     CREATE_REPO;
+    QVERIFY(m_pRepository->readStage());
     QVERIFY(m_pRepository->merge("Branch1"));
+    QVERIFY(m_pRepository->writeStage());
+
+    // Commit the merge
+    lStage.clear();
+    lStage << sFile7Path;
+    lStage << sFile8Path;
+
+    CREATE_REPO;
+    QVERIFY(m_pRepository->readStage());
+    QVERIFY(m_pRepository->stage(lStage));
+    QVERIFY(m_pRepository->writeStage());
+
+    CREATE_REPO;
+    QVERIFY(m_pRepository->readStage());
+    QVERIFY(m_pRepository->commit(m_sAuthor, "Commit 7"));
+    QVERIFY(m_pRepository->writeCurrentBranch());
+    QVERIFY(m_pRepository->clearStage());
+    QVERIFY(m_pRepository->writeStage());
 
     // Check merged files content
     QString sMergedFile7Content;
     QString sMergedFile8Content;
-    readFile(sFile7Path, sMergedFile7Content);
-    readFile(sFile8Path, sMergedFile8Content);
+    QVERIFY(readFile(sFile7Path, sMergedFile7Content));
+    QVERIFY(readFile(sFile8Path, sMergedFile8Content));
 
     QVERIFY(sMergedFile7Content == sFile7Content2);
     QVERIFY(sMergedFile8Content == sFile8Content2);
@@ -353,6 +374,7 @@ void CTestAze::testHeavy()
     QVERIFY(m_pRepository->createBranch("Branch1"));
 
     CREATE_REPO;
+    QVERIFY(m_pRepository->readStage());
     QVERIFY(m_pRepository->switchToBranch("Branch1"));
     QVERIFY(m_pRepository->writeCurrentBranch());
     QVERIFY(m_pRepository->writeGeneralInfo());
@@ -363,6 +385,7 @@ void CTestAze::testHeavy()
     QVERIFY(m_pRepository->createBranch("Branch2"));
 
     CREATE_REPO;
+    QVERIFY(m_pRepository->readStage());
     QVERIFY(m_pRepository->switchToBranch("Branch2"));
     QVERIFY(m_pRepository->writeCurrentBranch());
     QVERIFY(m_pRepository->writeGeneralInfo());

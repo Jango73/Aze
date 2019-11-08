@@ -17,6 +17,7 @@
 #include "objects/CCommit.h"
 #include "objects/CDatabase.h"
 #include "objects/CFile.h"
+#include "CCommitFunctions.h"
 #include "CEnums.h"
 #include "CStrings.h"
 
@@ -36,6 +37,8 @@ public:
 
     Q_FAST_PROPERTY(bool, b, ok, Ok)
     Q_FAST_PROPERTY(CDatabase*, p, database, Database)
+    Q_FAST_PROPERTY(CCommitFunctions*, p, commitFunctions, CommitFunctions)
+    Q_FAST_PROPERTY(CEnums::EFileStatus, e, status, Status)
 
     Q_FAST_PROPERTY(QString, s, currentBranchName, CurrentBranchName)
     Q_FAST_PROPERTY(QString, s, stagingCommitFileName, StagingCommitFileName)
@@ -68,7 +71,7 @@ public:
     bool createBranch(const QString& sName);
 
     //! Sets the current branch to sName
-    bool switchToBranch(const QString& sName);
+    bool switchToBranch(const QString& sName, bool bAllowFileDelete = false);
 
     //! Stages all files listed in lFileNames
     bool stage(const QStringList& lFileNames);
@@ -83,13 +86,13 @@ public:
     bool commit(const QString& sAuthor, const QString& sMessage);
 
     //! Reverts all files listed in lFileNames
-    bool revert(const QStringList& lFileNames);
+    bool revert(const QStringList& lFileNames, bool bAllowFileDelete = false);
 
     //! Reverts all files listed in the commit
-    bool revert(CCommit* pWorkingDirectory);
+    bool revert(CCommit* pWorkingDirectory, bool bAllowFileDelete = false);
 
     //! Returns a log
-    QString log(const QStringList& lFileNames, int iStart = 0, int iCount = 0);
+    QString log(const QStringList& lFileNames, bool bGraph = false, int iStart = 0, int iCount = 0);
 
     //! Returns a list of files and their status
     QList<CFile> fileStatus(const QStringList& lFileNames);
@@ -100,8 +103,12 @@ public:
     //!
     bool merge(const QString& sName);
 
+    //! Splits a full diff into a file diff list
+    //! 1st = file name, 2nd = diff
+    QList<QPair<QString, QString> > splitDiff(const QString& sFullDiff);
+
     //! Applies a diff to the working directory
-    bool applyDiff(const QString& sDiff);
+    bool applyDiff(const QString& sDiff, bool bAddToStage = false);
 
     //!
     CCommit* getStagingCommit();
@@ -133,6 +140,12 @@ public:
     //! Clears the stage commit (but does not write it)
     bool clearStage();
 
+    //!
+    CEnums::EFileStatus checkStatus(const QStringList& lFileNames);
+
+    //!
+    QStringList getLooseFiles();
+
     //-------------------------------------------------------------------------------------------------
     // Helper methods
     //-------------------------------------------------------------------------------------------------
@@ -143,23 +156,13 @@ public:
     //!
     QString processDeltas(const QString& sText, int& iDelta);
 
-    //!
-    CCommit* getCommitAncestor(CCommit* pCommit, QObject* parent = nullptr, int iDelta = 1);
+    //-------------------------------------------------------------------------------------------------
+    // Properties
+    //-------------------------------------------------------------------------------------------------
 
-    //!
-    QList<CCommit*> getCommitAncestorList(CCommit* pCommit, QObject* parent = nullptr, int iMaxCount = 0);
+private:
 
-    //!
-    CCommit* getCommitsCommonAncestor(CCommit* pCommit1, CCommit* pCommit2, QObject* parent = nullptr);
-
-    //!
-    CCommit* workingDirectoryAsCommit(QObject* parent);
-
-    //!
-    void listFilesRecursive(QStringList& lStack, QString sRootDirectory, QString sCurrentDirectory);
-
-    //!
-    void diffCommits(QString& sOutput, CCommit* pCommit1, CCommit* pCommit2, int iDelta1 = 0, int iDelta2 = 0);
+    QList<CFile> m_lFiles;
 };
 
 }

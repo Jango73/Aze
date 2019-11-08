@@ -22,7 +22,7 @@ public:
     // Constructor
     //-------------------------------------------------------------------------------------------------
 
-    CSwitchToBranchCommand(CRepository* pRepository, const QString& sBranchName);
+    CSwitchToBranchCommand(CRepository* pRepository, const QString& sBranchName, bool bAllowFileDelete = false);
 
     //-------------------------------------------------------------------------------------------------
     // Control methods
@@ -37,6 +37,7 @@ public:
 
 protected:
 
+    bool        m_bAllowFileDelete;
     QString     m_sBranchName;
 };
 

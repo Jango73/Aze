@@ -11,9 +11,9 @@ namespace Aze {
 
 //-------------------------------------------------------------------------------------------------
 
-CMergeCommand::CMergeCommand(CRepository* pRepository, const QString& sFrom)
+CMergeCommand::CMergeCommand(CRepository* pRepository, const QString& sFromBranch)
     : CBaseCommand(pRepository)
-    , m_sFrom(sFrom)
+    , m_sFromBranch(sFromBranch)
 {
 }
 
@@ -21,8 +21,11 @@ CMergeCommand::CMergeCommand(CRepository* pRepository, const QString& sFrom)
 
 bool CMergeCommand::execute()
 {
+    QList<CCommit*> lFromCommitChain;
+    QList<CCommit*> lToCommitChain;
+
     // Check validity of arguments
-    if (m_sFrom.isEmpty())
+    if (m_sFromBranch.isEmpty())
     {
         OUT_ERROR(CStrings::s_sTextNoCurrentBranch);
         return false;
@@ -35,6 +38,13 @@ bool CMergeCommand::execute()
         return false;
     }
 
+    // Check presence of stage
+    if (IS_NULL(m_pRepository->stagingCommit()))
+    {
+        OUT_ERROR(CStrings::s_sTextNoStagingCommit);
+        return false;
+    }
+
     // Check presence of current branch tip commit
     if (IS_NULL(m_pRepository->tipCommit()))
     {
@@ -42,7 +52,9 @@ bool CMergeCommand::execute()
         return false;
     }
 
-    CBranch* pFromBranch = m_pRepository->database()->getBranch(m_sFrom, this);
+    CCommit* pToTipCommit = m_pRepository->tipCommit();
+
+    CBranch* pFromBranch = m_pRepository->database()->getBranch(m_sFromBranch, this);
 
     // Check presence of 'from' branch tip commit
     if (IS_NULL(pFromBranch) || pFromBranch->tipCommitId().isEmpty())
@@ -67,10 +79,14 @@ bool CMergeCommand::execute()
         return false;
     }
 
-    CCommit* pCommonAncestor = m_pRepository->getCommitsCommonAncestor(
-                m_pRepository->tipCommit(),
+    // Get the common commit chains of the two commits
+    // Lists are from root to tip
+    CCommit* pCommonAncestor = m_pRepository->commitFunctions()->getCommonCommitChains(
+                pToTipCommit,
                 pFromTipCommit,
-                this
+                this,
+                &lToCommitChain,
+                &lFromCommitChain
                 );
 
     // Check presence of common ancestor
@@ -87,22 +103,41 @@ bool CMergeCommand::execute()
         return false;
     }
 
-//    OUT_DEBUG(pCommonAncestor->id());
+    // Check status of working directory
+    m_pRepository->checkStatus(QStringList());
+
+    if (m_pRepository->status() != CEnums::eClean)
+    {
+        OUT_ERROR(CStrings::s_sTextMergeWorkingDirectoryNotClean);
+        return false;
+    }
 
     // Get a diff between the two commits
     QString sDiff;
-    m_pRepository->diffCommits(sDiff, pCommonAncestor, pFromTipCommit);
+    m_pRepository->commitFunctions()->diffCommitLists(sDiff, lToCommitChain, lFromCommitChain);
 
     if (sDiff.isEmpty())
     {
-        OUT_ERROR("Diff is empty");
+        OUT_ERROR("Diff is empty.");
         return false;
     }
 
-    if (m_pRepository->applyDiff(sDiff) == false)
+    if (not m_pRepository->applyDiff(sDiff, true))
     {
+        OUT_ERROR(CStrings::s_sTextMergeFailed);
         return false;
     }
+
+    // Set merge information in staging commit
+    // Only the 'from' commit is added as a parent here, the other is added on commit
+    m_pRepository->stagingCommit()->setIsMerge(true);
+    m_pRepository->stagingCommit()->clearParents();
+    m_pRepository->stagingCommit()->addParent(pFromTipCommit->id());
+    m_pRepository->stagingCommit()->setMessage(
+                QString(tr("Merge branch %1 into %2"))
+                .arg(m_sFromBranch)
+                .arg(m_pRepository->currentBranchName())
+                );
 
     return true;
 }

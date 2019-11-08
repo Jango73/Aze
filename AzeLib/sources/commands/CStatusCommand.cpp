@@ -13,10 +13,11 @@ namespace Aze {
 
 //-------------------------------------------------------------------------------------------------
 
-CStatusCommand::CStatusCommand(CRepository* pRepository, const QStringList& lFileNames, QList<CFile>* pResult)
+CStatusCommand::CStatusCommand(CRepository* pRepository, const QStringList& lFileNames, QList<CFile>* pFileStatus, CEnums::EFileStatus* pGeneralStatus)
     : CBaseCommand(pRepository)
     , m_lFileNames(lFileNames)
-    , m_pResult(pResult)
+    , m_pFileStatus(pFileStatus)
+    , m_pGeneralStatus(pGeneralStatus)
 {
 }
 
@@ -26,11 +27,16 @@ bool CStatusCommand::execute()
 {
     QHash<QString, int> lProcessed;
 
-    if (IS_NULL(m_pResult))
+    if (IS_NULL(m_pFileStatus))
+        return false;
+
+    if (IS_NULL(m_pGeneralStatus))
         return false;
 
     if (IS_NULL(m_pRepository->stagingCommit()))
         return false;
+
+    (*m_pGeneralStatus) = CEnums::eClean;
 
     QList<CFile> lReturnValue;
 
@@ -46,12 +52,13 @@ bool CStatusCommand::execute()
         pFromCommit = new CCommit(this);
     }
 
-    CCommit* pWorkCommit = m_pRepository->workingDirectoryAsCommit(this);
+    // Get the working directory
+    CCommit* pWorkCommit = m_pRepository->commitFunctions()->directoryAsCommit(this);
 
     QStringList lWorkFiles = pWorkCommit->files().values();
     lWorkFiles.sort();
 
-    // Traverse working directory files
+    // Iterate through working directory files
     // Check how each file differs from the tip commit
     for (QString sRelativeName : lWorkFiles)
     {
@@ -71,17 +78,23 @@ bool CStatusCommand::execute()
             if (CUtils::idValid(sIdInStage))
             {
                 file.setStatus(CEnums::eAdded);
+
+                (*m_pGeneralStatus) = CEnums::eModified;
             }
         }
         else if (CUtils::idValid(sIdInFrom) && not CUtils::idValid(sIdInWork))
         {
             file.setStatus(CEnums::eDeleted);
+
+            (*m_pGeneralStatus) = CEnums::eModified;
         }
         else
         {
             if (sIdInWork != sIdInFrom)
             {
                 file.setStatus(CEnums::eModified);
+
+                (*m_pGeneralStatus) = CEnums::eModified;
             }
             else
             {
@@ -90,7 +103,7 @@ bool CStatusCommand::execute()
         }
 
         lProcessed[sRelativeName] = 0;
-        (*m_pResult) << file;
+        (*m_pFileStatus) << file;
     }
 
     // Traverse tip commit files
@@ -106,8 +119,10 @@ bool CStatusCommand::execute()
                 file.setRelativeName(sRelativeName);
                 file.setStatus(CEnums::eMissing);
 
+                (*m_pGeneralStatus) = CEnums::eModified;
+
                 lProcessed[sRelativeName] = 0;
-                (*m_pResult) << file;
+                (*m_pFileStatus) << file;
             }
         }
     }

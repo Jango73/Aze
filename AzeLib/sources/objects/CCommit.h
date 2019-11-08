@@ -67,6 +67,9 @@ public:
     bool toFile(const QString& sFileName) const;
 
     //!
+    void setDateToNow();
+
+    //!
     void clearParents();
 
     //!

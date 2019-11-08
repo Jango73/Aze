@@ -33,6 +33,7 @@ public:
     Q_FAST_PROPERTY(QString, s, rootPath, RootPath)
     Q_FAST_PROPERTY(QString, s, dataPath, DataPath)
     Q_FAST_PROPERTY(QString, s, stashPath, StashPath)
+    Q_FAST_PROPERTY(QString, s, mergePath, MergePath)
     Q_FAST_PROPERTY(QString, s, branchPath, BranchPath)
     Q_FAST_PROPERTY(QString, s, commitPath, CommitPath)
     Q_FAST_PROPERTY(QString, s, objectPath, ObjectPath)
@@ -81,6 +82,9 @@ public:
 
     //!
     QString composeLocalFileName(const QString& sFileName);
+
+    //!
+    QString composeMergeFileName(const QString& sFileName);
 
     //!
     QString composeBranchFileName(const QString& sBranchName);

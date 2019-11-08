@@ -19,6 +19,8 @@ CDatabase::CDatabase(const QString& sRootPath, QObject* parent)
         m_sRootPath.remove(m_sRootPath.count() - 1, 1);
 
     m_sDataPath = QString("%1/%2").arg(m_sRootPath).arg(CStrings::s_sPathAzeDataRoot);
+    m_sStashPath = QString("%1/%2").arg(m_sDataPath).arg(CStrings::s_sPathAzeStashPath);
+    m_sMergePath = QString("%1/%2").arg(m_sDataPath).arg(CStrings::s_sPathAzeMergePath);
     m_sBranchPath = QString("%1/%2").arg(m_sDataPath).arg(CStrings::s_sPathAzeBranchPath);
     m_sCommitPath = QString("%1/%2").arg(m_sDataPath).arg(CStrings::s_sPathAzeCommitPath);
     m_sObjectPath = QString("%1/%2").arg(m_sDataPath).arg(CStrings::s_sPathAzeObjectPath);
@@ -87,6 +89,8 @@ bool CDatabase::init()
         return false;
 
     rootDir.mkpath(m_sDataPath);
+    rootDir.mkpath(m_sStashPath);
+    rootDir.mkpath(m_sMergePath);
     rootDir.mkpath(m_sBranchPath);
     rootDir.mkpath(m_sCommitPath);
     rootDir.mkpath(m_sObjectPath);
@@ -113,6 +117,13 @@ QString CDatabase::absoluteFileName(const QString& sFileName)
 QString CDatabase::composeLocalFileName(const QString& sFileName)
 {
     return QString("%1/%2").arg(m_sRootPath).arg(sFileName);
+}
+
+//-------------------------------------------------------------------------------------------------
+
+QString CDatabase::composeMergeFileName(const QString& sFileName)
+{
+    return QString("%1/%2").arg(m_sMergePath).arg(sFileName);
 }
 
 //-------------------------------------------------------------------------------------------------

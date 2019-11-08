@@ -37,9 +37,15 @@ bool CDiffCommand::execute()
         return false;
     }
 
+    if (IS_NULL(m_pRepository->tipCommit()))
+    {
+        OUT_ERROR(CStrings::s_sTextNoTipCommit);
+        return false;
+    }
+
     if (sObject1.isEmpty() && sObject2.isEmpty())
     {
-        sObject1 = m_pRepository->currentBranch()->rootCommitId();
+        sObject1 = m_pRepository->currentBranch()->tipCommitId();
     }
 
     sObject1 = m_pRepository->processDeltas(sObject1, iDelta1);
@@ -66,7 +72,7 @@ bool CDiffCommand::execute()
 
     // Work on commits if object 2 is an existing file and object 1 is empty
     // We assume object 1 to be current stage
-    if (QFile(sCommitFileName2).exists() && sObject1.isEmpty())
+    if (sObject1.isEmpty() && QFile(sCommitFileName2).exists())
     {
         bWorkOnCommits = true;
     }
@@ -79,30 +85,51 @@ bool CDiffCommand::execute()
 
         if (not sObject1.isEmpty() && not sObject2.isEmpty())
         {
-            pCommit1 = CCommit::fromFile(sCommitFileName1, this, sObject1);
-            pCommit2 = CCommit::fromFile(sCommitFileName2, this, sObject2);
+            pCommit1 = m_pRepository->database()->getCommit(sObject1, this);
+            pCommit2 = m_pRepository->database()->getCommit(sObject2, this);
         }
         else if (not sObject1.isEmpty() && sObject2.isEmpty())
         {
             if (IS_NULL(m_pRepository->stagingCommit()))
                 return false;
 
-            pCommit1 = CCommit::fromFile(sCommitFileName1, this, sObject1);
-            pCommit2 = m_pRepository->stagingCommit()->clone();
+            pCommit1 = m_pRepository->database()->getCommit(sObject1, this);
+            pCommit2 = m_pRepository->commitFunctions()->directoryAsCommit(this);
         }
         else if (sObject1.isEmpty() && not sObject2.isEmpty())
         {
             if (IS_NULL(m_pRepository->stagingCommit()))
                 return false;
 
-            pCommit1 = CCommit::fromFile(sCommitFileName2, this, sObject2);
-            pCommit2 = m_pRepository->stagingCommit()->clone();
+            pCommit1 = m_pRepository->database()->getCommit(sObject2, this);
+            pCommit2 = m_pRepository->commitFunctions()->directoryAsCommit(this);
         }
 
         if (not IS_NULL(pCommit1) && not IS_NULL(pCommit2))
         {
-            m_pRepository->diffCommits(*m_pResult, pCommit1, pCommit2, iDelta1, iDelta2);
+            m_pRepository->commitFunctions()->diffCommits(*m_pResult, pCommit1, pCommit2, QStringList(), iDelta1, iDelta2);
         }
+    }
+    else
+    {
+        QString sFileName = sObject1;
+        QString sFileName2 = m_pRepository->database()->composeLocalFileName(sFileName);
+
+        if (not QFile(sFileName2).exists())
+        {
+            OUT_ERROR(CStrings::s_sTextNoSuchFile);
+            return false;
+        }
+
+        QString sId2 = mapKeyForValue(m_pRepository->tipCommit()->files(), sObject1);
+
+        if (sId2.isEmpty())
+            return false;
+
+        QString sText1 = m_pRepository->tipCommit()->fileContent(m_pRepository->database(), sFileName);
+        QString sText2 = CUtils::getTextFileContent(sFileName2);
+
+        m_pRepository->commitFunctions()->diffText(*m_pResult, sFileName, sText1, sText2);
     }
 
     return true;

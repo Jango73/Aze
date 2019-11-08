@@ -25,59 +25,10 @@
 
 AzeApp::AzeApp(int argc, char *argv[])
     : QCoreApplication(argc, argv)
-    , m_eCommand(CConstants::eCommandNone)
+    , m_tArguments(*this)
     , m_pOutStream(new QTextStream(stdout))
     , m_pRepository(new Aze::CRepository(QDir::currentPath(), this))
 {
-    CConstants::initCommandMap();
-
-    // Prepare arguments
-    QStringList lRawArguments;
-
-    for (int Index = 1; Index < argc; Index++)
-    {
-        lRawArguments << QString(argv[Index]);
-    }
-
-    QString lConcatenatedArguments = lRawArguments.join(" ");
-
-    // Get some arguments from console if none provided
-    if (lRawArguments.count() < 1)
-    {
-        (*m_pOutStream) << QString("Please enter a command (%1)\n>").arg(m_pRepository->database()->rootPath());
-        m_pOutStream->flush();
-
-        QTextStream in(stdin);
-        lConcatenatedArguments = in.readLine();
-    }
-
-    // Get arguments by splitting on space except for quoted strings
-    lRawArguments = lConcatenatedArguments.split(QRegExp(" (?=[^\"]*(\"[^\"]*\"[^\"]*)*$)"));
-
-    // Remove quotes when needed
-    for (QString sArg : lRawArguments)
-    {
-        if (sArg.startsWith("\"") && sArg.endsWith("\""))
-        {
-            sArg.remove(0, 1);
-            sArg.remove(sArg.length() - 1, 1);
-        }
-
-        m_lArguments << sArg;
-    }
-
-    // Get command
-    if (m_lArguments.count() > 0)
-    {
-        QString sCommand = m_lArguments.takeFirst().toLower();
-        m_eCommand = CConstants::s_mCommands[sCommand];
-    }
-
-    // Split switches and files
-    for (QString sArgument : m_lArguments)
-    {
-        m_lFilesAndIds << sArgument;
-    }
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -85,63 +36,13 @@ AzeApp::AzeApp(int argc, char *argv[])
 AzeApp::~AzeApp()
 {
     delete m_pOutStream;
-    delete m_pRepository;
-}
-
-//-------------------------------------------------------------------------------------------------
-
-QString AzeApp::getArgumentValue(const QString& sName)
-{
-    for (int iIndex = 0; iIndex < m_lArguments.count(); iIndex++)
-    {
-        if (m_lArguments[iIndex] == sName)
-        {
-            m_lArguments.takeAt(iIndex);
-
-            if (iIndex < m_lArguments.count())
-                return m_lArguments.takeAt(iIndex);
-
-            return "";
-        }
-    }
-
-    return "";
-}
-
-//-------------------------------------------------------------------------------------------------
-
-bool AzeApp::getSwitch(const QString& sName)
-{
-    for (int iIndex = 0; iIndex < m_lArguments.count(); iIndex++)
-    {
-        if (m_lArguments[iIndex] == sName)
-        {
-            m_lArguments.takeAt(iIndex);
-            return true;
-        }
-    }
-
-    return false;
-}
-
-//-------------------------------------------------------------------------------------------------
-
-bool AzeApp::checkRemainingSwitches()
-{
-    if (m_lArguments.count() > 0)
-    {
-        OUT_ERROR(QString(tr("Unknown argument: %1")).arg(m_lArguments[0]));
-        return false;
-    }
-
-    return true;
 }
 
 //-------------------------------------------------------------------------------------------------
 
 int AzeApp::run()
 {
-    switch (m_eCommand)
+    switch (m_tArguments.m_eCommand)
     {
     case CConstants::eCommandNone:
         break;
@@ -179,6 +80,9 @@ int AzeApp::run()
     case CConstants::eCommandCommit:
         return commit();
 
+    case CConstants::eCommandCleanUp:
+        return cleanUp();
+
     case CConstants::eCommandLog:
         return log();
 
@@ -190,10 +94,9 @@ int AzeApp::run()
 
     case CConstants::eCommandDump:
         return dump();
-
-    case CConstants::eCommandHelp:
-        return help();
     }
+
+    OUT_ERROR("Unknown command...");
 
     return 0;
 }
@@ -216,9 +119,9 @@ bool AzeApp::isASainRepository()
 
 void AzeApp::processWildCards()
 {
-    m_lFilesAndIds = CFileUtilities::getInstance()->concernedFiles(
+    m_tArguments.m_lFilesAndIds = CFileUtilities::getInstance()->concernedFiles(
                 m_pRepository->database()->rootPath(),
-                m_lFilesAndIds
+                m_tArguments.m_lFilesAndIds
                 );
 }
 
@@ -244,9 +147,9 @@ int AzeApp::createBranch()
 {
     ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
 
-    ERROR_WHEN_FALSE(m_lFilesAndIds.count() > 0, CConstants::s_iError_NoBranchNameGiven);
+    ERROR_WHEN_FALSE(m_tArguments.m_lFilesAndIds.count() > 0, CConstants::s_iError_NoBranchNameGiven);
 
-    ERROR_WHEN_FALSE(m_pRepository->createBranch(m_lFilesAndIds[0]), CConstants::s_iError_CouldNotCreateBranch);
+    ERROR_WHEN_FALSE(m_pRepository->createBranch(m_tArguments.m_lFilesAndIds[0]), CConstants::s_iError_CouldNotCreateBranch);
 
     return CConstants::s_iError_None;
 }
@@ -257,9 +160,13 @@ int AzeApp::switchToBranch()
 {
     ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
 
-    ERROR_WHEN_FALSE(m_lFilesAndIds.count() > 0, CConstants::s_iError_NoBranchNameGiven);
+    ERROR_WHEN_FALSE(m_tArguments.m_lFilesAndIds.count() > 0, CConstants::s_iError_NoBranchNameGiven);
 
-    QString sBranchName = m_lFilesAndIds[0];
+    ERROR_WHEN_FALSE(m_pRepository->readStage(), CConstants::s_iError_CouldNotReadStage);
+
+    bool bAllowFileDelete = m_tArguments.m_tParser.isSet(m_tArguments.m_oAllowFileDelete);
+
+    QString sBranchName = m_tArguments.m_lFilesAndIds[0];
 
     ERROR_WHEN_FALSE_PRINT(
                 sBranchName != m_pRepository->currentBranchName(),
@@ -267,7 +174,7 @@ int AzeApp::switchToBranch()
                 CConstants::s_iError_None
                 );
 
-    ERROR_WHEN_FALSE(m_pRepository->switchToBranch(sBranchName), CConstants::s_iError_CouldNotSetCurrentBranch);
+    ERROR_WHEN_FALSE(m_pRepository->switchToBranch(sBranchName, bAllowFileDelete), CConstants::s_iError_CouldNotSetCurrentBranch);
 
     ERROR_WHEN_FALSE(m_pRepository->writeCurrentBranch(), CConstants::s_iError_CouldNotWriteCurrentBranch);
 
@@ -286,30 +193,46 @@ int AzeApp::status()
 
     ERROR_WHEN_FALSE(m_pRepository->readStage(), CConstants::s_iError_CouldNotReadStage);
 
-    QList<Aze::CFile> lFiles = m_pRepository->fileStatus(m_lFilesAndIds);
+    QMap<Aze::CEnums::EFileStatus, bool> bVisibility;
 
-    if (lFiles.isEmpty())
+    bVisibility[Aze::CEnums::eLoose] = m_tArguments.m_tParser.isSet(m_tArguments.m_oLoose);
+    bVisibility[Aze::CEnums::eClean] = m_tArguments.m_tParser.isSet(m_tArguments.m_oClean);
+    bVisibility[Aze::CEnums::eModified] = m_tArguments.m_tParser.isSet(m_tArguments.m_oModified);
+    bVisibility[Aze::CEnums::eAdded] = m_tArguments.m_tParser.isSet(m_tArguments.m_oAdded);
+    bVisibility[Aze::CEnums::eDeleted] = m_tArguments.m_tParser.isSet(m_tArguments.m_oDeleted);
+    bVisibility[Aze::CEnums::eMissing] = m_tArguments.m_tParser.isSet(m_tArguments.m_oMissing);
+    bVisibility[Aze::CEnums::eIgnored] = m_tArguments.m_tParser.isSet(m_tArguments.m_oIgnored);
+    bVisibility[Aze::CEnums::eAll] = m_tArguments.m_tParser.isSet(m_tArguments.m_oAll);
+
+    processWildCards();
+
+    QString sOutput;
+    QList<Aze::CFile> lFiles = m_pRepository->fileStatus(m_tArguments.m_lFilesAndIds);
+
+    if (not m_tArguments.m_lFilesAndIds.isEmpty())
     {
-        (*m_pOutStream) << "All files are clean, on branch " << m_pRepository->currentBranchName() << "\n";
+        for (QString sFullName : m_tArguments.m_lFilesAndIds)
+        {
+            QString sRelativeName = m_pRepository->database()->relativeFileName(sFullName);
+
+            QList<Aze::CFile>::iterator file = std::find_if(
+                        lFiles.begin(),
+                        lFiles.end(),
+                        [&](const Aze::CFile& f) { return f.relativeName() == sRelativeName; }
+            );
+
+            if (file != lFiles.end())
+            {
+                sOutput += QString("%1 %2\n")
+                        .arg(Aze::CEnums::FileStatusSymbol(file->status()))
+                        .arg(sRelativeName);
+            }
+        }
     }
     else
     {
-        (*m_pOutStream) << "Status of working directory files, on branch " << m_pRepository->currentBranchName() << ":\n";
-
-        QMap<Aze::CEnums::EFileStatus, bool> bVisibility;
-
-        bVisibility[Aze::CEnums::eLoose] = getSwitch(CConstants::s_sSwitchLoose);
-        bVisibility[Aze::CEnums::eClean] = getSwitch(CConstants::s_sSwitchClean);
-        bVisibility[Aze::CEnums::eModified] = getSwitch(CConstants::s_sSwitchModified);
-        bVisibility[Aze::CEnums::eAdded] = getSwitch(CConstants::s_sSwitchAdded);
-        bVisibility[Aze::CEnums::eDeleted] = getSwitch(CConstants::s_sSwitchDeleted);
-        bVisibility[Aze::CEnums::eMissing] = getSwitch(CConstants::s_sSwitchMissing);
-        bVisibility[Aze::CEnums::eIgnored] = getSwitch(CConstants::s_sSwitchIgnored);
-        bVisibility[Aze::CEnums::eAll] = getSwitch(CConstants::s_sSwitchAll);
-
-        ERROR_WHEN_FALSE(checkRemainingSwitches(), CConstants::s_iError_UnknownSwitch);
-
         bool bAtLeastOneSwitchTrue = false;
+
         for (bool bSwitch : bVisibility.values())
             if (bSwitch)
                 bAtLeastOneSwitchTrue = true;
@@ -324,13 +247,32 @@ int AzeApp::status()
 
         for (Aze::CFile& file : lFiles)
         {
+            QString sRelativeName = file.relativeName();
+
             if (bVisibility[Aze::CEnums::eAll] || bVisibility[file.status()])
             {
-                (*m_pOutStream) << Aze::CEnums::FileStatusSymbol(file.status()) << " " << file.relativeName();
-                (*m_pOutStream) << "\n";
+                sOutput += QString("%1 %2\n")
+                        .arg(Aze::CEnums::FileStatusSymbol(file.status()))
+                        .arg(sRelativeName);
             }
         }
     }
+
+    if (sOutput.isEmpty())
+    {
+        sOutput = QString(CConstants::s_sAllFilesAreClean)
+                .arg(m_pRepository->currentBranchName())
+                + QString("\n");
+    }
+    else
+    {
+        sOutput = QString(CConstants::s_sStatusOfFiles)
+                .arg(m_pRepository->currentBranchName())
+                + QString("\n")
+                + sOutput;
+    }
+
+    (*m_pOutStream) << sOutput;
 
     return 0;
 }
@@ -341,13 +283,17 @@ int AzeApp::stage()
 {
     ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
 
-    ERROR_WHEN_FALSE(m_lFilesAndIds.count() > 0, CConstants::s_iError_NoFileNameGiven);
-
     ERROR_WHEN_FALSE(m_pRepository->readStage(), CConstants::s_iError_CouldNotReadStage);
+
+    ERROR_WHEN_FALSE_PRINT(
+                m_tArguments.m_lFilesAndIds.count() > 0,
+                Aze::CStrings::s_sTextNoFileSpecified,
+                CConstants::s_iError_NoFileNameGiven
+                );
 
     processWildCards();
 
-    ERROR_WHEN_FALSE(m_pRepository->stage(m_lFilesAndIds), CConstants::s_iError_CouldNotAddFiles);
+    ERROR_WHEN_FALSE(m_pRepository->stage(m_tArguments.m_lFilesAndIds), CConstants::s_iError_CouldNotAddFiles);
 
     ERROR_WHEN_FALSE(m_pRepository->writeStage(), CConstants::s_iError_CouldNotWriteStage);
 
@@ -360,13 +306,17 @@ int AzeApp::unstage()
 {
     ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
 
-    ERROR_WHEN_FALSE(m_lFilesAndIds.count() > 0, CConstants::s_iError_NoFileNameGiven);
-
     ERROR_WHEN_FALSE(m_pRepository->readStage(), CConstants::s_iError_CouldNotReadStage);
+
+    ERROR_WHEN_FALSE_PRINT(
+                m_tArguments.m_lFilesAndIds.count() > 0,
+                Aze::CStrings::s_sTextNoFileSpecified,
+                CConstants::s_iError_NoFileNameGiven
+                );
 
     processWildCards();
 
-    ERROR_WHEN_FALSE(m_pRepository->unstage(m_lFilesAndIds), CConstants::s_iError_CouldNotAddFiles);
+    ERROR_WHEN_FALSE(m_pRepository->unstage(m_tArguments.m_lFilesAndIds), CConstants::s_iError_CouldNotAddFiles);
 
     ERROR_WHEN_FALSE(m_pRepository->writeStage(), CConstants::s_iError_CouldNotWriteStage);
 
@@ -379,11 +329,15 @@ int AzeApp::revert()
 {
     ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
 
-    ERROR_WHEN_FALSE(m_lFilesAndIds.count() > 0, CConstants::s_iError_NoFileNameGiven);
+    ERROR_WHEN_FALSE(m_pRepository->readStage(), CConstants::s_iError_CouldNotReadStage);
+
+    bool bAllowFileDelete = m_tArguments.m_tParser.isSet(m_tArguments.m_oAllowFileDelete);
+
+    ERROR_WHEN_FALSE(m_tArguments.m_lFilesAndIds.count() > 0, CConstants::s_iError_NoFileNameGiven);
 
     processWildCards();
 
-    ERROR_WHEN_FALSE(m_pRepository->revert(m_lFilesAndIds), CConstants::s_iError_CouldNotRevertFiles);
+    ERROR_WHEN_FALSE(m_pRepository->revert(m_tArguments.m_lFilesAndIds, bAllowFileDelete), CConstants::s_iError_CouldNotRevertFiles);
 
     return CConstants::s_iError_None;
 }
@@ -409,7 +363,11 @@ int AzeApp::remove()
 
     ERROR_WHEN_FALSE(m_pRepository->readStage(), CConstants::s_iError_CouldNotReadStage);
 
-    ERROR_WHEN_FALSE(m_pRepository->remove(m_lFilesAndIds), CConstants::s_iError_CouldNotRemoveFiles);
+    ERROR_WHEN_FALSE(m_tArguments.m_lFilesAndIds.count() > 0, CConstants::s_iError_NoFileNameGiven);
+
+    processWildCards();
+
+    ERROR_WHEN_FALSE(m_pRepository->remove(m_tArguments.m_lFilesAndIds), CConstants::s_iError_CouldNotRemoveFiles);
 
     ERROR_WHEN_FALSE(m_pRepository->writeStage(), CConstants::s_iError_CouldNotWriteStage);
 
@@ -424,8 +382,8 @@ int AzeApp::commit()
 
     ERROR_WHEN_FALSE(m_pRepository->readStage(), CConstants::s_iError_CouldNotReadStage);
 
-    QString sAuthor = getArgumentValue(CConstants::s_sSwitchAuthor);
-    QString sMessage = getArgumentValue(CConstants::s_sSwitchMessage);
+    QString sAuthor = m_tArguments.m_tParser.value(m_tArguments.m_oAuthor);
+    QString sMessage = m_tArguments.m_tParser.value(m_tArguments.m_oMessage);
 
     ERROR_WHEN_FALSE(m_pRepository->commit(sAuthor, sMessage), CConstants::s_iError_CouldNotRemoveFiles);
 
@@ -440,14 +398,34 @@ int AzeApp::commit()
 
 //-------------------------------------------------------------------------------------------------
 
+int AzeApp::cleanUp()
+{
+    ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
+
+    ERROR_WHEN_FALSE(m_pRepository->readStage(), CConstants::s_iError_CouldNotReadStage);
+    ERROR_WHEN_FALSE(m_pRepository->clearStage(), CConstants::s_iError_CouldNotWriteStage);
+    ERROR_WHEN_FALSE(m_pRepository->writeStage(), CConstants::s_iError_CouldNotWriteStage);
+
+    m_tArguments.m_lFilesAndIds.clear();
+    m_tArguments.m_lFilesAndIds << "*";
+    processWildCards();
+
+    ERROR_WHEN_FALSE(m_pRepository->revert(m_tArguments.m_lFilesAndIds, true), CConstants::s_iError_CouldNotRevertFiles);
+
+    return CConstants::s_iError_None;
+}
+
+//-------------------------------------------------------------------------------------------------
+
 int AzeApp::log()
 {
     ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
 
-    int iStart = getArgumentValue(CConstants::s_sSwitchStart).toInt();
-    int iCount = getArgumentValue(CConstants::s_sSwitchCount).toInt();
+    bool bGraph = m_tArguments.m_tParser.isSet(m_tArguments.m_oGraph);
+    int iStart = m_tArguments.m_tParser.value(m_tArguments.m_oStart).toInt();
+    int iCount = m_tArguments.m_tParser.value(m_tArguments.m_oCount).toInt();
 
-    (*m_pOutStream) << m_pRepository->log(m_lFilesAndIds, iStart, iCount);
+    (*m_pOutStream) << m_pRepository->log(m_tArguments.m_lFilesAndIds, bGraph, iStart, iCount);
     m_pOutStream->flush();
 
     return CConstants::s_iError_None;
@@ -461,8 +439,8 @@ int AzeApp::diff()
 
     ERROR_WHEN_FALSE(m_pRepository->readStage(), CConstants::s_iError_CouldNotReadStage);
 
-    QString sFirst = m_lFilesAndIds.isEmpty() ? "" : m_lFilesAndIds.takeFirst();
-    QString sSecond = m_lFilesAndIds.isEmpty() ? "" : m_lFilesAndIds.takeFirst();
+    QString sFirst = m_tArguments.m_lFilesAndIds.isEmpty() ? "" : m_tArguments.m_lFilesAndIds.takeFirst();
+    QString sSecond = m_tArguments.m_lFilesAndIds.isEmpty() ? "" : m_tArguments.m_lFilesAndIds.takeFirst();
 
     (*m_pOutStream) << Aze::CUtils::printableUnifiedDiff(m_pRepository->diff(sFirst, sSecond));
     m_pOutStream->flush();
@@ -478,9 +456,9 @@ int AzeApp::merge()
 
     ERROR_WHEN_FALSE(m_pRepository->readStage(), CConstants::s_iError_CouldNotReadStage);
 
-    ERROR_WHEN_FALSE(m_lFilesAndIds.count() > 0, CConstants::s_iError_NoBranchNameGiven);
+    ERROR_WHEN_FALSE(m_tArguments.m_lFilesAndIds.count() > 0, CConstants::s_iError_NoBranchNameGiven);
 
-    QString sBranchName = m_lFilesAndIds.takeFirst();
+    QString sBranchName = m_tArguments.m_lFilesAndIds.takeFirst();
 
     if (sBranchName == m_pRepository->currentBranchName())
     {
@@ -491,6 +469,8 @@ int AzeApp::merge()
 
     ERROR_WHEN_FALSE(m_pRepository->merge(sBranchName), CConstants::s_iError_CouldNotMerge);
 
+    ERROR_WHEN_FALSE(m_pRepository->writeStage(), CConstants::s_iError_CouldNotWriteStage);
+
     return CConstants::s_iError_None;
 }
 
@@ -500,7 +480,7 @@ int AzeApp::dump()
 {
     ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
 
-    for (QString sId : m_lFilesAndIds)
+    for (QString sId : m_tArguments.m_lFilesAndIds)
     {
         (*m_pOutStream) << m_pRepository->database()->printableFileContentById(sId);
         m_pOutStream->flush();
@@ -522,3 +502,79 @@ int AzeApp::help()
 
     return CConstants::s_iError_None;
 }
+
+//-------------------------------------------------------------------------------------------------
+
+CAzeArguments::CAzeArguments(QCoreApplication& app)
+    : QObject(nullptr)
+    , m_oAll(QStringList() << CConstants::s_sSwitchAll,
+               QCoreApplication::translate(CConstants::s_sContextMain, "Include all files."))
+    , m_oLoose(QStringList() << CConstants::s_sSwitchLoose,
+               QCoreApplication::translate(CConstants::s_sContextMain, "Include loose files."))
+    , m_oClean(QStringList() << CConstants::s_sSwitchClean,
+                     QCoreApplication::translate(CConstants::s_sContextMain, "Include clean files."))
+    , m_oModified(QStringList() << CConstants::s_sSwitchModified,
+                  QCoreApplication::translate(CConstants::s_sContextMain, "Include modified files."))
+    , m_oAdded(QStringList() << CConstants::s_sSwitchAdded,
+               QCoreApplication::translate(CConstants::s_sContextMain, "Include added files."))
+    , m_oDeleted(QStringList() << CConstants::s_sSwitchDeleted,
+                 QCoreApplication::translate(CConstants::s_sContextMain, "Include deleted files."))
+    , m_oMissing(QStringList() << CConstants::s_sSwitchMissing,
+                 QCoreApplication::translate(CConstants::s_sContextMain, "Include missing files."))
+    , m_oIgnored(QStringList() << CConstants::s_sSwitchIgnored,
+                 QCoreApplication::translate(CConstants::s_sContextMain, "Include ignored files."))
+    , m_oAuthor(QStringList() << "a" << CConstants::s_sSwitchAuthor,
+                QCoreApplication::translate(CConstants::s_sContextMain, "Set commit author to <author>."),
+                QCoreApplication::translate(CConstants::s_sContextMain, CConstants::s_sSwitchAuthor))
+    , m_oMessage(QStringList() << "m" << CConstants::s_sSwitchMessage,
+                 QCoreApplication::translate(CConstants::s_sContextMain, "Set commit message to <message>."),
+                 QCoreApplication::translate(CConstants::s_sContextMain, CConstants::s_sSwitchMessage))
+    , m_oStart(QStringList() << "s" << CConstants::s_sSwitchStart,
+               QCoreApplication::translate(CConstants::s_sContextMain, "Begin listing after <start> items."),
+               QCoreApplication::translate(CConstants::s_sContextMain, CConstants::s_sSwitchStart))
+    , m_oCount(QStringList() << "c" << CConstants::s_sSwitchCount,
+               QCoreApplication::translate(CConstants::s_sContextMain, "List <count> items."),
+               QCoreApplication::translate(CConstants::s_sContextMain, CConstants::s_sSwitchCount))
+    , m_oAllowFileDelete(QStringList() << "d" << CConstants::s_sSwitchAllowFileDelete,
+                         QCoreApplication::translate(CConstants::s_sContextMain, "Allow Aze to delete files."),
+                         QCoreApplication::translate(CConstants::s_sContextMain, CConstants::s_sSwitchAllowFileDelete))
+    , m_oGraph(QStringList() << "g" << CConstants::s_sSwitchGraph,
+               QCoreApplication::translate(CConstants::s_sContextMain, "Show log as a graph."))
+    , m_eCommand(CConstants::eCommandNone)
+{
+    CConstants::initCommandMap();
+
+    QCoreApplication::setApplicationName("Aze");
+    QCoreApplication::setApplicationVersion("1.0");
+
+    m_tParser.addOptions({
+                             m_oAll,
+                             m_oLoose,
+                             m_oClean,
+                             m_oModified,
+                             m_oAdded,
+                             m_oDeleted,
+                             m_oMissing,
+                             m_oIgnored,
+                             m_oAuthor,
+                             m_oMessage,
+                             m_oStart,
+                             m_oCount,
+                             m_oAllowFileDelete,
+                             m_oGraph
+                         });
+
+    m_tParser.addHelpOption();
+    m_tParser.addVersionOption();
+    m_tParser.process(app);
+
+    m_lFilesAndIds = m_tParser.positionalArguments();
+
+    if (m_lFilesAndIds.count() > 0)
+    {
+        QString sCommand = m_lFilesAndIds.takeFirst();
+        m_eCommand = CConstants::s_mCommands[sCommand];
+    }
+}
+
+//-------------------------------------------------------------------------------------------------

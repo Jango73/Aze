@@ -11,8 +11,8 @@ namespace Aze {
 CCommit::CCommit(QObject* parent)
     : CObject(parent)
     , m_bIsMerge(false)
-    , m_sDate(QDateTime::currentDateTimeUtc().toString(Qt::ISODate))
 {
+    setDateToNow();
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -78,6 +78,13 @@ bool CCommit::toFile(const QString& sFileName) const
 {
     toNode().save(sFileName);
     return true;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+void CCommit::setDateToNow()
+{
+    m_sDate = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -150,6 +157,11 @@ bool CCommit::addCommit(CDatabase* pDatabase, CCommit* pCommitToAdd)
         }
     }
 
+    for (QString sParent : pCommitToAdd->parents())
+    {
+        addParent(sParent);
+    }
+
     return true;
 }
 
@@ -184,7 +196,7 @@ CCommit* CCommit::fromNode(const CXMLNode& xNode, QObject* parent, QString sComm
 
     // Read general information
     CXMLNode xInfo = xNode.getNodeByTagName(CStrings::s_sParamInfo);
-    pCommit->setIsMerge(bool(xInfo.attributes()[CStrings::s_sParamAuthor].toInt()));
+    pCommit->setIsMerge(bool(xInfo.attributes()[CStrings::s_sParamIsMerge].toInt()));
     pCommit->setAuthor(xInfo.attributes()[CStrings::s_sParamAuthor]);
     pCommit->setDate(xInfo.attributes()[CStrings::s_sParamDate]);
 

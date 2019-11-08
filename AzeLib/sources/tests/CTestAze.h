@@ -65,7 +65,7 @@ private:
     CRepository* m_pRepository;
     QStringList lStage;
     QString m_sRootPath;
-    QString m_sRepoPath;
+    QString m_sDataPath;
     QString m_sAuthor;
     QString m_sInfoPath;
     QString m_sTrunkPath;

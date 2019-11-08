@@ -17,6 +17,10 @@
 
 //-------------------------------------------------------------------------------------------------
 
+#define PRINTABLE_ISO_DATE(a)   (QDateTime::fromString(a, Qt::ISODate).toUTC().toString("yyyy-MM-dd hh:mm"))
+
+//-------------------------------------------------------------------------------------------------
+
 namespace Aze {
 
 class AZE_SHARED_EXPORT CUtils
@@ -26,6 +30,12 @@ public:
     //-------------------------------------------------------------------------------------------------
     // Public static methods
     //-------------------------------------------------------------------------------------------------
+
+    //!
+    static void ensureFilePathExists(const QString& sFileName);
+
+    //!
+    static bool moveFile(const QString& sSource, const QString& sTarget);
 
     //! Returns a relative file name given a root path and an absolute path to a file
     static QString relativeFileName(const QString& sRootPath, const QString& sFileName);
