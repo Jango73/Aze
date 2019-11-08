@@ -256,13 +256,7 @@ void CTestAze::testAll()
     commit(lStage, m_sAuthor, "Commit3");
 
     // Diff commits 2 and 3
-//    CREATE_REPO;
-//    QVERIFY(m_pRepository->readStage());
-//    sActualDiff = m_pRepository->diff("tip~1", "tip");
-//    QString sFile3Patched = CUtils::applyUnifiedDiff(sFile3Content1, sActualDiff);
-//    QString sFile4Patched = CUtils::applyUnifiedDiff(sFile4Content1, sActualDiff);
-//    QVERIFY(sFile3Content2 == sFile3Patched);
-//    QVERIFY(sFile4Content2 == sFile4Patched);
+    // TODO
 
     // 4th commit
     lStage.clear();
@@ -272,13 +266,7 @@ void CTestAze::testAll()
     commit(lStage, m_sAuthor, "Commit4");
 
     // Diff commits 3 and 4
-//    CREATE_REPO;
-//    QVERIFY(m_pRepository->readStage());
-//    sActualDiff = m_pRepository->diff("tip~1", "tip");
-//    QString sFile5Patched = CUtils::applyUnifiedDiff(sFile5Content1, sActualDiff);
-//    QString sFile6Patched = CUtils::applyUnifiedDiff(sFile6Content1, sActualDiff);
-//    QVERIFY(sFile5Content2 == sFile5Patched);
-//    QVERIFY(sFile6Content2 == sFile6Patched);
+    // TODO
 
     // Create branch 1
     CREATE_REPO;
@@ -302,8 +290,8 @@ void CTestAze::testAll()
 
     commit(lStage, m_sAuthor, "Commit5");
 
-//    // Diff commits 4 and 5
-//    // TODO
+    // Diff commits 4 and 5
+    // TODO
 
     // Modify files
     QVERIFY(createFile(sFile7Path, sFile7Content2));
@@ -360,37 +348,37 @@ void CTestAze::testAll()
 
 void CTestAze::testHeavy()
 {
-    clearRepository();
+//    clearRepository();
 
-    CREATE_REPO;
-    QVERIFY(m_pRepository->init());
+//    CREATE_REPO;
+//    QVERIFY(m_pRepository->init());
 
-    QDir rootDir(m_sRootPath);
-    QVERIFY(rootDir.mkdir(m_sFilesFolderName));
+//    QDir rootDir(m_sRootPath);
+//    QVERIFY(rootDir.mkdir(m_sFilesFolderName));
 
-    createManyFiles();
+//    createManyFiles();
 
-    CREATE_REPO;
-    QVERIFY(m_pRepository->createBranch("Branch1"));
+//    CREATE_REPO;
+//    QVERIFY(m_pRepository->createBranch("Branch1"));
 
-    CREATE_REPO;
-    QVERIFY(m_pRepository->readStage());
-    QVERIFY(m_pRepository->switchToBranch("Branch1"));
-    QVERIFY(m_pRepository->writeCurrentBranch());
-    QVERIFY(m_pRepository->writeGeneralInfo());
+//    CREATE_REPO;
+//    QVERIFY(m_pRepository->readStage());
+//    QVERIFY(m_pRepository->switchToBranch("Branch1"));
+//    QVERIFY(m_pRepository->writeCurrentBranch());
+//    QVERIFY(m_pRepository->writeGeneralInfo());
 
-    createManyFiles();
+//    createManyFiles();
 
-    CREATE_REPO;
-    QVERIFY(m_pRepository->createBranch("Branch2"));
+//    CREATE_REPO;
+//    QVERIFY(m_pRepository->createBranch("Branch2"));
 
-    CREATE_REPO;
-    QVERIFY(m_pRepository->readStage());
-    QVERIFY(m_pRepository->switchToBranch("Branch2"));
-    QVERIFY(m_pRepository->writeCurrentBranch());
-    QVERIFY(m_pRepository->writeGeneralInfo());
+//    CREATE_REPO;
+//    QVERIFY(m_pRepository->readStage());
+//    QVERIFY(m_pRepository->switchToBranch("Branch2"));
+//    QVERIFY(m_pRepository->writeCurrentBranch());
+//    QVERIFY(m_pRepository->writeGeneralInfo());
 
-    createManyFiles();
+//    createManyFiles();
 }
 
 //-------------------------------------------------------------------------------------------------

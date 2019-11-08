@@ -215,8 +215,12 @@ void CCommitFunctions::listFilesRecursive(QStringList& lStack, QString sRootDire
 
     for (QFileInfo iFile : lFiles)
     {
-        QString sTargetDirectory = QString("%1/%2").arg(sCurrentDirectory).arg(iFile.fileName());
-        listFilesRecursive(lStack, sRootDirectory, sTargetDirectory);
+        QString sDirectoryName = iFile.fileName();
+        if (sDirectoryName != CStrings::s_sPathAzeDataRoot)
+        {
+            QString sTargetDirectory = QString("%1/%2").arg(sCurrentDirectory).arg(sDirectoryName);
+            listFilesRecursive(lStack, sRootDirectory, sTargetDirectory);
+        }
     }
 }
 
