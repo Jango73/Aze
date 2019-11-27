@@ -116,12 +116,14 @@ bool CMergeCommand::execute()
     QString sDiff;
     m_pRepository->commitFunctions()->diffCommitLists(sDiff, lToCommitChain, lFromCommitChain);
 
+    // Bail out if diff is empty
     if (sDiff.isEmpty())
     {
         OUT_ERROR("Diff is empty.");
         return false;
     }
 
+    // Apply the diff to the working directory
     if (not m_pRepository->applyDiff(sDiff, true))
     {
         OUT_ERROR(CStrings::s_sTextMergeFailed);
@@ -129,7 +131,7 @@ bool CMergeCommand::execute()
     }
 
     // Set merge information in staging commit
-    // Only the 'from' commit is added as a parent here, the other is added on commit
+    // Only the 'from' commit is added as a parent here, the other will be added by commit command
     m_pRepository->stagingCommit()->setIsMerge(true);
     m_pRepository->stagingCommit()->clearParents();
     m_pRepository->stagingCommit()->addParent(pFromTipCommit->id());

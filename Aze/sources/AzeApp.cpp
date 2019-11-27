@@ -9,7 +9,6 @@
 #include <File/CFileUtilities.h>
 
 // Aze
-#include "tests/CTestAze.h"
 #include "CUtils.h"
 
 // Application
@@ -23,19 +22,26 @@
 
 //-------------------------------------------------------------------------------------------------
 
-AzeApp::AzeApp(int argc, char *argv[])
+AzeApp::AzeApp(int argc, char *argv[], QTextStream* pOutStream)
     : QCoreApplication(argc, argv)
     , m_tArguments(*this)
-    , m_pOutStream(new QTextStream(stdout))
+    , m_pOutStream(pOutStream)
     , m_pRepository(new Aze::CRepository(QDir::currentPath(), this))
+    , m_bOutputStreamIsMine(false)
 {
+    if (m_pOutStream == nullptr)
+    {
+        m_bOutputStreamIsMine = true;
+        m_pOutStream = new QTextStream(stdout);
+    }
 }
 
 //-------------------------------------------------------------------------------------------------
 
 AzeApp::~AzeApp()
 {
-    delete m_pOutStream;
+    if (m_bOutputStreamIsMine)
+        delete m_pOutStream;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -46,9 +52,6 @@ int AzeApp::run()
     {
     case CConstants::eCommandNone:
         break;
-
-    case CConstants::eCommandRunTests:
-        return test();
 
     case CConstants::eCommandInitRepository:
         return init();
@@ -123,15 +126,6 @@ void AzeApp::processWildCards()
                 m_pRepository->database()->rootPath(),
                 m_tArguments.m_lFilesAndIds
                 );
-}
-
-//-------------------------------------------------------------------------------------------------
-
-int AzeApp::test()
-{
-    Aze::CTestAze test;
-    QTEST_SET_MAIN_SOURCE_PATH
-    return QTest::qExec(&test, 0, nullptr);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -508,11 +502,11 @@ int AzeApp::help()
 CAzeArguments::CAzeArguments(QCoreApplication& app)
     : QObject(nullptr)
     , m_oAll(QStringList() << CConstants::s_sSwitchAll,
-               QCoreApplication::translate(CConstants::s_sContextMain, "Include all files."))
+             QCoreApplication::translate(CConstants::s_sContextMain, "Include all files."))
     , m_oLoose(QStringList() << CConstants::s_sSwitchLoose,
                QCoreApplication::translate(CConstants::s_sContextMain, "Include loose files."))
     , m_oClean(QStringList() << CConstants::s_sSwitchClean,
-                     QCoreApplication::translate(CConstants::s_sContextMain, "Include clean files."))
+               QCoreApplication::translate(CConstants::s_sContextMain, "Include clean files."))
     , m_oModified(QStringList() << CConstants::s_sSwitchModified,
                   QCoreApplication::translate(CConstants::s_sContextMain, "Include modified files."))
     , m_oAdded(QStringList() << CConstants::s_sSwitchAdded,
@@ -536,8 +530,7 @@ CAzeArguments::CAzeArguments(QCoreApplication& app)
                QCoreApplication::translate(CConstants::s_sContextMain, "List <count> items."),
                QCoreApplication::translate(CConstants::s_sContextMain, CConstants::s_sSwitchCount))
     , m_oAllowFileDelete(QStringList() << "d" << CConstants::s_sSwitchAllowFileDelete,
-                         QCoreApplication::translate(CConstants::s_sContextMain, "Allow Aze to delete files."),
-                         QCoreApplication::translate(CConstants::s_sContextMain, CConstants::s_sSwitchAllowFileDelete))
+                         QCoreApplication::translate(CConstants::s_sContextMain, "Allow Aze to delete files."))
     , m_oGraph(QStringList() << "g" << CConstants::s_sSwitchGraph,
                QCoreApplication::translate(CConstants::s_sContextMain, "Show log as a graph."))
     , m_eCommand(CConstants::eCommandNone)
@@ -545,7 +538,7 @@ CAzeArguments::CAzeArguments(QCoreApplication& app)
     CConstants::initCommandMap();
 
     QCoreApplication::setApplicationName("Aze");
-    QCoreApplication::setApplicationVersion("1.0");
+    QCoreApplication::setApplicationVersion(AZE_VERSION_STRING);
 
     m_tParser.addOptions({
                              m_oAll,

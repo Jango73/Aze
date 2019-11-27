@@ -31,61 +31,61 @@ public:
     // Public static methods
     //-------------------------------------------------------------------------------------------------
 
-    //!
+    //! Creates the path specified in sFileName if it does not exist
     static void ensureFilePathExists(const QString& sFileName);
 
-    //!
+    //! Moves a file from sSource to sTarget
     static bool moveFile(const QString& sSource, const QString& sTarget);
 
     //! Returns a relative file name given a root path and an absolute path to a file
     static QString relativeFileName(const QString& sRootPath, const QString& sFileName);
 
-    //!
+    //! Returns an absolute file name given a root path and a relative path to a file
     static QString absoluteFileName(const QString& sRootPath, const QString& sFileName);
 
-    //!
+    //! Returns true if the file sRelativeFileName relative to sRootPath exists
     static bool fileExists(const QString& sRootPath, const QString& sRelativeFileName);
 
-    //!
+    //! Returns binary contents of sFileName
     static QByteArray getBinaryFileContent(const QString& sFileName);
 
-    //!
+    //! Returns text contents of sFileName
     static QString getTextFileContent(const QString& sFileName);
 
-    //!
+    //! Writes baContent into sFileName
     static bool putBinaryFileContent(const QString& sFileName, const QByteArray& baContent);
 
-    //!
+    //! Writes sContent into sFileName
     static bool putTextFileContent(const QString& sFileName, const QString& sContent);
 
-    //!
+    //! Returns xNode as a dictionary
     static QDictionary dictionaryFromNode(const CXMLNode& xNode);
 
-    //!
+    //! Returns xDict as an XML node
     static CXMLNode nodeFromDictionary(const QDictionary& xDict);
 
-    //!
+    //! Returns a string as an UTF8-Base64 string
     static QString serializeBase64(const QString& sText);
 
-    //!
+    //! Returns an UTF8-Base64 string as a string
     static QString deserializeBase64(const QString& sText);
 
-    //!
+    //! Returns the SHA1 for baData
     static QString idFromByteArray(const QByteArray& baData);
 
-    //!
+    //! Returns the SHA1 for sText as UTF8
     static QString idFromString(const QString& sText);
 
-    //!
+    //! Returns the SHA1 for the contents of sFilename (calls idFromByteArray)
     static QString idFromFileContent(const QString& sFilename);
 
-    //!
+    //! Returns true if sId has the length of a SHA1 string
     static bool idValid(const QString& sId);
 
-    //!
+    //! Returns a string that joins sId and sFilePath with '@'
     static QString packIdAndFile(const QString& sId, const QString& sFilePath);
 
-    //!
+    //! Unjoins sPack with '@', yielding sId and sFilePath
     static void unpackIdAndFile(const QString& sPack, QString& sId, QString& sFilePath);
 
     //!
@@ -94,13 +94,13 @@ public:
     //!
     static QString fileDiffHeader(const QString& sLeft, const QString& sRight);
 
-    //!
+    //! Returns a unified diff of sText1 and sText2 (using diff-match-patch)
     static QString unifiedDiff(const QString& sText1, const QString& sText2);
 
-    //!
+    //! Applies a unified diff to sText (using diff-match-patch)
     static QString applyUnifiedDiff(const QString& sText, const QString& sDiff);
 
-    //!
+    //! Returns a printable version of sText
     static QString printableUnifiedDiff(const QString& sText);
 };
 

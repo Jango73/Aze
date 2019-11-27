@@ -64,7 +64,7 @@ public:
     // Command methods
     //-------------------------------------------------------------------------------------------------
 
-    //!
+    //! Initializes a repository, creating mandatory folders and files
     bool init();
 
     //! Creates a branch as sName
@@ -100,7 +100,7 @@ public:
     //! Makes a diff betweeen commits or files
     QString diff(const QString& sFirst, const QString& sSecond);
 
-    //!
+    //! Merges the branch sName onto the current one
     bool merge(const QString& sName);
 
     //! Splits a full diff into a file diff list
@@ -110,7 +110,7 @@ public:
     //! Applies a diff to the working directory
     bool applyDiff(const QString& sDiff, bool bAddToStage = false);
 
-    //!
+    //! Returns the staging commit
     CCommit* getStagingCommit();
 
     //! Reads the stage commit
@@ -140,20 +140,20 @@ public:
     //! Clears the stage commit (but does not write it)
     bool clearStage();
 
-    //!
+    //! Checks the status of tracked files
     CEnums::EFileStatus checkStatus(const QStringList& lFileNames);
 
-    //!
+    //! Gets a list of loose files
     QStringList getLooseFiles();
 
     //-------------------------------------------------------------------------------------------------
     // Helper methods
     //-------------------------------------------------------------------------------------------------
 
-    //!
+    //! Replaces symbols in sText with their actual value (if any)
     QString processKeywords(const QString& sText);
 
-    //!
+    //! Places in iDelta the value of delta symbols in sText (if any)
     QString processDeltas(const QString& sText, int& iDelta);
 
     //-------------------------------------------------------------------------------------------------

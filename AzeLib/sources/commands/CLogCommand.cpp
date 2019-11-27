@@ -60,14 +60,17 @@ bool CLogCommand::execute()
     // Get the starting commit
     m_mBranches[0] = m_pRepository->tipCommit()->clone(this);
 
+    // We stop when no more branches to show
     while (true)
     {
         if (m_iStart == 0)
         {
+            // Iterate through each branch
             for (int index = 0; index < m_mBranches.count(); index++)
             {
                 QString sId = m_mBranches[index]->id();
 
+                // Proceed if sId has not been processed yet
                 if (not lProcessed.contains(sId))
                 {
                     CCommit* pCommit = m_mBranches[index];

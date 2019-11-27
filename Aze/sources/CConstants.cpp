@@ -10,7 +10,6 @@
 const char* CConstants::s_sContextMain                      = "main";
 
 const char* CConstants::s_sSwitchHelpOn                     = "help";
-const char* CConstants::s_sSwitchRunTests                   = "run-tests";
 const char* CConstants::s_sSwitchInitRepository             = "init";
 const char* CConstants::s_sSwitchCreateBranch               = "create-branch";
 const char* CConstants::s_sSwitchSwitchToBranch             = "set-branch";
@@ -72,7 +71,6 @@ QMap<QString, QString> CConstants::s_mHelp;
 
 void CConstants::initCommandMap()
 {
-    s_mCommands[CConstants::s_sSwitchRunTests]          = CConstants::eCommandRunTests;
     s_mCommands[CConstants::s_sSwitchInitRepository]    = CConstants::eCommandInitRepository;
     s_mCommands[CConstants::s_sSwitchCreateBranch]      = CConstants::eCommandCreateBranch;
     s_mCommands[CConstants::s_sSwitchSwitchToBranch]    = CConstants::eCommandSwitchToBranch;
@@ -89,7 +87,6 @@ void CConstants::initCommandMap()
     s_mCommands[CConstants::s_sSwitchMerge]             = CConstants::eCommandMerge;
     s_mCommands[CConstants::s_sSwitchDump]              = CConstants::eCommandDump;
 
-    s_mHelp[CConstants::s_sSwitchRunTests]              = tr("Runs Aze unit tests. Please do this in an empty repository.");
     s_mHelp[CConstants::s_sSwitchInitRepository]        = tr("Makes the current directory an Aze repository.");
     s_mHelp[CConstants::s_sSwitchCreateBranch]          = tr("Creates a branch.");
     s_mHelp[CConstants::s_sSwitchSwitchToBranch]        = tr("Switches to a branch.");

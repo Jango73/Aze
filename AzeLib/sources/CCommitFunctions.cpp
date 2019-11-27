@@ -216,6 +216,8 @@ void CCommitFunctions::listFilesRecursive(QStringList& lStack, QString sRootDire
     for (QFileInfo iFile : lFiles)
     {
         QString sDirectoryName = iFile.fileName();
+
+        // Proceed recursively if we are not entering the .aze directory
         if (sDirectoryName != CStrings::s_sPathAzeDataRoot)
         {
             QString sTargetDirectory = QString("%1/%2").arg(sCurrentDirectory).arg(sDirectoryName);
@@ -288,8 +290,6 @@ void CCommitFunctions::diffCommitLists(QString& sOutput, const QList<CCommit*>& 
 //        if (foundCommit == lIgnoreList.end())
         if (bFound == false)
         {
-//            OUT_DEBUG(QString("Diffing %1 & %2").arg(pCommit1->message()).arg(pCommit2->message()));
-
             for (QString sName : pCommit2->files().values())
             {
                 QByteArray baContent1 = pCommit1->fileContent(m_pDatabase, sName);
@@ -311,11 +311,14 @@ void CCommitFunctions::diffCommitLists(QString& sOutput, const QList<CCommit*>& 
 
 void CCommitFunctions::diffFiles(QString& sOutput, const QString& sFile1, const QString& sFile2)
 {
+    // Get text content of both files
     QString sText1 = CUtils::getTextFileContent(sFile1);
     QString sText2 = CUtils::getTextFileContent(sFile2);
 
+    // Diff text contents
     QString sDiffText = CUtils::unifiedDiff(sText1, sText2);
 
+    // Output diff
     if (not sDiffText.isEmpty())
     {
         sOutput += CUtils::fileDiffHeader(sFile1, sFile2);

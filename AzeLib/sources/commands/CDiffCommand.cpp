@@ -48,12 +48,15 @@ bool CDiffCommand::execute()
         sObject1 = m_pRepository->currentBranch()->tipCommitId();
     }
 
+    // Get deltas if any
     sObject1 = m_pRepository->processDeltas(sObject1, iDelta1);
     sObject2 = m_pRepository->processDeltas(sObject2, iDelta2);
 
+    // Process special keywords
     sObject1 = m_pRepository->processKeywords(sObject1);
     sObject2 = m_pRepository->processKeywords(sObject2);
 
+    // Get file paths of both commits (does not mean they exist)
     QString sCommitFileName1 = m_pRepository->database()->composeCommitFileName(sObject1);
     QString sCommitFileName2 = m_pRepository->database()->composeCommitFileName(sObject2);
 

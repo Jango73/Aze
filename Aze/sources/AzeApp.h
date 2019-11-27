@@ -53,7 +53,7 @@ public:
     //-------------------------------------------------------------------------------------------------
 
     //! Constructor
-    AzeApp(int argc, char *argv[]);
+    AzeApp(int argc, char *argv[], QTextStream* pOutStream = nullptr);
 
     //! Destructor
     virtual ~AzeApp();
@@ -74,9 +74,6 @@ public:
     //-------------------------------------------------------------------------------------------------
     // User commands
     //-------------------------------------------------------------------------------------------------
-
-    //! Runs Aze unit tests
-    int test();
 
     //! Initializes a repository
     int init();
@@ -135,4 +132,5 @@ protected:
     CAzeArguments           m_tArguments;
     QTextStream*            m_pOutStream;
     Aze::CRepository*       m_pRepository;
+    bool                    m_bOutputStreamIsMine;
 };

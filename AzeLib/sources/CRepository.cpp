@@ -33,6 +33,7 @@ CRepository::CRepository(const QString& sRootPath, QObject* parent)
     , m_pRootCommit(nullptr)
     , m_pTipCommit(nullptr)
 {
+    // Get the path of the staging file
     m_sStagingCommitFileName = m_pDatabase->composeCommitFileName(CStrings::s_sStagingCommitFileName);
 
     // Check if repository is ok

@@ -23,7 +23,6 @@ public:
     enum ECommand
     {
         eCommandNone,
-        eCommandRunTests,
         eCommandInitRepository,
         eCommandCreateBranch,
         eCommandSwitchToBranch,
@@ -45,7 +44,6 @@ public:
 
     // Commands
     static const char* s_sSwitchHelpOn;
-    static const char* s_sSwitchRunTests;
     static const char* s_sSwitchInitRepository;
     static const char* s_sSwitchCreateBranch;
     static const char* s_sSwitchSwitchToBranch;

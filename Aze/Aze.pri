@@ -6,6 +6,7 @@ HEADERS += \
     ../qt-plus/source/cpp/File/CFileUtilities.h \
     sources/AzeApp.h \
     sources/CConstants.h \
+    sources/tests/CTestAze.h \
 
 SOURCES += \
     ../qt-plus/source/cpp/CXMLNode.cpp \
@@ -14,3 +15,4 @@ SOURCES += \
     sources/AzeApp.cpp \
     sources/CConstants.cpp \
     sources/main.cpp \
+    sources/tests/CTestAze.cpp \

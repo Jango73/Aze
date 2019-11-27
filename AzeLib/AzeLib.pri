@@ -19,7 +19,6 @@ HEADERS += \
     sources/objects/CDatabase.h \
     sources/objects/CFile.h \
     sources/objects/CObject.h \
-    sources/tests/CTestAze.h \
     sources/CEnums.h \
     sources/CRepository.h \
     sources/CCommitFunctions.h \
@@ -46,7 +45,6 @@ SOURCES += \
     sources/objects/CDatabase.cpp \
     sources/objects/CFile.cpp \
     sources/objects/CObject.cpp \
-    sources/tests/CTestAze.cpp \
     sources/CEnums.cpp \
     sources/CRepository.cpp \
     sources/CCommitFunctions.cpp \

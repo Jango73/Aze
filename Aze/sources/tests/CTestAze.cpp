@@ -4,37 +4,40 @@
 #include <QDir>
 
 // Application
+#include "../AzeApp.h"
+#include "../CConstants.h"
 #include "CTestAze.h"
-#include "../CRepository.h"
-#include "../CUtils.h"
-
-namespace Aze {
-
-//-------------------------------------------------------------------------------------------------
-// Macros
-
-#define CREATE_REPO  { if (m_pRepository != nullptr) delete m_pRepository; m_pRepository = new CRepository(m_sRootPath, this); }
-#define FINALIZE_REPO { if (m_pRepository != nullptr) delete m_pRepository; }
+#include "CRepository.h"
+#include "CUtils.h"
+#include "CStrings.h"
 
 //-------------------------------------------------------------------------------------------------
 
-CTestAze::CTestAze()
-    : m_pRepository(nullptr)
+CTestAze::CTestAze(const QString& sArgument0)
+    : m_sArgument0(sArgument0)
     , m_iCommitIndex(0)
 {
     m_sRootPath = QDir::currentPath();
     m_sDataPath = "./.aze";
     m_sAuthor = "CTestAze";
+    m_sBranch1 = "branch1";
+    m_sBranch2 = "branch2";
 
     m_sInfoPath = QString("%1/%2")
             .arg(m_sDataPath)
-            .arg(CStrings::s_sGeneralInfoFileName);
+            .arg(Aze::CStrings::s_sGeneralInfoFileName);
 
     m_sTrunkPath = QString("%1/%2/%3.%4")
             .arg(m_sDataPath)
-            .arg(CStrings::s_sPathAzeBranchPath)
-            .arg(CStrings::s_sDefaultBranchName)
-            .arg(CStrings::s_sCompressedXMLExtension);
+            .arg(Aze::CStrings::s_sPathAzeBranchPath)
+            .arg(Aze::CStrings::s_sDefaultBranchName)
+            .arg(Aze::CStrings::s_sCompressedXMLExtension);
+
+    m_sBranch1Path = QString("%1/%2/%3.%4")
+            .arg(m_sDataPath)
+            .arg(Aze::CStrings::s_sPathAzeBranchPath)
+            .arg(m_sBranch1)
+            .arg(Aze::CStrings::s_sCompressedXMLExtension);
 
     m_sFilesFolderName = "Files";
     m_sFilesFolderPath = QString("%1/%2").arg(m_sRootPath).arg(m_sFilesFolderName);
@@ -105,25 +108,6 @@ bool CTestAze::readFile(const QString& sName, QString& sContent)
 
 //-------------------------------------------------------------------------------------------------
 
-void CTestAze::commit(const QStringList& lStage, const QString& sAuthor, const QString& sMessage)
-{
-    QString sRootPath = QDir::currentPath();
-
-    CREATE_REPO;
-    QVERIFY(m_pRepository->readStage());
-    QVERIFY(m_pRepository->stage(lStage));
-    QVERIFY(m_pRepository->writeStage());
-
-    CREATE_REPO;
-    QVERIFY(m_pRepository->readStage());
-    QVERIFY(m_pRepository->commit(sAuthor, sMessage));
-    QVERIFY(m_pRepository->writeCurrentBranch());
-    QVERIFY(m_pRepository->clearStage());
-    QVERIFY(m_pRepository->writeStage());
-}
-
-//-------------------------------------------------------------------------------------------------
-
 void CTestAze::createManyFiles()
 {
     QDir filesDir(m_sFilesFolderPath);
@@ -151,8 +135,48 @@ void CTestAze::createManyFiles()
             QVERIFY(createFile(lStage.last(), mNewFiles[sNewFile]));
         }
 
-        commit(lStage, m_sAuthor, QString("Commit%1\nMultiline commit").arg(m_iCommitIndex++));
+        lStage.prepend(CConstants::s_sSwitchStage);
+
+        exec(lStage);
+        exec({
+                 CConstants::s_sSwitchCommit,
+                 QString("--%1").arg(CConstants::s_sSwitchMessage),
+                 QString("Commit%1\nMultiline commit").arg(m_iCommitIndex++),
+                 QString("--%1").arg(CConstants::s_sSwitchAuthor),
+                 m_sAuthor
+             });
     }
+}
+
+//-------------------------------------------------------------------------------------------------
+
+QString CTestAze::exec(const QStringList& lInputArguments)
+{
+    QStringList lFinalArguments(lInputArguments);
+    QByteArray baOutput;
+    QTextStream sOutput(&baOutput);
+
+    lFinalArguments.prepend(m_sArgument0);
+    int argc = lFinalArguments.count();
+    char** argv = new char*[size_t(argc)];
+    int index;
+
+    // Add arguments
+    for (index = 0; index < argc; index++)
+    {
+        argv[index] = new char[size_t(lFinalArguments[index].count() + 2)];
+        strcpy(argv[index], lFinalArguments[index].toUtf8().constData());
+    }
+
+    // Instantiate and run aze
+    AzeApp(argc, argv, &sOutput).run();
+
+    for (index = 0; index < argc; index++)
+        delete argv[index];
+
+    delete [] argv;
+
+    return QString::fromUtf8(baOutput);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -161,8 +185,7 @@ void CTestAze::testAll()
 {
     clearRepository();
 
-    CREATE_REPO;
-    QVERIFY(m_pRepository->init());
+    exec({ CConstants::s_sSwitchInitRepository });
 
     QFile trunk(m_sTrunkPath);
     QVERIFY(trunk.exists());
@@ -215,29 +238,50 @@ void CTestAze::testAll()
     QVERIFY(createFile(sFile6Path, sFile6Content1));
 
     // 1st commit
-    lStage.clear();
-    lStage << sFile1Path;
-    lStage << sFile2Path;
-    lStage << sFile3Path;
-    lStage << sFile4Path;
+    exec({
+             CConstants::s_sSwitchStage,
+             sFile1Path,
+             sFile2Path,
+             sFile3Path,
+             sFile4Path
+         });
 
-    commit(lStage, m_sAuthor, "Commit1");
+    exec({
+             CConstants::s_sSwitchCommit,
+             QString("--%1").arg(CConstants::s_sSwitchMessage),
+             "Commit1",
+             QString("--%1").arg(CConstants::s_sSwitchAuthor),
+             m_sAuthor
+         });
 
     // Modify files
     QVERIFY(createFile(sFile1Path, sFile1Content2));
     QVERIFY(createFile(sFile2Path, sFile2Content2));
 
     // 2nd commit
-    lStage.clear();
-    lStage << sFile1Path;
-    lStage << sFile2Path;
+    exec({
+             CConstants::s_sSwitchStage,
+             sFile1Path,
+             sFile2Path
+         });
 
-    commit(lStage, m_sAuthor, "Commit2");
+    exec({
+             CConstants::s_sSwitchCommit,
+             QString("--%1").arg(CConstants::s_sSwitchMessage),
+             "Commit2",
+             QString("--%1").arg(CConstants::s_sSwitchAuthor),
+             m_sAuthor
+         });
 
     // Diff commits 1 and 2
-    CREATE_REPO;
-    QVERIFY(m_pRepository->readStage());
-    QList<QPair<QString, QString> > mFileDiffs = m_pRepository->splitDiff(m_pRepository->diff("root", "tip"));
+    QString sDiff = exec({
+             CConstants::s_sSwitchDiff,
+             "root",
+             "tip"
+         });
+
+//    QVERIFY(m_pRepository->readStage());
+//    QList<QPair<QString, QString> > mFileDiffs = m_pRepository->splitDiff(m_pRepository->diff("root", "tip"));
 
 //    QString sFile1Patched = CUtils::applyUnifiedDiff(sFile1Content1, mFileDiffs[sFile1Path]);
 //    QString sFile2Patched = CUtils::applyUnifiedDiff(sFile2Content1, mFileDiffs[sFile2Path]);
@@ -249,46 +293,74 @@ void CTestAze::testAll()
     QVERIFY(createFile(sFile4Path, sFile4Content2));
 
     // 3rd commit
-    lStage.clear();
-    lStage << sFile3Path;
-    lStage << sFile4Path;
+    exec({
+             CConstants::s_sSwitchStage,
+             sFile3Path,
+             sFile4Path
+         });
 
-    commit(lStage, m_sAuthor, "Commit3");
+    exec({
+             CConstants::s_sSwitchCommit,
+             QString("--%1").arg(CConstants::s_sSwitchMessage),
+             "Commit3",
+             QString("--%1").arg(CConstants::s_sSwitchAuthor),
+             m_sAuthor
+         });
 
     // Diff commits 2 and 3
     // TODO
 
     // 4th commit
-    lStage.clear();
-    lStage << sFile5Path;
-    lStage << sFile6Path;
+    exec({
+             CConstants::s_sSwitchStage,
+             sFile5Path,
+             sFile6Path
+         });
 
-    commit(lStage, m_sAuthor, "Commit4");
+    exec({
+             CConstants::s_sSwitchCommit,
+             QString("--%1").arg(CConstants::s_sSwitchMessage),
+             "Commit4",
+             QString("--%1").arg(CConstants::s_sSwitchAuthor),
+             m_sAuthor
+         });
 
     // Diff commits 3 and 4
     // TODO
 
     // Create branch 1
-    CREATE_REPO;
-    QVERIFY(m_pRepository->createBranch("Branch1"));
+    exec({
+             CConstants::s_sSwitchCreateBranch,
+             m_sBranch1
+         });
+
+    QFile branch1(m_sBranch1Path);
+    QVERIFY(branch1.exists());
 
     // Switch to branch 1
-    CREATE_REPO;
-    QVERIFY(m_pRepository->readStage());
-    QVERIFY(m_pRepository->switchToBranch("Branch1"));
-    QVERIFY(m_pRepository->writeCurrentBranch());
-    QVERIFY(m_pRepository->writeGeneralInfo());
+    exec({
+             CConstants::s_sSwitchSwitchToBranch,
+             m_sBranch1
+         });
 
     // Create files
     QVERIFY(createFile(sFile7Path, sFile7Content1));
     QVERIFY(createFile(sFile8Path, sFile8Content1));
 
     // 5th commit
-    lStage.clear();
-    lStage << sFile7Path;
-    lStage << sFile8Path;
+    exec({
+             CConstants::s_sSwitchStage,
+             sFile7Path,
+             sFile8Path
+         });
 
-    commit(lStage, m_sAuthor, "Commit5");
+    exec({
+             CConstants::s_sSwitchCommit,
+             QString("--%1").arg(CConstants::s_sSwitchMessage),
+             "Commit5",
+             QString("--%1").arg(CConstants::s_sSwitchAuthor),
+             m_sAuthor
+         });
 
     // Diff commits 4 and 5
     // TODO
@@ -298,41 +370,47 @@ void CTestAze::testAll()
     QVERIFY(createFile(sFile8Path, sFile8Content2));
 
     // 6th commit
-    lStage.clear();
-    lStage << sFile7Path;
-    lStage << sFile8Path;
+    exec({
+             CConstants::s_sSwitchStage,
+             sFile7Path,
+             sFile8Path
+         });
 
-    commit(lStage, m_sAuthor, "Commit6");
+    exec({
+             CConstants::s_sSwitchCommit,
+             QString("--%1").arg(CConstants::s_sSwitchMessage),
+             "Commit6",
+             QString("--%1").arg(CConstants::s_sSwitchAuthor),
+             m_sAuthor
+         });
 
     // Switch to trunk
-    CREATE_REPO;
-    QVERIFY(m_pRepository->readStage());
-    QVERIFY(m_pRepository->switchToBranch("trunk", true));
-    QVERIFY(m_pRepository->writeCurrentBranch());
-    QVERIFY(m_pRepository->writeGeneralInfo());
+    exec({
+             CConstants::s_sSwitchSwitchToBranch,
+             Aze::CStrings::s_sDefaultBranchName,
+             QString("--%1").arg(CConstants::s_sSwitchAllowFileDelete),
+         });
 
     // Merge Branch1 on trunk
-    CREATE_REPO;
-    QVERIFY(m_pRepository->readStage());
-    QVERIFY(m_pRepository->merge("Branch1"));
-    QVERIFY(m_pRepository->writeStage());
+    exec({
+             CConstants::s_sSwitchMerge,
+             m_sBranch1
+         });
 
     // Commit the merge
-    lStage.clear();
-    lStage << sFile7Path;
-    lStage << sFile8Path;
+    exec({
+             CConstants::s_sSwitchStage,
+             sFile7Path,
+             sFile8Path
+         });
 
-    CREATE_REPO;
-    QVERIFY(m_pRepository->readStage());
-    QVERIFY(m_pRepository->stage(lStage));
-    QVERIFY(m_pRepository->writeStage());
-
-    CREATE_REPO;
-    QVERIFY(m_pRepository->readStage());
-    QVERIFY(m_pRepository->commit(m_sAuthor, "Commit 7"));
-    QVERIFY(m_pRepository->writeCurrentBranch());
-    QVERIFY(m_pRepository->clearStage());
-    QVERIFY(m_pRepository->writeStage());
+    exec({
+             CConstants::s_sSwitchCommit,
+             QString("--%1").arg(CConstants::s_sSwitchMessage),
+             "Commit7",
+             QString("--%1").arg(CConstants::s_sSwitchAuthor),
+             m_sAuthor
+         });
 
     // Check merged files content
     QString sMergedFile7Content;
@@ -350,33 +428,20 @@ void CTestAze::testHeavy()
 {
 //    clearRepository();
 
-//    CREATE_REPO;
-//    QVERIFY(m_pRepository->init());
+//    exec({ CConstants::s_sSwitchInitRepository });
 
 //    QDir rootDir(m_sRootPath);
 //    QVERIFY(rootDir.mkdir(m_sFilesFolderName));
 
 //    createManyFiles();
 
-//    CREATE_REPO;
-//    QVERIFY(m_pRepository->createBranch("Branch1"));
-
-//    CREATE_REPO;
-//    QVERIFY(m_pRepository->readStage());
-//    QVERIFY(m_pRepository->switchToBranch("Branch1"));
-//    QVERIFY(m_pRepository->writeCurrentBranch());
-//    QVERIFY(m_pRepository->writeGeneralInfo());
+//    exec({ CConstants::s_sSwitchCreateBranch, m_sBranch1 });
+//    exec({ CConstants::s_sSwitchSwitchToBranch, m_sBranch1 });
 
 //    createManyFiles();
 
-//    CREATE_REPO;
-//    QVERIFY(m_pRepository->createBranch("Branch2"));
-
-//    CREATE_REPO;
-//    QVERIFY(m_pRepository->readStage());
-//    QVERIFY(m_pRepository->switchToBranch("Branch2"));
-//    QVERIFY(m_pRepository->writeCurrentBranch());
-//    QVERIFY(m_pRepository->writeGeneralInfo());
+//    exec({ CConstants::s_sSwitchCreateBranch, m_sBranch2 });
+//    exec({ CConstants::s_sSwitchSwitchToBranch, m_sBranch2 });
 
 //    createManyFiles();
 }
@@ -385,11 +450,7 @@ void CTestAze::testHeavy()
 
 void CTestAze::testFinalize()
 {
-    FINALIZE_REPO;
-
-    clearRepository();
+//    clearRepository();
 }
 
 //-------------------------------------------------------------------------------------------------
-
-}
