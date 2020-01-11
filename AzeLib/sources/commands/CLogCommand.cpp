@@ -55,10 +55,11 @@ bool CLogCommand::execute()
     }
 
     // Keep track of shown commits
-    QHash<QString, int> lProcessed;
+    QHash<QString, int> hAddedCommits;
 
     // Get the starting commit
-    m_mBranches[0] = m_pRepository->tipCommit()->clone(this);
+    m_vBranches << QMap<int, CCommit*>();
+    m_vBranches.last()[0] = m_pRepository->tipCommit()->clone(this);
 
     // We stop when no more branches to show
     while (true)
@@ -66,42 +67,38 @@ bool CLogCommand::execute()
         if (m_iStart == 0)
         {
             // Iterate through each branch
-            for (int index = 0; index < m_mBranches.count(); index++)
+            for (int index = 0; index < m_vBranches.last().count(); index++)
             {
-                QString sId = m_mBranches[index]->id();
+                QString sId = m_vBranches.last()[index]->id();
 
-                // Proceed if sId has not been processed yet
-                if (not lProcessed.contains(sId))
+                CCommit* pCommit = m_vBranches.last()[index];
+
+                if (m_bGraph)
                 {
-                    CCommit* pCommit = m_mBranches[index];
+                    outputBranches(index, false, index == 0);
+                    (*m_pResult) += CStrings::s_sNewLine;
+                    outputBranches(index, true, index == 0);
 
-                    lProcessed[sId] = 0;
-
-                    if (m_bGraph)
-                    {
-                        outputBranches(index);
-
-                        (*m_pResult) += QString("%1 - %2 - %3 - %4%5")
-                                .arg(pCommit->id())
-                                .arg(PRINTABLE_ISO_DATE(m_mBranches[index]->date()))
-                                .arg(pCommit->author())
-                                .arg(pCommit->message())
-                                .arg(CStrings::s_sNewLine);
-                    }
-                    else
-                    {
-                        (*m_pResult) += QString("commit: %1%2date: %3%4author: %5%6%7%8%9%10")
-                                .arg(pCommit->id())
-                                .arg(CStrings::s_sNewLine)
-                                .arg(pCommit->date())
-                                .arg(CStrings::s_sNewLine)
-                                .arg(pCommit->author())
-                                .arg(CStrings::s_sNewLine)
-                                .arg(CStrings::s_sNewLine)
-                                .arg(pCommit->message())
-                                .arg(CStrings::s_sNewLine)
-                                .arg(CStrings::s_sNewLine);
-                    }
+                    (*m_pResult) += QString("%1 - %2 - %3 - %4%5")
+                            .arg(pCommit->id())
+                            .arg(PRINTABLE_ISO_DATE(m_vBranches.last()[index]->date()))
+                            .arg(pCommit->author())
+                            .arg(pCommit->message())
+                            .arg(CStrings::s_sNewLine);
+                }
+                else
+                {
+                    (*m_pResult) += QString("commit: %1%2date: %3%4author: %5%6%7%8%9%10")
+                            .arg(pCommit->id())
+                            .arg(CStrings::s_sNewLine)
+                            .arg(pCommit->date())
+                            .arg(CStrings::s_sNewLine)
+                            .arg(pCommit->author())
+                            .arg(CStrings::s_sNewLine)
+                            .arg(CStrings::s_sNewLine)
+                            .arg(pCommit->message())
+                            .arg(CStrings::s_sNewLine)
+                            .arg(CStrings::s_sNewLine);
                 }
             }
 
@@ -120,39 +117,80 @@ bool CLogCommand::execute()
         QMap<int, CCommit*> mNewBranches;
         int iNewBranchIndex = 0;
 
-        for (int branch = 0; branch < m_mBranches.count(); branch++)
+        for (int branch = 0; branch < m_vBranches.last().count(); branch++)
         {
             QList<CCommit*> lParents = CCommit::parentList(
-                        m_pRepository->database(), m_mBranches[branch], this
+                        m_pRepository->database(),
+                        m_vBranches.last()[branch],
+                        this
                         );
 
             for (CCommit* pCommit : lParents)
             {
-                mNewBranches[iNewBranchIndex++] = pCommit;
+                if (not hAddedCommits.contains(pCommit->id()))
+                {
+                    hAddedCommits[pCommit->id()] = 0;
+                    mNewBranches[iNewBranchIndex++] = pCommit;
+                }
+                else
+                {
+                    delete pCommit;
+                }
             }
         }
 
-        qDeleteAll(m_mBranches.values());
-        m_mBranches.clear();
-        m_mBranches = mNewBranches;
+        m_vBranches << mNewBranches;
 
-        if (m_mBranches.count() == 0)
+        if (m_vBranches.last().count() == 0)
             break;
     }
+
+    for (QMap<int, CCommit*>& mLevel : m_vBranches)
+    {
+        qDeleteAll(mLevel.values());
+        mLevel.clear();
+    }
+
+    m_vBranches.clear();
 
     return true;
 }
 
 //-------------------------------------------------------------------------------------------------
 
-void CLogCommand::outputBranches(int iCurrentBranch)
+void CLogCommand::outputBranches(int iCurrentBranch, bool bOnCommit, bool bFirstLine)
 {
-    for (int index = 0; index < m_mBranches.count(); index++)
+    for (int index = 0; index < m_vBranches.last().count(); index++)
     {
-        if (index == iCurrentBranch)
-            (*m_pResult) += QString("*  ");
+        if (bOnCommit)
+        {
+            if (index == iCurrentBranch)
+                (*m_pResult) += QString(" * ");
+            else
+                (*m_pResult) += QString(" | ");
+        }
         else
-            (*m_pResult) += QString("|  ");
+        {
+            if (m_vBranches.count() > 1)
+            {
+                if (
+                        bFirstLine
+                        && m_vBranches[m_vBranches.count() - 2].count() < m_vBranches[m_vBranches.count() - 1].count()
+                        && index == m_vBranches.last().count() - 1
+                        )
+                {
+                    (*m_pResult) += QString("\\  ");
+                }
+                else
+                {
+                    (*m_pResult) += QString(" | ");
+                }
+            }
+            else
+            {
+                (*m_pResult) += QString(" | ");
+            }
+        }
     }
 }
 

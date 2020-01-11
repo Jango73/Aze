@@ -7,9 +7,11 @@
 
 //-------------------------------------------------------------------------------------------------
 
-#define ERROR_WHEN_FALSE(a,b)           if ((a) == false) return b;
+#define ERROR_WHEN_FALSE(a,b)           if ((a) == false) return b
 
 #define ERROR_WHEN_FALSE_PRINT(a,b,c)   if ((a) == false) { OUT_ERROR(b); return c; }
+
+#define PROPNAME_ACTION                 "action"
 
 //-------------------------------------------------------------------------------------------------
 
@@ -60,7 +62,7 @@ public:
     static const char* s_sSwitchMerge;
     static const char* s_sSwitchDump;
 
-    // Switches
+    // Client switches
     static const char* s_sSwitchAuthor;
     static const char* s_sSwitchMessage;
     static const char* s_sSwitchAll;
@@ -75,6 +77,9 @@ public:
     static const char* s_sSwitchCount;
     static const char* s_sSwitchAllowFileDelete;
     static const char* s_sSwitchGraph;
+
+    // Server switches
+    static const char* s_sSwitchPort;
 
     // Error codes
     static const int s_iError_None;

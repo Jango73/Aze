@@ -1,7 +1,5 @@
 
 HEADERS += \
-    ../qt-plus/source/cpp/CXMLNode.h \
-    ../qt-plus/source/cpp/CTextGenerator.h \
     sources/google/diff_match_patch.h \
     sources/commands/CBaseCommand.h \
     sources/commands/CSwitchToBranchCommand.h \
@@ -26,8 +24,6 @@ HEADERS += \
     sources/CUtils.h \
 
 SOURCES += \
-    ../qt-plus/source/cpp/CXMLNode.cpp \
-    ../qt-plus/source/cpp/CTextGenerator.cpp \
     sources/google/diff_match_patch.cpp \
     sources/commands/CBaseCommand.cpp \
     sources/commands/CSwitchToBranchCommand.cpp \

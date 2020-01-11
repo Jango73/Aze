@@ -96,6 +96,13 @@ void CCommit::clearParents()
 
 //-------------------------------------------------------------------------------------------------
 
+void CCommit::readParentCommits(CDatabase* pDatabase)
+{
+    m_lParentCommits = parentList(pDatabase, this, this);
+}
+
+//-------------------------------------------------------------------------------------------------
+
 void CCommit::addParent(const QString& sParentId)
 {
     m_lParents << sParentId;

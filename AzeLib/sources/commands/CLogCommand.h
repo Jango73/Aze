@@ -42,7 +42,7 @@ public:
 protected:
 
     //!
-    void outputBranches(int iCurrentBranch);
+    void outputBranches(int iCurrentBranch, bool bOnCommit, bool bFirstLine);
 
     //-------------------------------------------------------------------------------------------------
     // Properties
@@ -50,12 +50,12 @@ protected:
 
 protected:
 
-    QStringList         m_lFileNames;
-    QMap<int, CCommit*> m_mBranches;
-    QString*            m_pResult;
-    bool                m_bGraph;
-    int                 m_iStart;
-    int                 m_iCount;
+    QStringList                 m_lFileNames;
+    QList<QMap<int, CCommit*> > m_vBranches;
+    QString*                    m_pResult;
+    bool                        m_bGraph;
+    int                         m_iStart;
+    int                         m_iCount;
 };
 
 }

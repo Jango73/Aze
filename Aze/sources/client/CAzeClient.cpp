@@ -12,17 +12,17 @@
 #include "CUtils.h"
 
 // Application
-#include "AzeApp.h"
+#include "CAzeClient.h"
 
 /*!
-    \class AzeApp
-    \inmodule AzeApp
+    \class CAzeClient
+    \inmodule Aze
     \section1 General
 */
 
 //-------------------------------------------------------------------------------------------------
 
-AzeApp::AzeApp(int argc, char *argv[], QTextStream* pOutStream)
+CAzeClient::CAzeClient(int argc, char *argv[], QTextStream* pOutStream)
     : QCoreApplication(argc, argv)
     , m_tArguments(*this)
     , m_pOutStream(pOutStream)
@@ -38,7 +38,7 @@ AzeApp::AzeApp(int argc, char *argv[], QTextStream* pOutStream)
 
 //-------------------------------------------------------------------------------------------------
 
-AzeApp::~AzeApp()
+CAzeClient::~CAzeClient()
 {
     if (m_bOutputStreamIsMine)
         delete m_pOutStream;
@@ -46,7 +46,7 @@ AzeApp::~AzeApp()
 
 //-------------------------------------------------------------------------------------------------
 
-int AzeApp::run()
+int CAzeClient::run()
 {
     switch (m_tArguments.m_eCommand)
     {
@@ -106,7 +106,7 @@ int AzeApp::run()
 
 //-------------------------------------------------------------------------------------------------
 
-bool AzeApp::isASainRepository()
+bool CAzeClient::isASainRepository()
 {
     if (not m_pRepository->ok())
     {
@@ -120,7 +120,7 @@ bool AzeApp::isASainRepository()
 
 //-------------------------------------------------------------------------------------------------
 
-void AzeApp::processWildCards()
+void CAzeClient::processWildCards()
 {
     m_tArguments.m_lFilesAndIds = CFileUtilities::getInstance()->concernedFiles(
                 m_pRepository->database()->rootPath(),
@@ -130,14 +130,14 @@ void AzeApp::processWildCards()
 
 //-------------------------------------------------------------------------------------------------
 
-int AzeApp::init()
+int CAzeClient::init()
 {
     return m_pRepository->init() ? 0 : 1;
 }
 
 //-------------------------------------------------------------------------------------------------
 
-int AzeApp::createBranch()
+int CAzeClient::createBranch()
 {
     ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
 
@@ -150,7 +150,7 @@ int AzeApp::createBranch()
 
 //-------------------------------------------------------------------------------------------------
 
-int AzeApp::switchToBranch()
+int CAzeClient::switchToBranch()
 {
     ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
 
@@ -181,7 +181,7 @@ int AzeApp::switchToBranch()
 
 //-------------------------------------------------------------------------------------------------
 
-int AzeApp::status()
+int CAzeClient::status()
 {
     ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
 
@@ -273,7 +273,7 @@ int AzeApp::status()
 
 //-------------------------------------------------------------------------------------------------
 
-int AzeApp::stage()
+int CAzeClient::stage()
 {
     ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
 
@@ -296,7 +296,7 @@ int AzeApp::stage()
 
 //-------------------------------------------------------------------------------------------------
 
-int AzeApp::unstage()
+int CAzeClient::unstage()
 {
     ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
 
@@ -319,7 +319,7 @@ int AzeApp::unstage()
 
 //-------------------------------------------------------------------------------------------------
 
-int AzeApp::revert()
+int CAzeClient::revert()
 {
     ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
 
@@ -338,7 +338,7 @@ int AzeApp::revert()
 
 //-------------------------------------------------------------------------------------------------
 
-int AzeApp::move()
+int CAzeClient::move()
 {
     ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
 
@@ -351,7 +351,7 @@ int AzeApp::move()
 
 //-------------------------------------------------------------------------------------------------
 
-int AzeApp::remove()
+int CAzeClient::remove()
 {
     ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
 
@@ -370,7 +370,7 @@ int AzeApp::remove()
 
 //-------------------------------------------------------------------------------------------------
 
-int AzeApp::commit()
+int CAzeClient::commit()
 {
     ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
 
@@ -392,7 +392,7 @@ int AzeApp::commit()
 
 //-------------------------------------------------------------------------------------------------
 
-int AzeApp::cleanUp()
+int CAzeClient::cleanUp()
 {
     ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
 
@@ -411,7 +411,7 @@ int AzeApp::cleanUp()
 
 //-------------------------------------------------------------------------------------------------
 
-int AzeApp::log()
+int CAzeClient::log()
 {
     ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
 
@@ -427,7 +427,7 @@ int AzeApp::log()
 
 //-------------------------------------------------------------------------------------------------
 
-int AzeApp::diff()
+int CAzeClient::diff()
 {
     ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
 
@@ -444,7 +444,7 @@ int AzeApp::diff()
 
 //-------------------------------------------------------------------------------------------------
 
-int AzeApp::merge()
+int CAzeClient::merge()
 {
     ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
 
@@ -470,7 +470,7 @@ int AzeApp::merge()
 
 //-------------------------------------------------------------------------------------------------
 
-int AzeApp::dump()
+int CAzeClient::dump()
 {
     ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
 
@@ -485,7 +485,7 @@ int AzeApp::dump()
 
 //-------------------------------------------------------------------------------------------------
 
-int AzeApp::help()
+int CAzeClient::help()
 {
     (*m_pOutStream) << CConstants::s_sTextCommands << ":\n\n";
 
@@ -495,79 +495,6 @@ int AzeApp::help()
     }
 
     return CConstants::s_iError_None;
-}
-
-//-------------------------------------------------------------------------------------------------
-
-CAzeArguments::CAzeArguments(QCoreApplication& app)
-    : QObject(nullptr)
-    , m_oAll(QStringList() << CConstants::s_sSwitchAll,
-             QCoreApplication::translate(CConstants::s_sContextMain, "Include all files."))
-    , m_oLoose(QStringList() << CConstants::s_sSwitchLoose,
-               QCoreApplication::translate(CConstants::s_sContextMain, "Include loose files."))
-    , m_oClean(QStringList() << CConstants::s_sSwitchClean,
-               QCoreApplication::translate(CConstants::s_sContextMain, "Include clean files."))
-    , m_oModified(QStringList() << CConstants::s_sSwitchModified,
-                  QCoreApplication::translate(CConstants::s_sContextMain, "Include modified files."))
-    , m_oAdded(QStringList() << CConstants::s_sSwitchAdded,
-               QCoreApplication::translate(CConstants::s_sContextMain, "Include added files."))
-    , m_oDeleted(QStringList() << CConstants::s_sSwitchDeleted,
-                 QCoreApplication::translate(CConstants::s_sContextMain, "Include deleted files."))
-    , m_oMissing(QStringList() << CConstants::s_sSwitchMissing,
-                 QCoreApplication::translate(CConstants::s_sContextMain, "Include missing files."))
-    , m_oIgnored(QStringList() << CConstants::s_sSwitchIgnored,
-                 QCoreApplication::translate(CConstants::s_sContextMain, "Include ignored files."))
-    , m_oAuthor(QStringList() << "a" << CConstants::s_sSwitchAuthor,
-                QCoreApplication::translate(CConstants::s_sContextMain, "Set commit author to <author>."),
-                QCoreApplication::translate(CConstants::s_sContextMain, CConstants::s_sSwitchAuthor))
-    , m_oMessage(QStringList() << "m" << CConstants::s_sSwitchMessage,
-                 QCoreApplication::translate(CConstants::s_sContextMain, "Set commit message to <message>."),
-                 QCoreApplication::translate(CConstants::s_sContextMain, CConstants::s_sSwitchMessage))
-    , m_oStart(QStringList() << "s" << CConstants::s_sSwitchStart,
-               QCoreApplication::translate(CConstants::s_sContextMain, "Begin listing after <start> items."),
-               QCoreApplication::translate(CConstants::s_sContextMain, CConstants::s_sSwitchStart))
-    , m_oCount(QStringList() << "c" << CConstants::s_sSwitchCount,
-               QCoreApplication::translate(CConstants::s_sContextMain, "List <count> items."),
-               QCoreApplication::translate(CConstants::s_sContextMain, CConstants::s_sSwitchCount))
-    , m_oAllowFileDelete(QStringList() << "d" << CConstants::s_sSwitchAllowFileDelete,
-                         QCoreApplication::translate(CConstants::s_sContextMain, "Allow Aze to delete files."))
-    , m_oGraph(QStringList() << "g" << CConstants::s_sSwitchGraph,
-               QCoreApplication::translate(CConstants::s_sContextMain, "Show log as a graph."))
-    , m_eCommand(CConstants::eCommandNone)
-{
-    CConstants::initCommandMap();
-
-    QCoreApplication::setApplicationName("Aze");
-    QCoreApplication::setApplicationVersion(AZE_VERSION_STRING);
-
-    m_tParser.addOptions({
-                             m_oAll,
-                             m_oLoose,
-                             m_oClean,
-                             m_oModified,
-                             m_oAdded,
-                             m_oDeleted,
-                             m_oMissing,
-                             m_oIgnored,
-                             m_oAuthor,
-                             m_oMessage,
-                             m_oStart,
-                             m_oCount,
-                             m_oAllowFileDelete,
-                             m_oGraph
-                         });
-
-    m_tParser.addHelpOption();
-    m_tParser.addVersionOption();
-    m_tParser.process(app);
-
-    m_lFilesAndIds = m_tParser.positionalArguments();
-
-    if (m_lFilesAndIds.count() > 0)
-    {
-        QString sCommand = m_lFilesAndIds.takeFirst();
-        m_eCommand = CConstants::s_mCommands[sCommand];
-    }
 }
 
 //-------------------------------------------------------------------------------------------------

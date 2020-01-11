@@ -41,6 +41,8 @@ const char* CConstants::s_sSwitchCount                      = "count";
 const char* CConstants::s_sSwitchAllowFileDelete            = "allow-delete";
 const char* CConstants::s_sSwitchGraph                      = "graph";
 
+const char* CConstants::s_sSwitchPort                       = "port";
+
 const int CConstants::s_iError_None                         = 0;
 const int CConstants::s_iError_UnknownCommand               = 1;
 const int CConstants::s_iError_UnknownSwitch                = 2;

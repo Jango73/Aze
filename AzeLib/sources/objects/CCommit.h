@@ -41,6 +41,9 @@ public:
     Q_FAST_PROPERTY(QDictionary, m, user, User)
     Q_FAST_PROPERTY(QDictionary, m, files, Files)
 
+    // This list will be filled only by calling readParents
+    Q_FAST_PROPERTY(QList<CCommit*>, l, parentCommits, ParentCommits)
+
 public:
 
     //-------------------------------------------------------------------------------------------------
@@ -71,6 +74,9 @@ public:
 
     //!
     void clearParents();
+
+    //!
+    void readParentCommits(CDatabase* pDatabase);
 
     //!
     void addParent(const QString& sParentId);

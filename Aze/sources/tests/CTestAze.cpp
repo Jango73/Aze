@@ -3,13 +3,15 @@
 #include <QFile>
 #include <QDir>
 
-// Application
-#include "../AzeApp.h"
-#include "../CConstants.h"
-#include "CTestAze.h"
+// AzeLib
 #include "CRepository.h"
 #include "CUtils.h"
 #include "CStrings.h"
+
+// Application
+#include "../client/CAzeClient.h"
+#include "../common/CConstants.h"
+#include "CTestAze.h"
 
 //-------------------------------------------------------------------------------------------------
 
@@ -169,7 +171,7 @@ QString CTestAze::exec(const QStringList& lInputArguments)
     }
 
     // Instantiate and run aze
-    AzeApp(argc, argv, &sOutput).run();
+    CAzeClient(argc, argv, &sOutput).run();
 
     for (index = 0; index < argc; index++)
         delete argv[index];

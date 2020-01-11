@@ -1,6 +1,7 @@
 
 // Application
-#include "AzeApp.h"
+#include "client/CAzeClient.h"
+#include "server/CAzeServer.h"
 #include "tests/CTestAze.h"
 
 int main(int argc, char *argv[])
@@ -12,5 +13,10 @@ int main(int argc, char *argv[])
         return QTest::qExec(&test, 0, nullptr);
     }
 
-    return AzeApp(argc, argv).run();
+    if (argc > 1 && QString(argv[1]) == "serve")
+    {
+        return CAzeServer(argc, argv).exec();
+    }
+
+    return CAzeClient(argc, argv).run();
 }
