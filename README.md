@@ -7,8 +7,9 @@ A versioning system
 * QtCreator 4.9.1
 * qt-plus - Copyright myself
   * https://github.com/Jango73/qt-plus
-* Diff Template Library (dtl) - Copyright (c) 2015 Tatsuhiko Kubo <cubicdaiya@gmail.com> All rights reserved.
-  * https://github.com/cubicdaiya/dtl
+* Diff Match and Patch - Copyright 2018 The diff-match-patch Authors.
+  * Qt/C++ port by mikeslemmer@gmail.com (Mike Slemmer)
+  * Original : https://github.com/google/diff-match-patch
 
 ## Building
 
@@ -17,7 +18,7 @@ A versioning system
     git submodule init
     git submodule update
 ```
-* Open /CuteGit.pro in QtCreator
+* Open /Aze.pro in QtCreator
 * Build and run
 
 ## Things it does
@@ -28,3 +29,4 @@ A versioning system
 * Remove files from stage
 * Commmit staged files
 * Diff between two commits
+* Merge a branch
