@@ -49,13 +49,32 @@ public:
     CCommit* getCommitAncestor(CCommit* pCommit, QObject* owner = nullptr, int iDelta = 1);
 
     //!
-    QList<CCommit*> getCommitAncestorList(CCommit* pCommit, QObject* owner = nullptr, bool bStayOnBranch = true, int iMaxCount = 0);
+    QList<CCommit*> getCommitAncestorList(
+            CCommit* pCommit,
+            QObject* owner = nullptr,
+            bool bStayOnBranch = true,
+            int iMaxCount = 0,
+            QString sStopAtCommitId = ""
+            );
 
     //!
-    void getCommitAncestorListRecurse(QList<CCommit*>& lCommitList, CCommit* pCommit, QObject* owner = nullptr, bool bStayOnBranch = true, int iGuard = 0);
+    void getCommitAncestorListRecurse(
+            QList<CCommit*>& lCommitList,
+            CCommit* pCommit,
+            QObject* owner = nullptr,
+            bool bStayOnBranch = true,
+            int iGuard = 0,
+            QString sStopAtCommitId = ""
+            );
 
     //!
-    CCommit* getCommonCommitChains(CCommit* pCommit1, CCommit* pCommit2, QObject* owner = nullptr, QList<CCommit*>* lCommit1Chain = nullptr, QList<CCommit*>* lCommit2Chain = nullptr);
+    CCommit* getCommonCommitChains(
+            CCommit* pCommit1,
+            CCommit* pCommit2,
+            QObject* owner = nullptr,
+            QList<CCommit*>* lCommit1Chain = nullptr,
+            QList<CCommit*>* lCommit2Chain = nullptr
+            );
 
     //!
     CCommit* directoryAsCommit(QObject* owner = nullptr, QString sRootPath = "");
@@ -74,6 +93,9 @@ public:
 
     //!
     void diffText(QString& sOutput, const QString& sFileName, const QString& sText1, const QString& sText2);
+
+    //! Applies a diff to the working directory
+    bool applyDiff(const QString& sFullDiff, bool bAddToStage = false, CCommit* pStagingCommit = nullptr);
 };
 
 }

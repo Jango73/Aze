@@ -4,6 +4,9 @@
 // Qt
 #include <QObject>
 #include <QCoreApplication>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QNetworkRequest>
 
 // AzeLib
 #include "CRepository.h"
@@ -44,56 +47,76 @@ public:
     void processWildCards();
 
     //-------------------------------------------------------------------------------------------------
-    // User commands
+    // Local commands
     //-------------------------------------------------------------------------------------------------
 
     //! Initializes a repository
     int init();
 
-    //!
+    //! Creates a branch
     int createBranch();
 
-    //!
+    //! Switches to a branch
     int switchToBranch();
 
-    //!
+    //! Prints repo status
     int status();
 
-    //!
+    //! Stages files
     int stage();
 
-    //!
+    //! Unstages files
     int unstage();
 
-    //!
+    //! Reverts files
     int revert();
 
-    //!
+    //! Moves some files
     int move();
 
-    //!
+    //! Removes some files
     int remove();
 
-    //!
+    //! Commits the staged files
     int commit();
 
-    //!
+    //! Reverts all files
     int cleanUp();
 
-    //!
+    //! Show the log
     int log();
 
-    //!
+    //! Shows a diff between two commits
     int diff();
 
     //!
     int merge();
 
     //!
+    int saveStash();
+
+    //!
+    int popStash();
+
+    //!
     int dump();
 
     //!
     int help();
+
+    //-------------------------------------------------------------------------------------------------
+    // Remote commands
+    //-------------------------------------------------------------------------------------------------
+
+    //!
+    int push();
+
+    //!
+    void postNetworkRequest(CXMLNode xRequest);
+
+protected slots:
+
+    void onNetworkAccessFinished(QNetworkReply* pReply);
 
     //-------------------------------------------------------------------------------------------------
     // Properties
@@ -104,7 +127,10 @@ protected:
     CAzeClientArguments     m_tArguments;
     QTextStream*            m_pOutStream;
     Aze::CRepository*       m_pRepository;
+    QNetworkAccessManager*  m_pNetworkAccessManager;
+    QNetworkRequest         m_tNetworkRequest;
     bool                    m_bOutputStreamIsMine;
+    bool                    m_bNetworkAccessFinished;
 };
 
 //-------------------------------------------------------------------------------------------------

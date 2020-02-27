@@ -12,14 +12,15 @@
 #include "Macros.h"
 
 // Application
-#include "objects/CObject.h"
+#include "CCommitFunctions.h"
+#include "CEnums.h"
+#include "CStrings.h"
 #include "objects/CBranch.h"
 #include "objects/CCommit.h"
 #include "objects/CDatabase.h"
 #include "objects/CFile.h"
-#include "CCommitFunctions.h"
-#include "CEnums.h"
-#include "CStrings.h"
+#include "objects/CObject.h"
+#include "objects/CStash.h"
 
 //-------------------------------------------------------------------------------------------------
 
@@ -47,6 +48,8 @@ public:
     Q_FAST_PROPERTY(CCommit*, p, stagingCommit, StagingCommit)
     Q_FAST_PROPERTY(CCommit*, p, rootCommit, RootCommit)
     Q_FAST_PROPERTY(CCommit*, p, tipCommit, TipCommit)
+
+    Q_FAST_PROPERTY(QStringList, l, stashList, StashList)
 
 public:
 
@@ -91,6 +94,9 @@ public:
     //! Reverts all files listed in the commit
     bool revert(CCommit* pWorkingDirectory, bool bAllowFileDelete = false);
 
+    //! Reverts all files
+    bool revert(bool bAllowFileDelete = false);
+
     //! Returns a log
     QString log(const QStringList& lFileNames, bool bGraph = false, int iStart = 0, int iCount = 0);
 
@@ -103,12 +109,11 @@ public:
     //! Merges the branch sName onto the current one
     bool merge(const QString& sName);
 
-    //! Splits a full diff into a file diff list
-    //! 1st = file name, 2nd = diff
-    QList<QPair<QString, QString> > splitDiff(const QString& sFullDiff);
+    //! Stashes the working directory changes
+    bool saveStash(const QString& sMessage);
 
-    //! Applies a diff to the working directory
-    bool applyDiff(const QString& sDiff, bool bAddToStage = false);
+    //! Restores the contents of a stash
+    bool popStash(const QString& sId);
 
     //! Returns the staging commit
     CCommit* getStagingCommit();
@@ -146,6 +151,12 @@ public:
     //! Gets a list of loose files
     QStringList getLooseFiles();
 
+    //! Adds a stash ID to the list of stash IDs
+    void addStashToList(const QString& sId);
+
+    //! Removes a stash ID from the list of stash IDs
+    void removeStashFromList(const QString& sId);
+
     //-------------------------------------------------------------------------------------------------
     // Helper methods
     //-------------------------------------------------------------------------------------------------
@@ -155,6 +166,12 @@ public:
 
     //! Places in iDelta the value of delta symbols in sText (if any)
     QString processDeltas(const QString& sText, int& iDelta);
+
+    //! Returns the diff between tip commit and working directory, if any
+    QString diffWorkingDirectory();
+
+	//!
+	QString getPushRequest();
 
     //-------------------------------------------------------------------------------------------------
     // Properties

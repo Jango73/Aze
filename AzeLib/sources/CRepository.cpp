@@ -7,16 +7,18 @@
 #include "CRepository.h"
 #include "CUtils.h"
 
-#include "commands/CSwitchToBranchCommand.h"
-#include "commands/CStageCommand.h"
-#include "commands/CUnstageCommand.h"
-#include "commands/CRemoveCommand.h"
 #include "commands/CCommitCommand.h"
-#include "commands/CRevertCommand.h"
-#include "commands/CStatusCommand.h"
-#include "commands/CLogCommand.h"
 #include "commands/CDiffCommand.h"
+#include "commands/CLogCommand.h"
 #include "commands/CMergeCommand.h"
+#include "commands/CPopStashCommand.h"
+#include "commands/CRemoveCommand.h"
+#include "commands/CRevertCommand.h"
+#include "commands/CSaveStashCommand.h"
+#include "commands/CStageCommand.h"
+#include "commands/CStatusCommand.h"
+#include "commands/CSwitchToBranchCommand.h"
+#include "commands/CUnstageCommand.h"
 
 namespace Aze {
 
@@ -155,6 +157,14 @@ bool CRepository::revert(CCommit* pWorkingDirectory, bool bAllowFileDelete)
 
 //-------------------------------------------------------------------------------------------------
 
+bool CRepository::revert(bool bAllowFileDelete)
+{
+    CCommit* pWorkingDirectory = m_pCommitFunctions->directoryAsCommit();
+    return CRevertCommand(this, pWorkingDirectory, bAllowFileDelete).execute();
+}
+
+//-------------------------------------------------------------------------------------------------
+
 QString CRepository::log(const QStringList& lFileNames, bool bGraph, int iStart, int iCount)
 {
     QString sReturnValue;
@@ -190,104 +200,16 @@ bool CRepository::merge(const QString& sName)
 
 //-------------------------------------------------------------------------------------------------
 
-QList<QPair<QString, QString> > CRepository::splitDiff(const QString& sFullDiff)
+bool CRepository::saveStash(const QString& sMessage)
 {
-    QList<QPair<QString, QString> > mReturnValue;
-
-    QRegExp tRegExp1(QString("%1\\s+[a-zA-Z0-9\\.\\/\\+-_]+\\s+[a-zA-Z0-9\\.\\/\\+-_]+\\s*\\r*\\n")
-                    .arg(CStrings::s_sDiffChunkHeader)
-                    );
-    QRegExp tRegExp2(QString("---\\s+([a-zA-Z0-9\\.\\/\\+-_]+)\\s*\\r*\\n"));
-    QRegExp tRegExp3(QString("\\+\\+\\+\\s+([a-zA-Z0-9\\.\\/\\+-_]+)\\s*\\r*\\n"));
-
-    // Get a list of file diffs from the full diff
-    QStringList lFileDiffs = sFullDiff.split(tRegExp1, QString::SkipEmptyParts);
-
-    // Iterate through each file diffs
-    for (QString sFileDiff : lFileDiffs)
-    {
-        if (tRegExp2.indexIn(sFileDiff) != -1)
-        {
-            QString sFileName = tRegExp2.cap(1).trimmed();
-
-            if (not sFileName.isEmpty())
-            {
-                // Remove things not expected by diff-match-patch
-                sFileDiff.replace(tRegExp2, "");
-                sFileDiff.replace(tRegExp3, "");
-
-                mReturnValue << QPair<QString, QString>(sFileName, sFileDiff);
-            }
-        }
-    }
-
-    return mReturnValue;
+    return CSaveStashCommand(this, sMessage).execute();
 }
 
 //-------------------------------------------------------------------------------------------------
 
-bool CRepository::applyDiff(const QString& sFullDiff, bool bAddToStage)
+bool CRepository::popStash(const QString& sId)
 {
-    // Keep track of merged files
-    QDictionary mProcessedFiles;
-
-    QList<QPair<QString, QString> > mFileDiffs = splitDiff(sFullDiff);
-
-    for (QPair<QString, QString> tPair : mFileDiffs)
-    {
-        QString sFileName = tPair.first;
-        QString sFileDiff = tPair.second;
-
-        // Read the file, apply the diff and write to merge directory
-        QString sFullSourceName = m_pDatabase->composeLocalFileName(sFileName);
-        QString sFullTargetName = m_pDatabase->composeMergeFileName(sFileName);
-
-        // Check if file is already present in merge directory
-        bool bMergedFileExists = QFile(sFullTargetName).exists();
-
-        if (bMergedFileExists)
-            sFullSourceName = sFullTargetName;
-
-        // Get the content of the file
-        QString sPreviousContent = CUtils::getTextFileContent(sFullSourceName);
-        QString sNewContent = CUtils::applyUnifiedDiff(sPreviousContent, sFileDiff);
-
-        if (sPreviousContent.isEmpty() && sNewContent.isEmpty())
-        {
-            OUT_ERROR(QString(CStrings::s_sTextCouldNotApplyPatch).arg(sFileName));
-            OUT_INFO(sFileDiff);
-            return false;
-        }
-
-        CUtils::putTextFileContent(sFullTargetName, sNewContent);
-        QString sId = CUtils::idFromByteArray(sNewContent.toUtf8());
-        mProcessedFiles[sFileName] = sId;
-    }
-
-    // Stage the merged files
-    if (bAddToStage && IS_NOT_NULL(m_pStagingCommit))
-    {
-        for (QString sFileName : mProcessedFiles.values())
-        {
-            QString sKey = mapKeyForValue(mProcessedFiles, sFileName);
-            m_pStagingCommit->addFile(mProcessedFiles[sKey], sFileName);
-        }
-    }
-
-    // Move the merged files
-    for (QString sFileName : mProcessedFiles.keys())
-    {
-        QString sFullSourceName = m_pDatabase->composeMergeFileName(sFileName);
-        QString sFullTargetName = m_pDatabase->composeLocalFileName(sFileName);
-
-        if (not CUtils::moveFile(sFullSourceName, sFullTargetName))
-        {
-            OUT_ERROR(QString("Could not move file %1.").arg(sFullSourceName));
-            return false;
-        }
-    }
-
-    return true;
+    return CPopStashCommand(this, sId).execute();
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -308,8 +230,18 @@ bool CRepository::readGeneralInfo()
 
     CXMLNode xInfo = CXMLNode::load(sFileName);
 
+    // Read branches
     CXMLNode xBranches = xInfo.getNodeByTagName(CStrings::s_sParamBranches);
     setCurrentBranchName(xBranches.attributes()[CStrings::s_sParamCurrent]);
+
+    // Read stash list
+    CXMLNode xStashListNode = xInfo.getNodeByTagName(CStrings::s_sParamStashList);
+    CXMLNodeList xStashList = xStashListNode.getNodesByTagName(CStrings::s_sParamStash);
+
+    for (CXMLNode& xStash : xStashList)
+    {
+        m_lStashList << xStash.attributes()[CStrings::s_sParamId];
+    }
 
     return true;
 }
@@ -374,9 +306,21 @@ bool CRepository::writeGeneralInfo()
 
     CXMLNode xInfo(CStrings::s_sParamInfo);
 
+    // Write branches
     CXMLNode xBranches(CStrings::s_sParamBranches);
     xBranches.attributes()[CStrings::s_sParamCurrent] = m_sCurrentBranchName;
     xInfo << xBranches;
+
+    // Write stash list
+    CXMLNode xStashListNode(CStrings::s_sParamStashList);
+    for (const QString& sId : m_lStashList)
+    {
+        CXMLNode xStash(CStrings::s_sParamStash);
+        xStash.attributes()[CStrings::s_sParamId] = sId;
+        xStashListNode << xStash;
+    }
+
+    xInfo << xStashListNode;
 
     xInfo.save(sFileName);
 
@@ -451,6 +395,21 @@ QStringList CRepository::getLooseFiles()
 
 //-------------------------------------------------------------------------------------------------
 
+void CRepository::addStashToList(const QString& sId)
+{
+    if (not sId.isEmpty())
+        m_lStashList << sId;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+void CRepository::removeStashFromList(const QString& sId)
+{
+    m_lStashList.removeAll(sId);
+}
+
+//-------------------------------------------------------------------------------------------------
+
 QString CRepository::processKeywords(const QString& sText)
 {
     if (sText == CStrings::s_sParamTip && not IS_NULL(m_pCurrentBranch))
@@ -479,6 +438,31 @@ QString CRepository::processDeltas(const QString& sText, int& iDelta)
     }
 
     return sText;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+QString CRepository::diffWorkingDirectory()
+{
+    QStringList lLooseFiles = getLooseFiles();
+
+    QString sDiff;
+    CCommit* pFromCommit = nullptr;
+    CCommit* pToCommit = nullptr;
+
+    if (not m_pCurrentBranch->tipCommitId().isEmpty())
+    {
+        // Get the current branch tip commit
+        pFromCommit = m_pDatabase->getCommit(m_pCurrentBranch->tipCommitId(), this);
+
+        // Get the working directory as commit
+        pToCommit = m_pCommitFunctions->directoryAsCommit(this);
+
+        // Diff the current tip commit and the working directory
+        m_pCommitFunctions->diffCommits(sDiff, pFromCommit, pToCommit, lLooseFiles);
+    }
+
+    return sDiff;
 }
 
 //-------------------------------------------------------------------------------------------------

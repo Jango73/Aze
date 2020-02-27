@@ -34,7 +34,7 @@ CONFIG(debug, debug|release) {
 }
 
 # Copy qt-plus to bin
-copyfile = $$PWD/../common/qt-plus/bin/*
+copyfile = $$PWD/../qt-plus/bin/*
 copydest = $$DESTDIR
 
 QMAKE_PRE_LINK += $$QMAKE_COPY $$quote($$shell_path($$copyfile)) $$quote($$shell_path($$copydest)) $$escape_expand(\\n\\t)

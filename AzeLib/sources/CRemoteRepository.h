@@ -1,23 +1,34 @@
 
 #pragma once
 
+// Global
+#include "Aze_global.h"
+
 // Qt
 #include <QObject>
+#include <QDateTime>
 
 // qt-plus
-#include "Web/CDynamicHTTPServer.h"
-
-// AzeLib
-#include "CRepository.h"
+#include "Macros.h"
 
 // Application
-#include "../common/CConstants.h"
+#include "CRepository.h"
 
 //-------------------------------------------------------------------------------------------------
 
-class CAzeServerProcessor : public CDynamicHTTPServer
+namespace Aze {
+
+class AZE_SHARED_EXPORT CRemoteRepository : public CObject
 {
     Q_OBJECT
+
+public:
+
+    //-------------------------------------------------------------------------------------------------
+    // Properties
+    //-------------------------------------------------------------------------------------------------
+
+    Q_FAST_PROPERTY(CRepository*, p, localRepository, LocalRepository)
 
 public:
 
@@ -25,28 +36,18 @@ public:
     // Constructor & destructor
     //-------------------------------------------------------------------------------------------------
 
-    //! Constructor
-    CAzeServerProcessor(quint16 iPort = DEFAULT_HTTP_PORT);
-
-    //! Destructor
-    virtual ~CAzeServerProcessor() override;
-
-    //-------------------------------------------------------------------------------------------------
-    // Control methods
-    //-------------------------------------------------------------------------------------------------
+    //!
+    CRemoteRepository(CRepository* pLocalRepository, QObject* parent = nullptr);
 
     //!
-    virtual void getContent(CWebContext& tContext, QString& sHead, QString& sBody, QString& sCustomResponse, QString& sCustomResponseMIME) override;
-
-    //!
-    CXMLNode serveRequest(CWebContext& tContext, const CXMLNode &xRequest);
+    ~CRemoteRepository();
 
     //-------------------------------------------------------------------------------------------------
-    // Properties
+    // Command methods
     //-------------------------------------------------------------------------------------------------
 
-protected:
-
+    //! Returns the request for push
+    CXMLNode getPushRequest();
 };
 
-//-------------------------------------------------------------------------------------------------
+}

@@ -15,6 +15,7 @@
 #include "../CStrings.h"
 #include "CBranch.h"
 #include "CCommit.h"
+#include "CStash.h"
 
 //-------------------------------------------------------------------------------------------------
 
@@ -30,6 +31,7 @@ public:
     // Properties
     //-------------------------------------------------------------------------------------------------
 
+    Q_FAST_PROPERTY(QString, s, startPath, StartPath)
     Q_FAST_PROPERTY(QString, s, rootPath, RootPath)
     Q_FAST_PROPERTY(QString, s, dataPath, DataPath)
     Q_FAST_PROPERTY(QString, s, stashPath, StashPath)
@@ -58,6 +60,9 @@ public:
     CCommit* getCommit(const QString& sId, QObject* parent);
 
     //!
+    CStash* getStash(const QString& sId, QObject* parent);
+
+    //!
     QByteArray getObject(const QString& sId);
 
     //-------------------------------------------------------------------------------------------------
@@ -67,12 +72,18 @@ public:
     //!
     QString storeCommit(const CCommit* pCommit, const QString& sId = "");
 
+    //!
+    QString storeStash(const CStash* pStash, const QString& sId = "");
+
     //-------------------------------------------------------------------------------------------------
     // Control methods
     //-------------------------------------------------------------------------------------------------
 
     //!
     bool init();
+
+    //!
+    bool removeStash(const QString& sId);
 
     //! Returns a relative file name given a root path and an absolute path to a file
     QString relativeFileName(const QString& sFileName);
@@ -96,6 +107,9 @@ public:
     QString composeObjectFileName(const QString& sId);
 
     //!
+    QString composeStashFileName(const QString& sId);
+
+    //!
     QString storeFile(const QString& sFileName);
 
     //!
@@ -103,6 +117,14 @@ public:
 
     //!
     QString printableFileContentById(const QString& sId);
+
+    //-------------------------------------------------------------------------------------------------
+    // Protected control methods
+    //-------------------------------------------------------------------------------------------------
+
+protected:
+
+    QString getActualRoot(const QString& sPath);
 };
 
 }

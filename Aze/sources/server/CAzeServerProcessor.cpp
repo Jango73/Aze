@@ -16,6 +16,24 @@
 
 //-------------------------------------------------------------------------------------------------
 
+/*
+    AZE Request format
+
+    {
+        "repository": "<Name of repository>"
+        "branch": "<Name of branch>"
+        "request": "<Type of request>"
+        "commit": [
+            "01ab23cd....": "<BASE64: xml commit>"
+        ]
+        "object": [
+            "01ab23cd....": "<BASE64: xml commit>"
+        ]
+    }
+*/
+
+//-------------------------------------------------------------------------------------------------
+
 CAzeServerProcessor::CAzeServerProcessor(quint16 iPort)
     : CDynamicHTTPServer(iPort)
 {
@@ -34,16 +52,17 @@ void CAzeServerProcessor::getContent(CWebContext& tContext, QString& sHead, QStr
     Q_UNUSED(sHead);
     Q_UNUSED(sBody);
 
-    if (tContext.m_lPath.count() == 0 || tContext.m_lPath[0].isEmpty())
+    if (not tContext.pathValid())
     {
-        QString sResponse;
-
-        if (tContext.m_baPostContent.isEmpty() == false)
+        if (not tContext.m_baPostContent.isEmpty())
         {
-            CXMLNode xRequest = CXMLNode::parseJSON(QString(tContext.m_baPostContent));
+            if (tContext.m_sContentType == MIME_Content_JSON)
+            {
+                CXMLNode xRequest = CXMLNode::parseJSON(QString(tContext.m_baPostContent));
 
-            sCustomResponse = serveRequest(xRequest).toJsonString();
-            sCustomResponseMIME = MIME_Content_JSON;
+                sCustomResponse = serveRequest(tContext, xRequest).toJsonString();
+                sCustomResponseMIME = MIME_Content_JSON;
+            }
         }
     }
     else
@@ -54,36 +73,15 @@ void CAzeServerProcessor::getContent(CWebContext& tContext, QString& sHead, QStr
 
 //-------------------------------------------------------------------------------------------------
 
-CXMLNode CAzeServerProcessor::serveRequest(CXMLNode xRequest)
+CXMLNode CAzeServerProcessor::serveRequest(CWebContext& tContext, const CXMLNode& xRequest)
 {
     CXMLNode xResult;
     QString sAction = xRequest.attributes()[PROPNAME_ACTION];
 
-    if (sAction.isEmpty() == false)
+    if (not sAction.isEmpty())
     {
-//        // Get this user Id
-//        qint64 iThisUserId = m_pServer->model()->idFromIP(m_tContext.m_sPeer);
-
-//        if (sAction == ACTNAME_PING)
-//            xResult = servePing(xRequest, iThisUserId);
-//        else if (sAction == ACTNAME_SET_OWN_PROFILE)
-//            xResult = serveSetOwnProfile(xRequest);
-//        else if (sAction == ACTNAME_SET_OWN_STATUS)
-//            xResult = serveSetOwnStatus(xRequest, iThisUserId);
-//        else if (sAction == ACTNAME_GET_USER_LIST)
-//            xResult = serveGetUserList(xRequest, iThisUserId);
-//        else if (sAction == ACTNAME_GET_USERS_BY_TAGS)
-//            xResult = serveGetUsersByTags(xRequest, iThisUserId);
-//        else if (sAction == ACTNAME_REQUEST_TO_USER)
-//            xResult = serveRequestToUser(xRequest, iThisUserId);
-//        else if (sAction == ACTNAME_RESPONSE_TO_USER)
-//            xResult = serveResponseToUser(xRequest, iThisUserId);
-//        else if (sAction == ACTNAME_SET_MEETING)
-//            xResult = serveSetMeeting(xRequest, iThisUserId);
-//        else if (sAction == ACTNAME_SET_GROUP)
-//            xResult = serveSetGroup(xRequest, iThisUserId);
-//        else if (sAction == ACTNAME_CHAT_MESSAGE)
-//            xResult = serveChatMessage(xRequest, iThisUserId);
+        // Get the IP
+        QString sIP = tContext.m_sPeer;
     }
 
     return xResult;

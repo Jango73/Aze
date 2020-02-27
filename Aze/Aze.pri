@@ -13,6 +13,8 @@ SOURCES += \
     sources/server/CAzeServerArguments.cpp \
     sources/server/CAzeServerProcessor.cpp \
     sources/client/CAzeClient.cpp \
+    sources/client/CAzeClient_Local.cpp \
+    sources/client/CAzeClient_Remote.cpp \
     sources/client/CAzeClientArguments.cpp \
     sources/common/CConstants.cpp \
     sources/tests/CTestAze.cpp \

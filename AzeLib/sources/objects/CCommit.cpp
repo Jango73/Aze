@@ -57,6 +57,7 @@ CXMLNode CCommit::toNode() const
     xNode << xMessage;
 
     CXMLNode xUser = CUtils::nodeFromDictionary(m_mUser);
+    xUser.setTag(CStrings::s_sParamUser);
     xNode << xUser;
 
     CXMLNode xFiles(CStrings::s_sParamFiles);
@@ -110,12 +111,15 @@ void CCommit::addParent(const QString& sParentId)
 
 //-------------------------------------------------------------------------------------------------
 
-bool CCommit::addFile(QString sRelativeFileName, QString sId)
+bool CCommit::addFile(CDatabase* pDatabase, QString sRelativeFileName, QString sId)
 {
     if (not m_mFiles.values().contains(sRelativeFileName))
     {
         if (sId.isEmpty())
-            sId = CUtils::idFromFileContent(sRelativeFileName);
+        {
+            QString sAbsoluteFileName = pDatabase->absoluteFileName(sRelativeFileName);
+            sId = CUtils::idFromFileContent(sAbsoluteFileName);
+        }
 
         m_mFiles[sId] = sRelativeFileName;
     }
@@ -137,7 +141,7 @@ bool CCommit::removeFile(QString sRelativeFileName)
 
 //-------------------------------------------------------------------------------------------------
 
-bool CCommit::addCommit(CDatabase* pDatabase, CCommit* pCommitToAdd)
+bool CCommit::addCommit(CDatabase* pDatabase, const CCommit* pCommitToAdd)
 {
     for (QString sAddKey : pCommitToAdd->m_mFiles.keys())
     {

@@ -22,21 +22,48 @@ public:
 
 private:
 
+    class CTransformedFile
+    {
+    public:
+        CTransformedFile()
+        {
+        }
+
+        CTransformedFile(QString sFileName, QString sFileContent1, QString sFileContent2)
+            : m_sFilePath(sFileName)
+            , m_sFileContent1(sFileContent1)
+            , m_sFileContent2(sFileContent2)
+        {
+        }
+
+        QString m_sFilePath;
+        QString m_sFileContent1;
+        QString m_sFileContent2;
+    };
+
     //-------------------------------------------------------------------------------------------------
     // Control methods
     //-------------------------------------------------------------------------------------------------
 
+    //! Deletes all folders and files in the test repository
     void clearRepository();
 
+    //!
     QMap<QString, QString> generateFiles(int iCount);
 
+    //!
     bool createFile(const QString& sName, const QString& sContent);
 
+    //!
     bool readFile(const QString& sName, QString& sContent);
 
+    //!
     void createManyFiles();
 
+    //! Executes a command
     QString exec(const QStringList& lInputArguments);
+
+    void checkCommitDiff(const QString& sDiff, QVector<CTransformedFile> vFiles);
 
     //-------------------------------------------------------------------------------------------------
     // Slots

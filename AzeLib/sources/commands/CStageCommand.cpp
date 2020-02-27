@@ -42,7 +42,7 @@ bool CStageCommand::addSingleFile(QString sRelativeFileName)
         if (CUtils::fileExists(m_pRepository->database()->rootPath(), sRelativeFileName))
         {
             QString sId = CUtils::idFromString(sRelativeFileName);
-            m_pRepository->stagingCommit()->addFile(sRelativeFileName, sId);
+            m_pRepository->stagingCommit()->addFile(m_pRepository->database(), sRelativeFileName, sId);
             return true;
         }
         else

@@ -59,17 +59,19 @@ CCommit* CCommitFunctions::getCommitAncestor(CCommit* pCommit, QObject* owner, i
 
 //-------------------------------------------------------------------------------------------------
 
-QList<CCommit*> CCommitFunctions::getCommitAncestorList(CCommit* pCommit, QObject* owner, bool bStayOnBranch, int iMaxCount)
+QList<CCommit*> CCommitFunctions::getCommitAncestorList(CCommit* pCommit, QObject* owner, bool bStayOnBranch, int iMaxCount, QString sStopAtCommitId)
 {
     int iGuard = iMaxCount == 0 ? 999999 : iMaxCount;
     QList<CCommit*> lReturnValue;
-    getCommitAncestorListRecurse(lReturnValue, pCommit, owner, bStayOnBranch, iGuard);
+
+    getCommitAncestorListRecurse(lReturnValue, pCommit, owner, bStayOnBranch, iGuard, sStopAtCommitId);
+
     return lReturnValue;
 }
 
 //-------------------------------------------------------------------------------------------------
 
-void CCommitFunctions::getCommitAncestorListRecurse(QList<CCommit*>& lCommitList, CCommit* pCommit, QObject* owner, bool bStayOnBranch, int iGuard)
+void CCommitFunctions::getCommitAncestorListRecurse(QList<CCommit*>& lCommitList, CCommit* pCommit, QObject* owner, bool bStayOnBranch, int iGuard, QString sStopAtCommitId)
 {
     if (iGuard <= 0)
         return;
@@ -82,16 +84,22 @@ void CCommitFunctions::getCommitAncestorListRecurse(QList<CCommit*>& lCommitList
     {
         if (parents.count() > 0)
         {
-            lCommitList << parents[0];
-            getCommitAncestorListRecurse(lCommitList, parents[0], owner, bStayOnBranch, iGuard - 1);
+            if (parents[0]->id() != sStopAtCommitId)
+            {
+                lCommitList << parents[0];
+                getCommitAncestorListRecurse(lCommitList, parents[0], owner, bStayOnBranch, iGuard - 1, sStopAtCommitId);
+            }
         }
     }
     else
     {
         for (CCommit* pParent : parents)
         {
-            lCommitList << pParent;
-            getCommitAncestorListRecurse(lCommitList, pParent, owner, bStayOnBranch, iGuard - 1);
+            if (pParent->id() != sStopAtCommitId)
+            {
+                lCommitList << pParent;
+                getCommitAncestorListRecurse(lCommitList, pParent, owner, bStayOnBranch, iGuard - 1, sStopAtCommitId);
+            }
         }
     }
 }
@@ -191,7 +199,7 @@ CCommit* CCommitFunctions::directoryAsCommit(QObject* owner, QString sRootPath)
     // Add agregated files to the commit
     // The id will be generated from the file's contents
     for (QString sFile : lFiles)
-        pNewCommit->addFile(sFile);
+        pNewCommit->addFile(m_pDatabase, sFile);
 
     return pNewCommit;
 }
@@ -218,7 +226,7 @@ void CCommitFunctions::listFilesRecursive(QStringList& lStack, QString sRootDire
         QString sDirectoryName = iFile.fileName();
 
         // Proceed recursively if we are not entering the .aze directory
-        if (sDirectoryName != CStrings::s_sPathAzeDataRoot)
+        if (sDirectoryName != CStrings::s_sPathAzeDataRootPath)
         {
             QString sTargetDirectory = QString("%1/%2").arg(sCurrentDirectory).arg(sDirectoryName);
             listFilesRecursive(lStack, sRootDirectory, sTargetDirectory);
@@ -337,6 +345,72 @@ void CCommitFunctions::diffText(QString& sOutput, const QString& sFileName, cons
         sOutput += CUtils::fileDiffHeader(sFileName, sFileName);
         sOutput += sDiffText;
     }
+}
+
+//-------------------------------------------------------------------------------------------------
+
+bool CCommitFunctions::applyDiff(const QString& sFullDiff, bool bAddToStage, CCommit* pStagingCommit)
+{
+    // Keep track of merged files
+    QDictionary mProcessedFiles;
+
+    QList<QPair<QString, QString> > mFileDiffs = CUtils::splitDiff(sFullDiff);
+
+    for (QPair<QString, QString> tPair : mFileDiffs)
+    {
+        QString sFileName = tPair.first;
+        QString sFileDiff = tPair.second;
+
+        // Read the file, apply the diff and write to merge directory
+        QString sFullSourceName = m_pDatabase->composeLocalFileName(sFileName);
+        QString sFullTargetName = m_pDatabase->composeMergeFileName(sFileName);
+
+        // Check if file is already present in merge directory
+        bool bMergedFileExists = QFile(sFullTargetName).exists();
+
+        if (bMergedFileExists)
+            sFullSourceName = sFullTargetName;
+
+        // Get the content of the file
+        QString sPreviousContent = CUtils::getTextFileContent(sFullSourceName);
+        QString sNewContent = CUtils::applyUnifiedDiff(sPreviousContent, sFileDiff);
+
+        if (sPreviousContent.isEmpty() && sNewContent.isEmpty())
+        {
+            OUT_ERROR(QString(CStrings::s_sTextCouldNotApplyPatch).arg(sFileName));
+            OUT_INFO(sFileDiff);
+            return false;
+        }
+
+        CUtils::putTextFileContent(sFullTargetName, sNewContent);
+        QString sId = CUtils::idFromByteArray(sNewContent.toUtf8());
+        mProcessedFiles[sFileName] = sId;
+    }
+
+    // Stage the merged files
+    if (bAddToStage && IS_NOT_NULL(pStagingCommit))
+    {
+        for (QString sFileName : mProcessedFiles.values())
+        {
+            QString sKey = mapKeyForValue(mProcessedFiles, sFileName);
+            pStagingCommit->addFile(m_pDatabase, mProcessedFiles[sKey], sFileName);
+        }
+    }
+
+    // Move the merged files
+    for (QString sFileName : mProcessedFiles.keys())
+    {
+        QString sFullSourceName = m_pDatabase->composeMergeFileName(sFileName);
+        QString sFullTargetName = m_pDatabase->composeLocalFileName(sFileName);
+
+        if (not CUtils::moveFile(sFullSourceName, sFullTargetName))
+        {
+            OUT_ERROR(QString("Could not move file %1.").arg(sFullSourceName));
+            return false;
+        }
+    }
+
+    return true;
 }
 
 //-------------------------------------------------------------------------------------------------

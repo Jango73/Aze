@@ -38,8 +38,6 @@ bool CStatusCommand::execute()
 
     (*m_pGeneralStatus) = CEnums::eClean;
 
-    QList<CFile> lReturnValue;
-
     CCommit* pStageCommit = m_pRepository->stagingCommit();
     CCommit* pFromCommit = nullptr;
 

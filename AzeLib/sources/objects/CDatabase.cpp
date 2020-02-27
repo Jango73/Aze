@@ -13,12 +13,14 @@ namespace Aze {
 
 CDatabase::CDatabase(const QString& sRootPath, QObject* parent)
     : QObject(parent)
-    , m_sRootPath(sRootPath)
+    , m_sStartPath(sRootPath)
 {
-    if (m_sRootPath.endsWith(CStrings::s_sPathSep))
-        m_sRootPath.remove(m_sRootPath.count() - 1, 1);
+    if (m_sStartPath.endsWith(CStrings::s_sPathSep))
+        m_sStartPath.remove(m_sStartPath.count() - 1, 1);
 
-    m_sDataPath = QString("%1/%2").arg(m_sRootPath).arg(CStrings::s_sPathAzeDataRoot);
+    m_sRootPath = getActualRoot(m_sStartPath);
+
+    m_sDataPath = QString("%1/%2").arg(m_sRootPath).arg(CStrings::s_sPathAzeDataRootPath);
     m_sStashPath = QString("%1/%2").arg(m_sDataPath).arg(CStrings::s_sPathAzeStashPath);
     m_sMergePath = QString("%1/%2").arg(m_sDataPath).arg(CStrings::s_sPathAzeMergePath);
     m_sBranchPath = QString("%1/%2").arg(m_sDataPath).arg(CStrings::s_sPathAzeBranchPath);
@@ -38,6 +40,13 @@ CBranch* CDatabase::getBranch(const QString& sName, QObject* parent)
 CCommit* CDatabase::getCommit(const QString& sId, QObject* parent)
 {
     return CCommit::fromFile(composeCommitFileName(sId), parent, sId);
+}
+
+//-------------------------------------------------------------------------------------------------
+
+CStash* CDatabase::getStash(const QString& sId, QObject* parent)
+{
+    return CStash::fromFile(composeStashFileName(sId), parent, sId);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -81,6 +90,23 @@ QString CDatabase::storeCommit(const CCommit* pCommit, const QString& sId)
 
 //-------------------------------------------------------------------------------------------------
 
+QString CDatabase::storeStash(const CStash* pStash, const QString& sId)
+{
+    if (IS_NULL(pStash))
+        return "";
+
+    QString sIdToUse = sId;
+
+    if (sIdToUse.isEmpty())
+        sIdToUse = pStash->generateId();
+
+    pStash->toFile(composeStashFileName(sIdToUse));
+
+    return sIdToUse;
+}
+
+//-------------------------------------------------------------------------------------------------
+
 bool CDatabase::init()
 {
     QDir rootDir(m_sRootPath);
@@ -94,8 +120,17 @@ bool CDatabase::init()
     rootDir.mkpath(m_sBranchPath);
     rootDir.mkpath(m_sCommitPath);
     rootDir.mkpath(m_sObjectPath);
+    rootDir.mkpath(m_sStashPath);
 
     return true;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+bool CDatabase::removeStash(const QString& sId)
+{
+    QFile file(composeStashFileName(sId));
+    return file.remove();
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -150,9 +185,17 @@ QString CDatabase::composeCommitFileName(const QString& sCommitId)
 
 QString CDatabase::composeObjectFileName(const QString& sId)
 {
-    return QString("%1/%2")
-            .arg(m_sObjectPath)
-            .arg(sId);
+    return QString("%1/%2").arg(m_sObjectPath).arg(sId);
+}
+
+//-------------------------------------------------------------------------------------------------
+
+QString CDatabase::composeStashFileName(const QString& sId)
+{
+    return QString("%1/%2.%3")
+            .arg(m_sStashPath)
+            .arg(sId)
+            .arg(CStrings::s_sCompressedXMLExtension);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -222,6 +265,12 @@ QString CDatabase::printableFileContentById(const QString& sId)
     if (QFile(sFileName).exists())
         return CUtils::getTextFileContent(sFileName);
 
+    // Try in stash
+    sFileName = composeStashFileName(sId);
+
+    if (QFile(sFileName).exists())
+        return CUtils::getTextFileContent(sFileName);
+
     // Try in objects
     sFileName = composeObjectFileName(sId);
 
@@ -229,6 +278,37 @@ QString CDatabase::printableFileContentById(const QString& sId)
         return QString(getObject(sId));
 
     return sText;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+QString CDatabase::getActualRoot(const QString& sPath)
+{
+    QString sSearchPath = sPath;
+
+    while (true)
+    {
+        QString sDataPath = QString("%1/%2").arg(sSearchPath).arg(CStrings::s_sPathAzeDataRootPath);
+
+        QDir dataPath(sDataPath);
+        if (dataPath.exists())
+            return sSearchPath;
+
+        if (sSearchPath.contains(CStrings::s_sPathSep))
+        {
+            int index = sSearchPath.lastIndexOf(CStrings::s_sPathSep);
+            if (index == -1)
+                break;
+
+            sSearchPath = sSearchPath.left(index);
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    return sPath;
 }
 
 //-------------------------------------------------------------------------------------------------

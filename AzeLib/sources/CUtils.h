@@ -70,16 +70,16 @@ public:
     //! Returns an UTF8-Base64 string as a string
     static QString deserializeBase64(const QString& sText);
 
-    //! Returns the SHA1 for baData
+    //! Returns the SHAxxx for baData
     static QString idFromByteArray(const QByteArray& baData);
 
-    //! Returns the SHA1 for sText as UTF8
+    //! Returns the SHAxxx for sText as UTF8
     static QString idFromString(const QString& sText);
 
-    //! Returns the SHA1 for the contents of sFilename (calls idFromByteArray)
+    //! Returns the SHAxxx for the contents of sFilename (calls idFromByteArray)
     static QString idFromFileContent(const QString& sFilename);
 
-    //! Returns true if sId has the length of a SHA1 string
+    //! Returns true if sId has the length of a SHAxxx string
     static bool idValid(const QString& sId);
 
     //! Returns a string that joins sId and sFilePath with '@'
@@ -102,6 +102,10 @@ public:
 
     //! Returns a printable version of sText
     static QString printableUnifiedDiff(const QString& sText);
+
+	//! Splits a full diff into a file diff list
+    //! 1st = file name, 2nd = diff
+    static QList<QPair<QString, QString> > splitDiff(const QString& sFullDiff);
 };
 
 }

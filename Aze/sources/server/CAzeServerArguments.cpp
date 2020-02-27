@@ -25,9 +25,7 @@ CAzeServerArguments::CAzeServerArguments(QCoreApplication& app)
     QCoreApplication::setApplicationVersion(AZE_VERSION_STRING);
 
     // Set option array
-    m_tParser.addOptions({
-                             m_oPort
-                         });
+    m_tParser.addOptions({ m_oPort });
 
     // Finalize option array
     m_tParser.addHelpOption();

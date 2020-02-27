@@ -69,7 +69,7 @@ bool CLogCommand::execute()
             // Iterate through each branch
             for (int index = 0; index < m_vBranches.last().count(); index++)
             {
-                QString sId = m_vBranches.last()[index]->id();
+                // QString sId = m_vBranches.last()[index]->id();
 
                 CCommit* pCommit = m_vBranches.last()[index];
 
@@ -77,6 +77,7 @@ bool CLogCommand::execute()
                 {
                     outputBranches(index, false, index == 0);
                     (*m_pResult) += CStrings::s_sNewLine;
+
                     outputBranches(index, true, index == 0);
 
                     (*m_pResult) += QString("%1 - %2 - %3 - %4%5")
@@ -88,7 +89,7 @@ bool CLogCommand::execute()
                 }
                 else
                 {
-                    (*m_pResult) += QString("commit: %1%2date: %3%4author: %5%6%7%8%9%10")
+                    (*m_pResult) += QString("%1%2%3%4by: %5%6%7%8%9%10")
                             .arg(pCommit->id())
                             .arg(CStrings::s_sNewLine)
                             .arg(pCommit->date())

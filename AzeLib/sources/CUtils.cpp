@@ -124,7 +124,7 @@ QString CUtils::deserializeBase64(const QString& sText)
 
 QString CUtils::idFromByteArray(const QByteArray& baData)
 {
-    QCryptographicHash crypto(QCryptographicHash::Sha1);
+    QCryptographicHash crypto(QCryptographicHash::Sha256);
     crypto.addData(baData);
     QString sResult = QString(crypto.result().toHex());
     return sResult;
@@ -157,7 +157,13 @@ QString CUtils::idFromFileContent(const QString& sFilename)
 bool CUtils::idValid(const QString& sId)
 {
     // In hex strings, there are 2 characters per byte
-    return (sId.count() / 2) == QCryptographicHash::hashLength(QCryptographicHash::Sha1);
+    // SHA256 length = 32 bytes = 64 chars in hex
+
+#if QT_VERSION < QT_VERSION_CHECK(5, 12, 0)
+    return (sId.count() / 2) == 32;
+#else
+    return (sId.count() / 2) == QCryptographicHash::hashLength(QCryptographicHash::Sha256);
+#endif
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -304,6 +310,42 @@ QString CUtils::printableUnifiedDiff(const QString& sText)
     }
 
     return sReturnValue;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+QList<QPair<QString, QString> > CUtils::splitDiff(const QString& sFullDiff)
+{
+    QList<QPair<QString, QString> > mReturnValue;
+
+    QRegExp tRegExp1(QString("%1\\s+[a-zA-Z0-9\\.\\/\\+-_]+\\s+[a-zA-Z0-9\\.\\/\\+-_]+\\s*\\r*\\n")
+                    .arg(CStrings::s_sDiffChunkHeader)
+                    );
+    QRegExp tRegExp2(QString("---\\s+([a-zA-Z0-9\\.\\/\\+-_]+)\\s*\\r*\\n"));
+    QRegExp tRegExp3(QString("\\+\\+\\+\\s+([a-zA-Z0-9\\.\\/\\+-_]+)\\s*\\r*\\n"));
+
+    // Get a list of file diffs from the full diff
+    QStringList lFileDiffs = sFullDiff.split(tRegExp1, QString::SkipEmptyParts);
+
+    // Iterate through each file diffs
+    for (QString sFileDiff : lFileDiffs)
+    {
+        if (tRegExp2.indexIn(sFileDiff) != -1)
+        {
+            QString sFileName = tRegExp2.cap(1).trimmed();
+
+            if (not sFileName.isEmpty())
+            {
+                // Remove things not expected by diff-match-patch
+                sFileDiff.replace(tRegExp2, "");
+                sFileDiff.replace(tRegExp3, "");
+
+                mReturnValue << QPair<QString, QString>(sFileName, sFileDiff);
+            }
+        }
+    }
+
+    return mReturnValue;
 }
 
 //-------------------------------------------------------------------------------------------------

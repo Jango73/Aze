@@ -183,8 +183,29 @@ QString CTestAze::exec(const QStringList& lInputArguments)
 
 //-------------------------------------------------------------------------------------------------
 
+void CTestAze::checkCommitDiff(const QString& sDiff, QVector<CTransformedFile> vFiles)
+{
+    QList<QPair<QString, QString> > mFileDiffs = Aze::CUtils::splitDiff(sDiff);
+    QVERIFY(mFileDiffs.count() == vFiles.count());
+
+    for (CTransformedFile file : vFiles)
+    {
+        // Find the diff for this file
+        auto sItFileDiff = std::find_if(mFileDiffs.begin(), mFileDiffs.end(), [=](QPair<QString, QString> o) { return o.first == file.m_sFilePath; });
+        QVERIFY(sItFileDiff != mFileDiffs.end());
+        // Apply the diff for this file
+        QString sPatch = (*sItFileDiff).second;
+        QString sFilePatched = Aze::CUtils::applyUnifiedDiff(file.m_sFileContent1, sPatch);
+        QVERIFY(file.m_sFileContent2 == sFilePatched);
+    }
+}
+
+//-------------------------------------------------------------------------------------------------
+
 void CTestAze::testAll()
 {
+    QVector<CTransformedFile> vTransformedFiles;
+
     clearRepository();
 
     exec({ CConstants::s_sSwitchInitRepository });
@@ -232,14 +253,12 @@ void CTestAze::testAll()
     QVERIFY(filesDir.mkdir(sFolder2Name));
     QVERIFY(filesDir.mkdir(sFolder3Name));
 
+    // 1st commit
     QVERIFY(createFile(sFile1Path, sFile1Content1));
     QVERIFY(createFile(sFile2Path, sFile2Content1));
     QVERIFY(createFile(sFile3Path, sFile3Content1));
     QVERIFY(createFile(sFile4Path, sFile4Content1));
-    QVERIFY(createFile(sFile5Path, sFile5Content1));
-    QVERIFY(createFile(sFile6Path, sFile6Content1));
 
-    // 1st commit
     exec({
              CConstants::s_sSwitchStage,
              sFile1Path,
@@ -256,7 +275,7 @@ void CTestAze::testAll()
              m_sAuthor
          });
 
-    // Modify files
+    // Modify files 1 and 2
     QVERIFY(createFile(sFile1Path, sFile1Content2));
     QVERIFY(createFile(sFile2Path, sFile2Content2));
 
@@ -278,19 +297,16 @@ void CTestAze::testAll()
     // Diff commits 1 and 2
     QString sDiff = exec({
              CConstants::s_sSwitchDiff,
-             "root",
+             "tip~1",
              "tip"
          });
 
-//    QVERIFY(m_pRepository->readStage());
-//    QList<QPair<QString, QString> > mFileDiffs = m_pRepository->splitDiff(m_pRepository->diff("root", "tip"));
+    vTransformedFiles.clear();
+    vTransformedFiles << CTransformedFile(sFile1Path, sFile1Content1, sFile1Content2);
+    vTransformedFiles << CTransformedFile(sFile2Path, sFile2Content1, sFile2Content2);
+    checkCommitDiff(sDiff, vTransformedFiles);
 
-//    QString sFile1Patched = CUtils::applyUnifiedDiff(sFile1Content1, mFileDiffs[sFile1Path]);
-//    QString sFile2Patched = CUtils::applyUnifiedDiff(sFile2Content1, mFileDiffs[sFile2Path]);
-//    QVERIFY(sFile1Content2 == sFile1Patched);
-//    QVERIFY(sFile2Content2 == sFile2Patched);
-
-    // Modify files
+    // Modify files 3 and 4
     QVERIFY(createFile(sFile3Path, sFile3Content2));
     QVERIFY(createFile(sFile4Path, sFile4Content2));
 
@@ -310,9 +326,11 @@ void CTestAze::testAll()
          });
 
     // Diff commits 2 and 3
-    // TODO
 
     // 4th commit
+    QVERIFY(createFile(sFile5Path, sFile5Content1));
+    QVERIFY(createFile(sFile6Path, sFile6Content1));
+
     exec({
              CConstants::s_sSwitchStage,
              sFile5Path,
@@ -327,9 +345,6 @@ void CTestAze::testAll()
              m_sAuthor
          });
 
-    // Diff commits 3 and 4
-    // TODO
-
     // Create branch 1
     exec({
              CConstants::s_sSwitchCreateBranch,
@@ -339,21 +354,23 @@ void CTestAze::testAll()
     QFile branch1(m_sBranch1Path);
     QVERIFY(branch1.exists());
 
+    // Modify files 5 and 6
+    QVERIFY(createFile(sFile5Path, sFile5Content2));
+    QVERIFY(createFile(sFile6Path, sFile6Content2));
+
     // Switch to branch 1
     exec({
              CConstants::s_sSwitchSwitchToBranch,
              m_sBranch1
          });
 
-    // Create files
-    QVERIFY(createFile(sFile7Path, sFile7Content1));
-    QVERIFY(createFile(sFile8Path, sFile8Content1));
+    // Here we have files 5 and 6 modified and unstaged
 
     // 5th commit
     exec({
              CConstants::s_sSwitchStage,
-             sFile7Path,
-             sFile8Path
+             sFile5Path,
+             sFile6Path
          });
 
     exec({
@@ -365,13 +382,21 @@ void CTestAze::testAll()
          });
 
     // Diff commits 4 and 5
-    // TODO
+    sDiff = exec({
+             CConstants::s_sSwitchDiff,
+             "tip~1",
+             "tip"
+         });
 
-    // Modify files
-    QVERIFY(createFile(sFile7Path, sFile7Content2));
-    QVERIFY(createFile(sFile8Path, sFile8Content2));
+    vTransformedFiles.clear();
+    vTransformedFiles << CTransformedFile(sFile5Path, sFile5Content1, sFile5Content2);
+    vTransformedFiles << CTransformedFile(sFile6Path, sFile6Content1, sFile6Content2);
+    checkCommitDiff(sDiff, vTransformedFiles);
 
     // 6th commit
+    QVERIFY(createFile(sFile7Path, sFile7Content1));
+    QVERIFY(createFile(sFile8Path, sFile8Content1));
+
     exec({
              CConstants::s_sSwitchStage,
              sFile7Path,
@@ -385,6 +410,37 @@ void CTestAze::testAll()
              QString("--%1").arg(CConstants::s_sSwitchAuthor),
              m_sAuthor
          });
+
+    // Modify files 7 and 8
+    QVERIFY(createFile(sFile7Path, sFile7Content2));
+    QVERIFY(createFile(sFile8Path, sFile8Content2));
+
+    // 7th commit
+    exec({
+             CConstants::s_sSwitchStage,
+             sFile7Path,
+             sFile8Path
+         });
+
+    exec({
+             CConstants::s_sSwitchCommit,
+             QString("--%1").arg(CConstants::s_sSwitchMessage),
+             "Commit7",
+             QString("--%1").arg(CConstants::s_sSwitchAuthor),
+             m_sAuthor
+         });
+
+    // Diff commits 6 and 7
+    sDiff = exec({
+             CConstants::s_sSwitchDiff,
+             "tip~1",
+             "tip"
+         });
+
+    vTransformedFiles.clear();
+    vTransformedFiles << CTransformedFile(sFile7Path, sFile7Content1, sFile7Content2);
+    vTransformedFiles << CTransformedFile(sFile8Path, sFile8Content1, sFile8Content2);
+    checkCommitDiff(sDiff, vTransformedFiles);
 
     // Switch to trunk
     exec({
@@ -409,7 +465,7 @@ void CTestAze::testAll()
     exec({
              CConstants::s_sSwitchCommit,
              QString("--%1").arg(CConstants::s_sSwitchMessage),
-             "Commit7",
+             "Commit8-Merge",
              QString("--%1").arg(CConstants::s_sSwitchAuthor),
              m_sAuthor
          });

@@ -1,45 +1,36 @@
 
 #pragma once
 
-// Qt
-#include <QObject>
-
-// qt-plus
-#include "Web/CDynamicHTTPServer.h"
-
-// AzeLib
-#include "CRepository.h"
+// Global
+#include "../Aze_global.h"
 
 // Application
-#include "../common/CConstants.h"
+#include "CBaseCommand.h"
+#include "../objects/CCommit.h"
 
 //-------------------------------------------------------------------------------------------------
 
-class CAzeServerProcessor : public CDynamicHTTPServer
+namespace Aze {
+
+class AZE_SHARED_EXPORT CPopStashCommand : public CBaseCommand
 {
     Q_OBJECT
 
 public:
 
     //-------------------------------------------------------------------------------------------------
-    // Constructor & destructor
+    // Constructor
     //-------------------------------------------------------------------------------------------------
 
-    //! Constructor
-    CAzeServerProcessor(quint16 iPort = DEFAULT_HTTP_PORT);
-
-    //! Destructor
-    virtual ~CAzeServerProcessor() override;
+    //! Pops the stash with ID <sId>, uses head if <sId> is empty
+    CPopStashCommand(CRepository* pRepository, const QString& sId);
 
     //-------------------------------------------------------------------------------------------------
     // Control methods
     //-------------------------------------------------------------------------------------------------
 
     //!
-    virtual void getContent(CWebContext& tContext, QString& sHead, QString& sBody, QString& sCustomResponse, QString& sCustomResponseMIME) override;
-
-    //!
-    CXMLNode serveRequest(CWebContext& tContext, const CXMLNode &xRequest);
+    virtual bool execute() override;
 
     //-------------------------------------------------------------------------------------------------
     // Properties
@@ -47,6 +38,7 @@ public:
 
 protected:
 
+    QString m_sId;
 };
 
-//-------------------------------------------------------------------------------------------------
+}

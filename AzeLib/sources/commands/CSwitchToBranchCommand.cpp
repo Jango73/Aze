@@ -5,6 +5,8 @@
 
 // Application
 #include "CSwitchToBranchCommand.h"
+#include "CSaveStashCommand.h"
+#include "CPopStashCommand.h"
 #include "../CRepository.h"
 #include "../CUtils.h"
 
@@ -35,23 +37,13 @@ bool CSwitchToBranchCommand::execute()
     if (not QFile(sFileName).exists())
         return false;
 
-    QStringList lLooseFiles = m_pRepository->getLooseFiles();
-
     // Save stash : diffs between last commit and working directory
-    QString sDiff;
-    CCommit* pFromCommit = nullptr;
-    CCommit* pToCommit = nullptr;
+    bool bStashSaved = CSaveStashCommand(m_pRepository, "").execute();
 
-    if (not m_pRepository->currentBranch()->tipCommitId().isEmpty())
+    if (not bStashSaved)
     {
-        // Get the current branch tip commit
-        pFromCommit = m_pRepository->database()->getCommit(m_pRepository->currentBranch()->tipCommitId(), this);
-
-        // Get the working directory as commit
-        pToCommit = m_pRepository->commitFunctions()->directoryAsCommit(this);
-
-        // Diff the current tip commit and the working directory
-        m_pRepository->commitFunctions()->diffCommits(sDiff, pFromCommit, pToCommit, lLooseFiles);
+        OUT_ERROR(CStrings::s_sTextStashSaveFailed);
+        return false;
     }
 
     // Make the branch switch
@@ -59,15 +51,22 @@ bool CSwitchToBranchCommand::execute()
     m_pRepository->readCurrentBranch();
     m_pRepository->readTipCommit();
 
+    // Get the working directory as commit
+    CCommit* pToCommit = m_pRepository->commitFunctions()->directoryAsCommit(this);
+
     // Revert local files to their last committed state
     if (IS_NOT_NULL(pToCommit))
     {
         m_pRepository->revert(pToCommit, m_bAllowFileDelete);
     }
 
-    // Apply the stash
-    if (not sDiff.isEmpty())
-        return m_pRepository->applyDiff(sDiff);
+    bool bStashPopped = CPopStashCommand(m_pRepository, "").execute();
+
+    if (not bStashPopped)
+    {
+        OUT_ERROR(CStrings::s_sTextStashPopFailed);
+        return false;
+    }
 
     return true;
 }
