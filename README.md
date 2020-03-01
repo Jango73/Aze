@@ -21,12 +21,26 @@ A versioning system
 * Open /Aze.pro in QtCreator
 * Build and run
 
-## Things it does
+## Implemented functionality
 
+### Client side
+#### Local
 * Initialize a repository
+* Show status of files
 * Create a branch
+* Switch branches
 * Add files to stage
 * Remove files from stage
 * Commmit staged files
+* Show commit log
+* Show commit graph => needs rework to show commits in correct order
 * Diff between two commits
-* Merge a branch
+* Merge a branch onto the current one
+* Save stash
+* Pop stash
+
+#### Remote
+* Push => under construction
+
+### Server side
+* Nothing yet, under construction
