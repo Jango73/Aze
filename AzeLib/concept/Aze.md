@@ -1,15 +1,19 @@
+## XML files
+The xml files should be compressed in production environment.
+The extension of a compressed XML file is xmlc, which contains UTF8 text data compressed using Qt's built-in compression functions (qCompress and qUncompress).
+
 ## Repository structure
 
 ```
 .aze  
 |- info.xml  
 |- branches  
-|  |- trunk.xml  
-|  |- some-branch.xml  
+|  |- trunk.xml (.xmlc)  
+|  |- some-branch.xml (.xmlc)  
 |- stash  
 |- commits
-|  |- 0123456789abcdef.xml  
-|  |- fedbca9876543210.xml  
+|  |- 0123456789abcdef.xml (.xmlc)  
+|  |- fedbca9876543210.xml (.xmlc)  
 |  |- ...  
 |- objects
 ```
@@ -22,8 +26,8 @@
     type : String  
     author : String  
     date : ISO 8601 Date String  
-    root : Commit Id (link to commits/id.xmlc)  
-    tip : Commit Id (link to commits/id.xmlc)  
+    root : Commit Id (link to commits/id.xml (.xmlc))  
+    tip : Commit Id (link to commits/id.xml (.xmlc))  
 ```
 
 ## Commit file structure
