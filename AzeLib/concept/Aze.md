@@ -16,6 +16,9 @@ The extension of a compressed XML file is xmlc, which contains UTF8 text data co
 |  |- fedbca9876543210.xml (.xmlc)  
 |  |- ...  
 |- objects
+   |- abcdef0123456789  
+   |- 9876543210fedbca  
+   |- ...  
 ```
 
 ## Branch file structure
