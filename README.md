@@ -31,7 +31,7 @@ A versioning system
 * Switch branches
 * Add files to stage
 * Remove files from stage
-* Commmit staged files
+* Commit staged files
 * Show commit log
 * Show commit graph => needs rework to show commits in correct order
 * Diff between two commits
