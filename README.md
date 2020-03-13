@@ -22,7 +22,7 @@ A versioning system
 * Build and run
 
 ## Concepts
-[Here is information about architecture](AzeLib/concept/AZE.md)
+[Here is information about architecture](AzeLib/concept/Aze.md)
 
 ## Implemented functionality
 
