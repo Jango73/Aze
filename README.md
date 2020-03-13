@@ -21,6 +21,9 @@ A versioning system
 * Open /Aze.pro in QtCreator
 * Build and run
 
+## Concepts
+[Here is information about architecture](AzeLib/concept/AZE.md)
+
 ## Implemented functionality
 
 ### Client side
@@ -40,7 +43,8 @@ A versioning system
 * Pop stash
 
 #### Remote
-* Push => under construction
+* Pull => WIP
+* Push => WIP
 
 ### Server side
-* Nothing yet, under construction
+* WIP
