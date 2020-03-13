@@ -90,106 +90,106 @@ This sequence should be auto-tested.
 Initial situation.
 
 ```
-    Trunk root      Trunk tip
+    Branch A root   Branch A tip
     v               v
   [CA1] - [CA2] - [CA3]
             |
             \---- [CB1] - [CB2] - [CB3]
             ^                       |^
-            Branch B1 root          |Branch B1 tip
+            Branch B root           |Branch B tip
                                     |
                                     \---- [CC1] - [CC2]
                                     ^               ^
-                                    Branch B2 root  Branch B2 tip
+                                    Branch C root   Branch C tip
 ```
 
 ### Step 2
-Merge B1 on trunk.
+Merge B on A.
 Common ancestor of CA3 and CB3 is CA2.
 
 ```
-    Trunk root                              Trunk tip
+    Branch A root                           Branch A tip
     v                                       v
   [CA1] - [CA2] - [CA3] ----------------- [MA4]
             |                               |
             \---- [CB1] - [CB2] - [CB3] ----/
             ^                       |^
-            Branch B1 root          |Branch B1 tip
+            Branch B root           |Branch B tip
                                     |
                                     \---- [CC1] - [CC2]
                                     ^               ^
-                                    Branch B2 root  Branch B2 tip
+                                    Branch C root   Branch C tip
 ```
 
 ### Step 3
-Merge B2 on trunk.
+Merge C on A.
 Common ancestor of MA4 and CC2 is CB3.
 
 ```
-    Trunk root                              Trunk tip
+    Branch A root                           Branch A tip
     v                                       v
   [CA1] - [CA2] - [CA3] ----------------- [MA4] --------- [MA5]
             |                               |               |
             \---- [CB1] - [CB2] - [CB3] ----/               |
             ^                       |^                      |
-            Branch B1 root          |Branch B1 tip          |
+            Branch B root           |Branch B tip           |
                                     |                       |
                                     \---- [CC1] - [CC2] ----/
                                     ^               ^
-                                    Branch B2 root  Branch B2 tip
+                                    Branch C root   Branch C tip
 ```
 
 ### Step 4
-Work on B1 and B2.
+Work on B and C.
 
 ```
-    Trunk root                              Trunk tip
+    Branch A root                           Branch A tip
     v                                       v
   [CA1] - [CA2] - [CA3] ----------------- [MA4] --------- [MA5]
             |                               |               |
             \---- [CB1] - [CB2] - [CB3] ----/-------------- | --- [CB4] - [CB5]
             ^                       |                       |               ^
-            Branch B1 root          |                       |               Branch B1 tip
+            Branch B root           |                       |               Branch B tip
                                     |                       |
                                     \---- [CC1] - [CC2] ----/ --- [CC3]
                                     ^                               ^
-                                    Branch B2 root                  Branch B2 tip
+                                    Branch C root                   Branch C tip
 ```
 
 ### Step 5
-Merge B1 on trunk.
-Common ancestor of MA5 and CB5 is MA4.
+Merge B on A.
+Common ancestor of MA5 and CB5 is CB3.
 
 ```
-    Trunk root                                                                      Trunk tip
+    Branch A root                                                                   Branch A tip
     v                                                                               v
   [CA1] - [CA2] - [CA3] ----------------- [MA4] --------- [MA5] ----------------- [MA6]
             |                               |               |                       |
             \---- [CB1] - [CB2] - [CB3] ----/-------------- | --- [CB4] - [CB5] ----/
             ^                       |                       |               ^
-            Branch B1 root          |                       |               Branch B1 tip
+            Branch B root           |                       |               Branch B tip
                                     |                       |
                                     \---- [CC1] - [CC2] ----/ --- [CC3]
                                     ^                               ^
-                                    Branch B2 root                  Branch B2 tip
+                                    Branch B root                   Branch B tip
 ```
 
 ### Step 6
-Merge trunk on B2.
-Common ancestor of CC3 and MA6 is MA5.
+Merge A on C.
+Common ancestor of CC3 and MA6 is CC2.
 
 ```
-    Trunk root                                                                      Trunk tip
+    Branch A root                                                                   Branch A tip
     v                                                                               v
   [CA1] - [CA2] - [CA3] ----------------- [MA4] --------- [MA5] ----------------- [MA6] ----\
             |                               |               |                       |       |
             \---- [CB1] - [CB2] - [CB3] ----/-------------- | --- [CB4] - [CB5] ----/       |
             ^                       |                       |               ^               |
-            Branch B1 root          |                       |               Branch B1 tip   |
+            Branch B root           |                       |               Branch B tip    |
                                     |                       |                               |
                                     \---- [CC1] - [CC2] ----/ --- [CC3] ----------------- [MC4]
                                     ^                                                       ^
-                                    Branch B2 root                                          Branch B2 tip
+                                    Branch C root                                           Branch C tip
 ```
 
 ## Workflow samples
