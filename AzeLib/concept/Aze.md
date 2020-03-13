@@ -90,8 +90,8 @@ This sequence should be auto-tested.
 Initial situation.
 
 ```
-                    Trunk tip
-                    v
+    Trunk root      Trunk tip
+    v               v
   [CA1] - [CA2] - [CA3]
             |
             \---- [CB1] - [CB2] - [CB3]
@@ -108,8 +108,8 @@ Merge B1 on trunk.
 Common ancestor of CA3 and CB3 is CA2.
 
 ```
-                                        Trunk tip
-                                            v
+    Trunk root                              Trunk tip
+    v                                       v
   [CA1] - [CA2] - [CA3] ----------------- [MA4]
             |                               |
             \---- [CB1] - [CB2] - [CB3] ----/
@@ -126,8 +126,8 @@ Merge B2 on trunk.
 Common ancestor of MA4 and CC2 is CB3.
 
 ```
-                                        Trunk tip
-                                            v
+    Trunk root                              Trunk tip
+    v                                       v
   [CA1] - [CA2] - [CA3] ----------------- [MA4] --------- [MA5]
             |                               |               |
             \---- [CB1] - [CB2] - [CB3] ----/               |
@@ -143,8 +143,8 @@ Common ancestor of MA4 and CC2 is CB3.
 Work on B1 and B2.
 
 ```
-                                        Trunk tip
-                                            v
+    Trunk root                              Trunk tip
+    v                                       v
   [CA1] - [CA2] - [CA3] ----------------- [MA4] --------- [MA5]
             |                               |               |
             \---- [CB1] - [CB2] - [CB3] ----/-------------- | --- [CB4] - [CB5]
@@ -161,8 +161,8 @@ Merge B1 on trunk.
 Common ancestor of MA5 and CB5 is MA4.
 
 ```
-                                                                                Trunk tip
-                                                                                    v
+    Trunk root                                                                      Trunk tip
+    v                                                                               v
   [CA1] - [CA2] - [CA3] ----------------- [MA4] --------- [MA5] ----------------- [MA6]
             |                               |               |                       |
             \---- [CB1] - [CB2] - [CB3] ----/-------------- | --- [CB4] - [CB5] ----/
@@ -179,8 +179,8 @@ Merge trunk on B2.
 Common ancestor of CC3 and MA6 is MA5.
 
 ```
-                                                                                Trunk tip
-                                                                                    v
+    Trunk root                                                                      Trunk tip
+    v                                                                               v
   [CA1] - [CA2] - [CA3] ----------------- [MA4] --------- [MA5] ----------------- [MA6] ----\
             |                               |               |                       |       |
             \---- [CB1] - [CB2] - [CB3] ----/-------------- | --- [CB4] - [CB5] ----/       |
