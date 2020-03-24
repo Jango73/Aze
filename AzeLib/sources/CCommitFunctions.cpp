@@ -23,6 +23,9 @@ CCommitFunctions::CCommitFunctions(CDatabase* pDatabase, QObject* parent)
 
 CCommit* CCommitFunctions::getCommitAncestor(CCommit* pCommit, QObject* owner, int iDelta)
 {
+    if (IS_NULL(pCommit))
+        return nullptr;
+
     CCommit* pAncestor = pCommit;
     int iGuard = 999999;
 
@@ -62,43 +65,46 @@ CCommit* CCommitFunctions::getCommitAncestor(CCommit* pCommit, QObject* owner, i
 QList<CCommit*> CCommitFunctions::getCommitAncestorList(CCommit* pCommit, QObject* owner, bool bStayOnBranch, int iMaxCount, QString sStopAtCommitId)
 {
     int iGuard = iMaxCount == 0 ? 999999 : iMaxCount;
+    int iDepth = 0;
     QList<CCommit*> lReturnValue;
 
-    getCommitAncestorListRecurse(lReturnValue, pCommit, owner, bStayOnBranch, iGuard, sStopAtCommitId);
+    getCommitAncestorListRecurse(lReturnValue, pCommit, owner, iDepth, bStayOnBranch, iGuard, sStopAtCommitId);
 
     return lReturnValue;
 }
 
 //-------------------------------------------------------------------------------------------------
 
-void CCommitFunctions::getCommitAncestorListRecurse(QList<CCommit*>& lCommitList, CCommit* pCommit, QObject* owner, bool bStayOnBranch, int iGuard, QString sStopAtCommitId)
+void CCommitFunctions::getCommitAncestorListRecurse(QList<CCommit*>& lCommitList, CCommit* pCommit, QObject* owner, int iDepth, bool bStayOnBranch, int iGuard, QString sStopAtCommitId)
 {
     if (iGuard <= 0)
         return;
 
     iGuard--;
 
-    QList<CCommit*> parents = CCommit::parentList(m_pDatabase, pCommit, owner);
+    QList<CCommit*> lParents = CCommit::parentList(m_pDatabase, pCommit, owner);
 
     if (bStayOnBranch)
     {
-        if (parents.count() > 0)
+        if (lParents.count() > 0)
         {
-            if (parents[0]->id() != sStopAtCommitId)
+            if (lParents[0]->id() != sStopAtCommitId)
             {
-                lCommitList << parents[0];
-                getCommitAncestorListRecurse(lCommitList, parents[0], owner, bStayOnBranch, iGuard - 1, sStopAtCommitId);
+                lParents[0]->setDistance(iDepth);
+                lCommitList << lParents[0];
+                getCommitAncestorListRecurse(lCommitList, lParents[0], owner, iDepth + 1, bStayOnBranch, iGuard - 1, sStopAtCommitId);
             }
         }
     }
     else
     {
-        for (CCommit* pParent : parents)
+        for (CCommit* pParent : lParents)
         {
             if (pParent->id() != sStopAtCommitId)
             {
+                pParent->setDistance(iDepth);
                 lCommitList << pParent;
-                getCommitAncestorListRecurse(lCommitList, pParent, owner, bStayOnBranch, iGuard - 1, sStopAtCommitId);
+                getCommitAncestorListRecurse(lCommitList, pParent, owner, iDepth + 1, bStayOnBranch, iGuard - 1, sStopAtCommitId);
             }
         }
     }
@@ -110,23 +116,22 @@ CCommit* CCommitFunctions::getCommonCommitChains(CCommit* pCommit1, CCommit* pCo
 {
     CCommit* pAncestor = nullptr;
     QList<CCommit*> pAncestors1 = getCommitAncestorList(pCommit1, owner, false);
-    QList<CCommit*> pAncestors2 = getCommitAncestorList(pCommit2, owner, true);
+    QList<CCommit*> pAncestors2 = getCommitAncestorList(pCommit2, owner, false);
+    QMap<int, CCommit*> commonAncestors;
 
     // Add commits themselves to lists
-    pAncestors1.prepend(pCommit1->clone());
-    pAncestors2.prepend(pCommit2->clone());
+    pAncestors1.prepend(pCommit1->clone(this));
+    pAncestors2.prepend(pCommit2->clone(this));
 
 //    OUT_DEBUG("--------------------");
 //    OUT_DEBUG("pAncestors1:");
-//    for (CCommit* pCommit : pAncestors1OnBranch)
+//    for (CCommit* pCommit : pAncestors1)
 //        OUT_DEBUG(QString("%1 %2").arg(pCommit->id()).arg(pCommit->message()));
 //    OUT_DEBUG("--------------------");
 //    OUT_DEBUG("pAncestors2:");
 //    for (CCommit* pCommit : pAncestors2)
 //        OUT_DEBUG(QString("%1 %2").arg(pCommit->id()).arg(pCommit->message()));
 //    OUT_DEBUG("--------------------");
-
-    bool bFound = false;
 
     for (CCommit* pCommit1 : pAncestors1)
     {
@@ -136,16 +141,23 @@ CCommit* CCommitFunctions::getCommonCommitChains(CCommit* pCommit1, CCommit* pCo
         {
             if (sId == pCommit2->id())
             {
-                pAncestor = pCommit1->clone(owner);
-                OUT_INFO(QString(CStrings::s_sTextCommonAncestor).arg(pAncestor->id()));
-                bFound = true;
-                break;
+                int iDistance = pCommit1->distance() + pCommit2->distance();
+
+                if (not commonAncestors.contains(iDistance))
+                    commonAncestors[iDistance] = pCommit1;
             }
         }
-
-        if (bFound)
-            break;
     }
+
+    // Bail ou if not common ancestor found
+    if (commonAncestors.count() == 0)
+        return nullptr;
+
+    // Clone the common ancestor
+    int iKey = commonAncestors.keys()[0];
+    pAncestor = commonAncestors[iKey]->clone(owner);
+
+//    OUT_INFO(QString(CStrings::s_sTextCommonAncestor).arg(iKey).arg(pAncestor->message()));
 
     // Populate the commit lists if required
     if (IS_NOT_NULL(lCommit1Chain))
@@ -244,19 +256,23 @@ void CCommitFunctions::diffCommits(QString& sOutput, CCommit* pCommit1, CCommit*
     if (iDelta2 != 0)
         pCommit2 = getCommitAncestor(pCommit2, this, iDelta2);
 
-    for (QString sName : pCommit2->files().values())
+    if (IS_NOT_NULL(pCommit1) && IS_NOT_NULL(pCommit2))
     {
-        if (not lIgnoreFiles.contains(sName))
+
+        for (QString sName : pCommit2->files().values())
         {
-            QByteArray baContent1 = pCommit1->fileContent(m_pDatabase, sName);
-            QByteArray baContent2 = pCommit2->fileContent(m_pDatabase, sName);
-
-            QString sDiffText = CUtils::unifiedDiff(QString(baContent1), QString(baContent2));
-
-            if (not sDiffText.isEmpty())
+            if (not lIgnoreFiles.contains(sName))
             {
-                sOutput += CUtils::fileDiffHeader(sName, sName);
-                sOutput += sDiffText;
+                QByteArray baContent1 = pCommit1->fileContent(m_pDatabase, sName);
+                QByteArray baContent2 = pCommit2->fileContent(m_pDatabase, sName);
+
+                QString sDiffText = CUtils::unifiedDiff(QString(baContent1), QString(baContent2));
+
+                if (not sDiffText.isEmpty())
+                {
+                    sOutput += CUtils::fileDiffHeader(sName, sName);
+                    sOutput += sDiffText;
+                }
             }
         }
     }
@@ -353,6 +369,7 @@ bool CCommitFunctions::applyDiff(const QString& sFullDiff, bool bAddToStage, CCo
 {
     // Keep track of merged files
     QDictionary mProcessedFiles;
+    QStringList mMovedFiles;
 
     QList<QPair<QString, QString> > mFileDiffs = CUtils::splitDiff(sFullDiff);
 
@@ -384,7 +401,7 @@ bool CCommitFunctions::applyDiff(const QString& sFullDiff, bool bAddToStage, CCo
 
         CUtils::putTextFileContent(sFullTargetName, sNewContent);
         QString sId = CUtils::idFromByteArray(sNewContent.toUtf8());
-        mProcessedFiles[sFileName] = sId;
+        mProcessedFiles[sId] = sFileName;
     }
 
     // Stage the merged files
@@ -398,15 +415,20 @@ bool CCommitFunctions::applyDiff(const QString& sFullDiff, bool bAddToStage, CCo
     }
 
     // Move the merged files
-    for (QString sFileName : mProcessedFiles.keys())
+    for (QString sFileName : mProcessedFiles.values())
     {
         QString sFullSourceName = m_pDatabase->composeMergeFileName(sFileName);
         QString sFullTargetName = m_pDatabase->composeLocalFileName(sFileName);
 
-        if (not CUtils::moveFile(sFullSourceName, sFullTargetName))
+        if (not mMovedFiles.contains(sFullSourceName))
         {
-            OUT_ERROR(QString("Could not move file %1.").arg(sFullSourceName));
-            return false;
+            if (not CUtils::moveFile(sFullSourceName, sFullTargetName))
+            {
+                OUT_ERROR(QString("Could not move file %1.").arg(sFullSourceName));
+                return false;
+            }
+
+            mMovedFiles << sFullSourceName;
         }
     }
 

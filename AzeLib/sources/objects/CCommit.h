@@ -44,6 +44,9 @@ public:
     // This list will be filled only by calling readParents
     Q_FAST_PROPERTY(QList<CCommit*>, l, parentCommits, ParentCommits)
 
+    // For internal use
+    Q_FAST_PROPERTY(int, i, distance, Distance)
+
 public:
 
     //-------------------------------------------------------------------------------------------------

@@ -65,6 +65,9 @@ public:
     //!
     QByteArray getObject(const QString& sId);
 
+    //!
+    QVector<CBranch*> getAllBranches(QObject* parent);
+
     //-------------------------------------------------------------------------------------------------
     // Setters
     //-------------------------------------------------------------------------------------------------
@@ -90,6 +93,9 @@ public:
 
     //!
     QString absoluteFileName(const QString& sFileName);
+
+    //!
+    QString generalInformationFileName();
 
     //!
     QString composeLocalFileName(const QString& sFileName);

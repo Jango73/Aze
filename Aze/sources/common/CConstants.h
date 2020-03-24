@@ -11,8 +11,6 @@
 
 #define ERROR_WHEN_FALSE_PRINT(a,b,c)   if ((a) == false) { OUT_ERROR(b); return c; }
 
-#define PROPNAME_ACTION                 "action"
-
 //-------------------------------------------------------------------------------------------------
 
 class CConstants : public QObject
@@ -30,15 +28,18 @@ public:
         eCommandCreateBranch,
         eCommandDiff,
         eCommandDump,
+        eCommandHelp,
         eCommandInitRepository,
         eCommandLog,
         eCommandMerge,
         eCommandMove,
         eCommandPopStash,
+        eCommandPull,
         eCommandPush,
         eCommandRemove,
         eCommandRevert,
         eCommandSaveStash,
+        eCommandSetRemoteHost,
         eCommandShowStatus,
         eCommandStage,
         eCommandSwitchToBranch,
@@ -53,20 +54,23 @@ public:
     static const char* s_sSwitchCreateBranch;
     static const char* s_sSwitchDiff;
     static const char* s_sSwitchDump;
-    static const char* s_sSwitchHelpOn;
+    static const char* s_sSwitchHelp;
     static const char* s_sSwitchInitRepository;
     static const char* s_sSwitchLog;
     static const char* s_sSwitchMerge;
     static const char* s_sSwitchMove;
     static const char* s_sSwitchPopStash;
+    static const char* s_sSwitchPull;
     static const char* s_sSwitchPush;
     static const char* s_sSwitchRemove;
     static const char* s_sSwitchRevert;
     static const char* s_sSwitchSaveStash;
+    static const char* s_sSwitchSetRemoteHost;
     static const char* s_sSwitchShowStatus;
     static const char* s_sSwitchStage;
     static const char* s_sSwitchSwitchToBranch;
     static const char* s_sSwitchUnstage;
+    static const char* s_sSwitchVoid;
 
     // Client switches
     static const char* s_sSwitchAdded;
@@ -101,9 +105,11 @@ public:
     static const int s_iError_CouldNotSaveStash;
     static const int s_iError_CouldNotSetCurrentBranch;
     static const int s_iError_CouldNotWriteCurrentBranch;
+    static const int s_iError_CouldNotWriteGeneralInformation;
     static const int s_iError_CouldNotWriteStage;
     static const int s_iError_NoBranchNameGiven;
     static const int s_iError_NoFileNameGiven;
+    static const int s_iError_NoRemoteHostNameGiven;
     static const int s_iError_NotARepository;
     static const int s_iError_UnknownCommand;
     static const int s_iError_UnknownSwitch;
@@ -113,6 +119,7 @@ public:
     static const QString s_sStatusOfFiles;
     static const QString s_sTextCannotMergeBranchWithSelf;
     static const QString s_sTextCommands;
+    static const QString s_sTextUnknownCommand;
     static const QString s_sTextYouAreAlreadyOnBranch;
     static const QString s_sTextYouAreNowOnBranch;
 

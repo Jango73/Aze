@@ -46,6 +46,9 @@ public:
     // Command methods
     //-------------------------------------------------------------------------------------------------
 
+    //! Returns the request for pull
+    CXMLNode getPullRequest();
+
     //! Returns the request for push
     CXMLNode getPushRequest();
 };

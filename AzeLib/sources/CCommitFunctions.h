@@ -62,6 +62,7 @@ public:
             QList<CCommit*>& lCommitList,
             CCommit* pCommit,
             QObject* owner = nullptr,
+            int iDepth = 0,
             bool bStayOnBranch = true,
             int iGuard = 0,
             QString sStopAtCommitId = ""

@@ -15,6 +15,25 @@
 
 //-------------------------------------------------------------------------------------------------
 
+#define COMMIT(a) \
+exec({ \
+    CConstants::s_sSwitchCommit, \
+    QString("--%1").arg(CConstants::s_sSwitchMessage), \
+    a, \
+    QString("--%1").arg(CConstants::s_sSwitchAuthor), \
+    m_sAuthor \
+    })
+
+#define STAGE(...) exec({ CConstants::s_sSwitchStage, __VA_ARGS__ })
+
+#define CREATE_BRANCH(a) exec({ CConstants::s_sSwitchCreateBranch, a})
+
+#define SWITCH_TO_BRANCH(a) exec({ CConstants::s_sSwitchSwitchToBranch, a, QString("--%1").arg(CConstants::s_sSwitchAllowFileDelete) });
+
+#define MERGE_BRANCH(a) exec({ CConstants::s_sSwitchMerge, a });
+
+//-------------------------------------------------------------------------------------------------
+
 CTestAze::CTestAze(const QString& sArgument0)
     : m_sArgument0(sArgument0)
     , m_iCommitIndex(0)
@@ -27,7 +46,7 @@ CTestAze::CTestAze(const QString& sArgument0)
 
     m_sInfoPath = QString("%1/%2")
             .arg(m_sDataPath)
-            .arg(Aze::CStrings::s_sGeneralInfoFileName);
+            .arg(Aze::CStrings::s_sGeneralInformationFileName);
 
     m_sTrunkPath = QString("%1/%2/%3.%4")
             .arg(m_sDataPath)
@@ -174,7 +193,7 @@ QString CTestAze::exec(const QStringList& lInputArguments)
     CAzeClient(argc, argv, &sOutput).run();
 
     for (index = 0; index < argc; index++)
-        delete argv[index];
+        delete [] argv[index];
 
     delete [] argv;
 
@@ -478,6 +497,138 @@ void CTestAze::testAll()
 
     QVERIFY(sMergedFile7Content == sFile7Content2);
     QVERIFY(sMergedFile8Content == sFile8Content2);
+}
+
+//-------------------------------------------------------------------------------------------------
+
+void CTestAze::testMerge()
+{
+    clearRepository();
+
+    exec({ CConstants::s_sSwitchInitRepository });
+
+    QString sFile1Path = "Files/MergeTest.txt";
+
+    QString sCA1("CA1--*--");
+    QString sCA2("CA1.CA2--*--");
+    QString sCA3("CA1.CA2.CA3--*--");
+
+    QString sCB1("CA1.CA2--CB1--");
+    QString sCB2("CA1.CA2--CB1.CB2--");
+    QString sCB3("CA1.CA2--CB1.CB2.CB3--");
+    QString sCB4("CA1.CA2--CB1.CB2.CB3.CB4--");
+    QString sCB5("CA1.CA2--CB1.CB2.CB3.CB4.CB5--");
+
+    QString sCC1("CA1.CA2--CB1.CB2.CB3--CC1");
+    QString sCC2("CA1.CA2--CB1.CB2.CB3--CC1.CC2");
+    QString sCC3("CA1.CA2--CB1.CB2.CB3--CC1.CC2.CC3");
+
+    QDir rootDir(m_sRootPath);
+    QVERIFY(rootDir.mkdir(m_sFilesFolderName));
+
+    // Create initial commits
+
+    // Branch A
+    CREATE_BRANCH("A");
+    SWITCH_TO_BRANCH("A");
+
+    // CA1
+    QVERIFY(createFile(sFile1Path, sCA1));
+    STAGE(sFile1Path);
+    COMMIT("CA1");
+
+    // CA2
+    QVERIFY(createFile(sFile1Path, sCA2));
+    STAGE(sFile1Path);
+    COMMIT("CA2");
+
+    // Create branch B
+    CREATE_BRANCH("B");
+
+    // CA3
+    QVERIFY(createFile(sFile1Path, sCA3));
+    STAGE(sFile1Path);
+    COMMIT("CA3");
+
+    // Switch to branch B
+    SWITCH_TO_BRANCH("B");
+
+    // CB1
+    QVERIFY(createFile(sFile1Path, sCB1));
+    STAGE(sFile1Path);
+    COMMIT("CB1");
+
+    // CB2
+    QVERIFY(createFile(sFile1Path, sCB2));
+    STAGE(sFile1Path);
+    COMMIT("CB2");
+
+    // CB3
+    QVERIFY(createFile(sFile1Path, sCB3));
+    STAGE(sFile1Path);
+    COMMIT("CB3");
+
+    // Create branch C
+    CREATE_BRANCH("C");
+
+    // Switch to branch C
+    SWITCH_TO_BRANCH("C");
+
+    // CC1
+    QVERIFY(createFile(sFile1Path, sCC1));
+    STAGE(sFile1Path);
+    COMMIT("CC1");
+
+    // CC2
+    QVERIFY(createFile(sFile1Path, sCC2));
+    STAGE(sFile1Path);
+    COMMIT("CC2");
+
+    // Switch to branch A
+    SWITCH_TO_BRANCH("A");
+
+    // Merge B on A
+    MERGE_BRANCH("B");
+    COMMIT("MA4");
+
+    // Merge C on A
+    MERGE_BRANCH("C");
+    COMMIT("MA5");
+
+    // Switch to branch B
+    SWITCH_TO_BRANCH("B");
+
+    // CB4
+    QVERIFY(createFile(sFile1Path, sCB4));
+    STAGE(sFile1Path);
+    COMMIT("CB4");
+
+    // CB5
+    QVERIFY(createFile(sFile1Path, sCB5));
+    STAGE(sFile1Path);
+    COMMIT("CB5");
+
+    // Switch to branch C
+    SWITCH_TO_BRANCH("C");
+
+    // CC3
+    QVERIFY(createFile(sFile1Path, sCC3));
+    STAGE(sFile1Path);
+    COMMIT("CC3");
+
+    // Switch to branch A
+    SWITCH_TO_BRANCH("A");
+
+    // Merge B on A
+    MERGE_BRANCH("B");
+    COMMIT("MA6");
+
+    // Switch to branch C
+    SWITCH_TO_BRANCH("C");
+
+    // Merge A on C
+    MERGE_BRANCH("A");
+    COMMIT("MC4");
 }
 
 //-------------------------------------------------------------------------------------------------

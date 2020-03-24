@@ -5,8 +5,11 @@
 //-------------------------------------------------------------------------------------------------
 
 // Use first line for human readable files
+#ifdef QT_DEBUG
 #define XMLC_EXTENSION  "xml"
-// #define XMLC_EXTENSION  "xmlc"
+#else
+#define XMLC_EXTENSION  "xmlc"
+#endif
 
 //-------------------------------------------------------------------------------------------------
 
@@ -28,19 +31,25 @@ const QString CStrings::s_sParamCommit                          = "commit";
 const QString CStrings::s_sParamCurrent                         = "current";
 const QString CStrings::s_sParamDate                            = "date";
 const QString CStrings::s_sParamDiff                            = "diff";
+const QString CStrings::s_sParamError                           = "error";
 const QString CStrings::s_sParamFiles                           = "files";
 const QString CStrings::s_sParamId                              = "id";
 const QString CStrings::s_sParamInfo                            = "info";
 const QString CStrings::s_sParamIsMerge                         = "isMerge";
 const QString CStrings::s_sParamMessage                         = "message";
+const QString CStrings::s_sParamName                            = "name";
 const QString CStrings::s_sParamParents                         = "parents";
+const QString CStrings::s_sParamPull                            = "pull";
 const QString CStrings::s_sParamPush                            = "push";
+const QString CStrings::s_sParamRemoteHost                      = "remoteHost";
 const QString CStrings::s_sParamRepository                      = "repository";
 const QString CStrings::s_sParamRequest                         = "request";
+const QString CStrings::s_sParamResult                          = "result";
 const QString CStrings::s_sParamRoot                            = "root";
 const QString CStrings::s_sParamStage                           = "stage";
 const QString CStrings::s_sParamStash                           = "stash";
 const QString CStrings::s_sParamStashList                       = "stashList";
+const QString CStrings::s_sParamSuccess                         = "success";
 const QString CStrings::s_sParamTip                             = "tip";
 const QString CStrings::s_sParamType                            = "type";
 const QString CStrings::s_sParamUser                            = "user";
@@ -52,7 +61,7 @@ const QString CStrings::s_sPathAzeMergePath                     = "merge";
 const QString CStrings::s_sPathAzeObjectPath                    = "objects";
 const QString CStrings::s_sPathAzeStashPath                     = "stash";
 
-const QString CStrings::s_sGeneralInfoFileName                  = "info." XMLC_EXTENSION;
+const QString CStrings::s_sGeneralInformationFileName                  = "info." XMLC_EXTENSION;
 const QString CStrings::s_sStagingCommitFileName                = "stage";
 
 const QString CStrings::s_sDefaultBranchName                    = "trunk";
@@ -61,7 +70,7 @@ const QString CStrings::s_sTextBranchAlreadyExists              = tr("Branch alr
 const QString CStrings::s_sTextBranchNameEmpty                  = tr("No branch name specified.");
 const QString CStrings::s_sTextCannotMergeSameCommits           = tr("You are trying to merge a commit onto itself, cannot do that.");
 const QString CStrings::s_sTextCommitEmpty                      = tr("No files to commit.");
-const QString CStrings::s_sTextCommonAncestor                   = tr("Common ancestor is %1.");
+const QString CStrings::s_sTextCommonAncestor                   = tr("Common ancestor is %1 (%2).");
 const QString CStrings::s_sTextCouldNotApplyPatch               = tr("Could not patch %1.");
 const QString CStrings::s_sTextMergeFailed                      = tr("Merge failed.");
 const QString CStrings::s_sTextMergeWorkingDirectoryNotClean    = tr("Please clean up the working directory before atempting a merge.");

@@ -73,6 +73,25 @@ QByteArray CDatabase::getObject(const QString& sId)
 
 //-------------------------------------------------------------------------------------------------
 
+QVector<CBranch*> CDatabase::getAllBranches(QObject* parent)
+{
+    QVector<CBranch*> lReturnValue;
+
+    QStringList lFilter; lFilter << QString("*.%1").arg(Aze::CStrings::s_sCompressedXMLExtension);
+
+    QDir dDirectory(m_sBranchPath);
+    QFileInfoList lFiles = dDirectory.entryInfoList(lFilter, QDir::Files | QDir::NoSymLinks);
+
+    for (QFileInfo iFile : lFiles)
+    {
+        lReturnValue << getBranch(iFile.baseName(), parent);
+    }
+
+    return lReturnValue;
+}
+
+//-------------------------------------------------------------------------------------------------
+
 QString CDatabase::storeCommit(const CCommit* pCommit, const QString& sId)
 {
     if (IS_NULL(pCommit))
@@ -145,6 +164,13 @@ QString CDatabase::relativeFileName(const QString& sFileName)
 QString CDatabase::absoluteFileName(const QString& sFileName)
 {
     return CUtils::absoluteFileName(m_sRootPath, sFileName);
+}
+
+//-------------------------------------------------------------------------------------------------
+
+QString CDatabase::generalInformationFileName()
+{
+	return QString("%1/%2").arg(m_sDataPath).arg(CStrings::s_sGeneralInformationFileName);
 }
 
 //-------------------------------------------------------------------------------------------------

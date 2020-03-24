@@ -12,6 +12,7 @@
 #include "Macros.h"
 
 // Application
+#include "CRemoteHostInfo.h"
 #include "CCommitFunctions.h"
 #include "CEnums.h"
 #include "CStrings.h"
@@ -38,6 +39,7 @@ public:
 
     Q_FAST_PROPERTY(bool, b, ok, Ok)
     Q_FAST_PROPERTY(CDatabase*, p, database, Database)
+    Q_FAST_PROPERTY(CRemoteHostInfo*, p, remoteHostInfo, RemoteHostInfo)
     Q_FAST_PROPERTY(CCommitFunctions*, p, commitFunctions, CommitFunctions)
     Q_FAST_PROPERTY(CEnums::EFileStatus, e, status, Status)
 
@@ -119,12 +121,12 @@ public:
     CCommit* getStagingCommit();
 
     //! Reads the stage commit
-    bool readGeneralInfo();
+    bool readGeneralInformation();
 
     //! Reads the current branch
     bool readCurrentBranch();
 
-    //! Reads general information
+    //! Reads the general information
     bool readStage();
 
     //! Reads the current branch's root commit
@@ -133,8 +135,8 @@ public:
     //! Reads the current branch's tip commit
     bool readTipCommit();
 
-    //! Writes the general info
-    bool writeGeneralInfo();
+    //! Writes the general information
+    bool writeGeneralInformation();
 
     //! Writes the current branch
     bool writeCurrentBranch();
@@ -157,6 +159,9 @@ public:
     //! Removes a stash ID from the list of stash IDs
     void removeStashFromList(const QString& sId);
 
+    //!
+    void setRemoteHostName(const QString& sName);
+
     //-------------------------------------------------------------------------------------------------
     // Helper methods
     //-------------------------------------------------------------------------------------------------
@@ -170,8 +175,8 @@ public:
     //! Returns the diff between tip commit and working directory, if any
     QString diffWorkingDirectory();
 
-	//!
-	QString getPushRequest();
+    //!
+    QString getPushRequest();
 
     //-------------------------------------------------------------------------------------------------
     // Properties

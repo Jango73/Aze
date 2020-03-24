@@ -30,11 +30,26 @@ static void msleep(unsigned long msecs)
 
 //-------------------------------------------------------------------------------------------------
 
+int CAzeClient::pull()
+{
+    ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
+
+    CXMLNode xRequest = Aze::CRemoteRepository(m_pRepository).getPullRequest();
+
+    postNetworkRequest(xRequest);
+
+    return CConstants::s_iError_None;
+}
+
+//-------------------------------------------------------------------------------------------------
+
 int CAzeClient::push()
 {
     ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
 
     CXMLNode xRequest = Aze::CRemoteRepository(m_pRepository).getPushRequest();
+
+    postNetworkRequest(xRequest);
 
     return CConstants::s_iError_None;
 }
@@ -43,6 +58,11 @@ int CAzeClient::push()
 
 void CAzeClient::postNetworkRequest(CXMLNode xRequest)
 {
+    if (IS_NOT_NULL(m_pRepository))
+    {
+        setupRemoteHost(m_pRepository->remoteHostInfo()->name());
+    }
+
     m_pNetworkAccessManager->post(m_tNetworkRequest, xRequest.toJsonString().simplified().toUtf8());
 
     while (not m_bNetworkAccessFinished)
@@ -59,6 +79,11 @@ void CAzeClient::onNetworkAccessFinished(QNetworkReply* pReply)
     if (pReply->error() == QNetworkReply::NoError)
     {
         CXMLNode xResponse = CXMLNode::parseJSON(QString(pReply->readAll()));
+
+        if (xResponse.attributes()[Aze::CStrings::s_sParamResult] == Aze::CStrings::s_sParamSuccess)
+        {
+            QString s;
+        }
     }
     else
     {

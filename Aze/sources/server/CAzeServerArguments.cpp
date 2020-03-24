@@ -2,6 +2,9 @@
 // Qt
 #include <QDebug>
 
+// qt-plus
+#include "Web/CHTTPServer.h"
+
 // Application
 #include "CAzeServerArguments.h"
 
@@ -11,12 +14,13 @@
     \section1 General
 */
 
+#define TRT(a) QCoreApplication::translate(CConstants::s_sContextMain, a)
+
 //-------------------------------------------------------------------------------------------------
 
 CAzeServerArguments::CAzeServerArguments(QCoreApplication& app)
     : QObject(nullptr)
-    , m_oPort(QStringList() << CConstants::s_sSwitchPort,
-             QCoreApplication::translate(CConstants::s_sContextMain, "Listening port."))
+    , m_oPort(QStringList() << CConstants::s_sSwitchPort << "p", TRT("Listening port."), TRT(CConstants::s_sSwitchPort), QString::number(DEFAULT_HTTP_PORT))
 {
     CConstants::initCommandMap();
 

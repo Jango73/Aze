@@ -15,8 +15,9 @@ HEADERS += \
     sources/commands/CStatusCommand.h \
     sources/commands/CSwitchToBranchCommand.h \
     sources/commands/CUnstageCommand.h \
-    sources/CRepository.h \
+    sources/CRemoteHostInfo.h \
     sources/CRemoteRepository.h \
+    sources/CRepository.h \
     sources/CStrings.h \
     sources/CUtils.h \
     sources/google/diff_match_patch.h \
@@ -43,8 +44,9 @@ SOURCES += \
     sources/commands/CStatusCommand.cpp \
     sources/commands/CSwitchToBranchCommand.cpp \
     sources/commands/CUnstageCommand.cpp \
-    sources/CRepository.cpp \
+    sources/CRemoteHostInfo.cpp \
     sources/CRemoteRepository.cpp \
+    sources/CRepository.cpp \
     sources/CStrings.cpp \
     sources/CUtils.cpp \
     sources/google/diff_match_patch.cpp \

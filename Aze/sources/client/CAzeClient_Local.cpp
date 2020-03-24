@@ -58,7 +58,7 @@ int CAzeClient::switchToBranch()
 
     ERROR_WHEN_FALSE(m_pRepository->writeCurrentBranch(), CConstants::s_iError_CouldNotWriteCurrentBranch);
 
-    ERROR_WHEN_FALSE(m_pRepository->writeGeneralInfo(), CConstants::s_iError_CouldNotWriteCurrentBranch);
+    ERROR_WHEN_FALSE(m_pRepository->writeGeneralInformation(), CConstants::s_iError_CouldNotWriteGeneralInformation);
 
     (*m_pOutStream) << QString(CConstants::s_sTextYouAreNowOnBranch).arg(sBranchName) << "\n";
 
@@ -370,7 +370,7 @@ int CAzeClient::saveStash()
 
     ERROR_WHEN_FALSE(m_pRepository->writeStage(), CConstants::s_iError_CouldNotWriteStage);
 
-    ERROR_WHEN_FALSE(m_pRepository->writeGeneralInfo(), CConstants::s_iError_CouldNotWriteCurrentBranch);
+    ERROR_WHEN_FALSE(m_pRepository->writeGeneralInformation(), CConstants::s_iError_CouldNotWriteGeneralInformation);
 
     return CConstants::s_iError_None;
 }
@@ -391,7 +391,24 @@ int CAzeClient::popStash()
 
     ERROR_WHEN_FALSE(m_pRepository->writeStage(), CConstants::s_iError_CouldNotWriteStage);
 
-    ERROR_WHEN_FALSE(m_pRepository->writeGeneralInfo(), CConstants::s_iError_CouldNotWriteCurrentBranch);
+    ERROR_WHEN_FALSE(m_pRepository->writeGeneralInformation(), CConstants::s_iError_CouldNotWriteGeneralInformation);
+
+    return CConstants::s_iError_None;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+int CAzeClient::setRemoteHost()
+{
+    ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
+
+    ERROR_WHEN_FALSE(m_tArguments.m_lFilesAndIds.count() > 0, CConstants::s_iError_NoRemoteHostNameGiven);
+
+    QString sRemoteHostName = m_tArguments.m_lFilesAndIds.takeFirst();
+
+    m_pRepository->setRemoteHostName(sRemoteHostName);
+
+    ERROR_WHEN_FALSE(m_pRepository->writeGeneralInformation(), CConstants::s_iError_CouldNotWriteGeneralInformation);
 
     return CConstants::s_iError_None;
 }

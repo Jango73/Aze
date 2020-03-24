@@ -103,7 +103,7 @@ public:
     //! Returns a printable version of sText
     static QString printableUnifiedDiff(const QString& sText);
 
-	//! Splits a full diff into a file diff list
+    //! Splits a full diff into a file diff list
     //! 1st = file name, 2nd = diff
     static QList<QPair<QString, QString> > splitDiff(const QString& sFullDiff);
 };

@@ -28,6 +28,7 @@ CRepository::CRepository(const QString& sRootPath, QObject* parent)
     : CObject(parent)
     , m_bOk(false)
     , m_pDatabase(new CDatabase(sRootPath, this))
+    , m_pRemoteHostInfo(new CRemoteHostInfo(this))
     , m_pCommitFunctions(new CCommitFunctions(m_pDatabase, this))
     , m_eStatus(CEnums::eUnknown)
     , m_pCurrentBranch(nullptr)
@@ -45,7 +46,7 @@ CRepository::CRepository(const QString& sRootPath, QObject* parent)
 
     if (m_bOk)
     {
-        readGeneralInfo();
+        readGeneralInformation();
         readCurrentBranch();
         readTipCommit();
     }
@@ -69,7 +70,7 @@ bool CRepository::init()
         setCurrentBranch(CBranch::fromNode(CXMLNode::load(sBranchFileName), this));
         setCurrentBranchName(CStrings::s_sDefaultBranchName);
 
-        writeGeneralInfo();
+        writeGeneralInformation();
         writeCurrentBranch();
 
         setOk(true);
@@ -222,13 +223,13 @@ QList<CFile> CRepository::fileStatus(const QStringList& lFileNames)
 
 //-------------------------------------------------------------------------------------------------
 
-bool CRepository::readGeneralInfo()
+bool CRepository::readGeneralInformation()
 {
-    QString sFileName = QString("%1/%2")
-            .arg(m_pDatabase->dataPath())
-            .arg(CStrings::s_sGeneralInfoFileName);
+    CXMLNode xInfo = CXMLNode::load(m_pDatabase->generalInformationFileName());
 
-    CXMLNode xInfo = CXMLNode::load(sFileName);
+    // Read remote host information
+    CXMLNode xRemoteHost = xInfo.getNodeByTagName(CStrings::s_sParamRemoteHost);
+    m_pRemoteHostInfo->setName(xRemoteHost.attributes()[CStrings::s_sParamName]);
 
     // Read branches
     CXMLNode xBranches = xInfo.getNodeByTagName(CStrings::s_sParamBranches);
@@ -298,13 +299,14 @@ bool CRepository::readTipCommit()
 
 //-------------------------------------------------------------------------------------------------
 
-bool CRepository::writeGeneralInfo()
+bool CRepository::writeGeneralInformation()
 {
-    QString sFileName = QString("%1/%2")
-            .arg(m_pDatabase->dataPath())
-            .arg(CStrings::s_sGeneralInfoFileName);
-
     CXMLNode xInfo(CStrings::s_sParamInfo);
+
+    // Write remote host information
+    CXMLNode xRemoteHost(CStrings::s_sParamRemoteHost);
+    xRemoteHost.attributes()[CStrings::s_sParamName] = m_pRemoteHostInfo->name();
+	xInfo << xRemoteHost;
 
     // Write branches
     CXMLNode xBranches(CStrings::s_sParamBranches);
@@ -322,7 +324,7 @@ bool CRepository::writeGeneralInfo()
 
     xInfo << xStashListNode;
 
-    xInfo.save(sFileName);
+    xInfo.save(m_pDatabase->generalInformationFileName());
 
     return true;
 }
@@ -406,6 +408,13 @@ void CRepository::addStashToList(const QString& sId)
 void CRepository::removeStashFromList(const QString& sId)
 {
     m_lStashList.removeAll(sId);
+}
+
+//-------------------------------------------------------------------------------------------------
+
+void CRepository::setRemoteHostName(const QString& sName)
+{
+    m_pRemoteHostInfo->setName(sName);
 }
 
 //-------------------------------------------------------------------------------------------------

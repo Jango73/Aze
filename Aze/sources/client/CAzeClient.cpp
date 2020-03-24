@@ -20,12 +20,6 @@
     \section1 General
 */
 
-// Server IP
-#define SERVER_IP "127.0.0.1"
-
-// Port number
-#define PORT_NUMBER "8080"
-
 //-------------------------------------------------------------------------------------------------
 
 CAzeClient::CAzeClient(int argc, char *argv[], QTextStream* pOutStream)
@@ -44,9 +38,7 @@ CAzeClient::CAzeClient(int argc, char *argv[], QTextStream* pOutStream)
     }
 
     // Setup network request
-    QString sUrl = QString("http://%1:%2").arg(SERVER_IP).arg(PORT_NUMBER);
-    m_tNetworkRequest.setUrl(QUrl(sUrl));
-    m_tNetworkRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    setupRemoteHost("127.0.0.1:8080");
 
     // Listen to network manager responses
     connect(m_pNetworkAccessManager, &QNetworkAccessManager::finished, this, &CAzeClient::onNetworkAccessFinished);
@@ -66,32 +58,39 @@ int CAzeClient::run()
 {
     switch (m_tArguments.m_eCommand)
     {
-    case CConstants::eCommandNone: break;
+    case CConstants::eCommandNone:
+    case CConstants::eCommandHelp:
+    {
+        m_tArguments.showHelp(m_pOutStream);
+        return CConstants::s_iError_None;
+    }
 
     // Local commands
-    case CConstants::eCommandCleanUp:        return cleanUp();
-    case CConstants::eCommandCommit:         return commit();
-    case CConstants::eCommandCreateBranch:   return createBranch();
-    case CConstants::eCommandDiff:           return diff();
-    case CConstants::eCommandDump:           return dump();
-    case CConstants::eCommandInitRepository: return init();
-    case CConstants::eCommandLog:            return log();
-    case CConstants::eCommandMerge:          return merge();
-    case CConstants::eCommandMove:           return move();
-    case CConstants::eCommandPopStash:       return popStash();
-    case CConstants::eCommandRemove:         return remove();
-    case CConstants::eCommandRevert:         return revert();
-    case CConstants::eCommandSaveStash:      return saveStash();
-    case CConstants::eCommandShowStatus:     return status();
-    case CConstants::eCommandStage:          return stage();
-    case CConstants::eCommandSwitchToBranch: return switchToBranch();
-    case CConstants::eCommandUnstage:        return unstage();
+    case CConstants::eCommandCleanUp:           return cleanUp();
+    case CConstants::eCommandCommit:            return commit();
+    case CConstants::eCommandCreateBranch:      return createBranch();
+    case CConstants::eCommandDiff:              return diff();
+    case CConstants::eCommandDump:              return dump();
+    case CConstants::eCommandInitRepository:    return init();
+    case CConstants::eCommandLog:               return log();
+    case CConstants::eCommandMerge:             return merge();
+    case CConstants::eCommandMove:              return move();
+    case CConstants::eCommandPopStash:          return popStash();
+    case CConstants::eCommandRemove:            return remove();
+    case CConstants::eCommandRevert:            return revert();
+    case CConstants::eCommandSaveStash:         return saveStash();
+    case CConstants::eCommandSetRemoteHost:     return setRemoteHost();
+    case CConstants::eCommandShowStatus:        return status();
+    case CConstants::eCommandStage:             return stage();
+    case CConstants::eCommandSwitchToBranch:    return switchToBranch();
+    case CConstants::eCommandUnstage:           return unstage();
 
     // Remote commands
+    case CConstants::eCommandPull:           return pull();
     case CConstants::eCommandPush:           return push();
     }
 
-    OUT_ERROR("Unknown command...");
+    OUT_ERROR(CConstants::s_sTextUnknownCommand);
 
     return 0;
 }
@@ -122,16 +121,11 @@ void CAzeClient::processWildCards()
 
 //-------------------------------------------------------------------------------------------------
 
-int CAzeClient::help()
+void CAzeClient::setupRemoteHost(const QString& sHostName)
 {
-    (*m_pOutStream) << CConstants::s_sTextCommands << ":\n\n";
-
-    for (QString sKey : CConstants::s_mHelp.keys())
-    {
-        (*m_pOutStream) << QString(" %1  %2\n").arg(sKey, -15).arg(CConstants::s_mHelp[sKey]);
-    }
-
-    return CConstants::s_iError_None;
+    QString sUrl = QString("http://%1").arg(sHostName);
+    m_tNetworkRequest.setUrl(QUrl(sUrl));
+    m_tNetworkRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
 }
 
 //-------------------------------------------------------------------------------------------------

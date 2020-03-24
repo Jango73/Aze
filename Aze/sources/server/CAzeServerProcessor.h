@@ -15,6 +15,8 @@
 
 //-------------------------------------------------------------------------------------------------
 
+class CAzeServer;
+
 class CAzeServerProcessor : public CDynamicHTTPServer
 {
     Q_OBJECT
@@ -26,7 +28,7 @@ public:
     //-------------------------------------------------------------------------------------------------
 
     //! Constructor
-    CAzeServerProcessor(quint16 iPort = DEFAULT_HTTP_PORT);
+    CAzeServerProcessor(CAzeServer* parent, quint16 iPort = DEFAULT_HTTP_PORT);
 
     //! Destructor
     virtual ~CAzeServerProcessor() override;
@@ -38,8 +40,20 @@ public:
     //!
     virtual void getContent(CWebContext& tContext, QString& sHead, QString& sBody, QString& sCustomResponse, QString& sCustomResponseMIME) override;
 
+protected:
+
+    //-------------------------------------------------------------------------------------------------
+    // Protected control methods
+    //-------------------------------------------------------------------------------------------------
+
     //!
-    CXMLNode serveRequest(CWebContext& tContext, const CXMLNode &xRequest);
+    CXMLNode serveRequest(CWebContext& tContext, const CXMLNode& xRequest);
+
+    //!
+    static CXMLNode servePull(CWebContext& tContext, const CXMLNode& xRequest);
+
+    //!
+    static CXMLNode servePush(CWebContext& tContext, const CXMLNode& xRequest);
 
     //-------------------------------------------------------------------------------------------------
     // Properties
@@ -47,6 +61,10 @@ public:
 
 protected:
 
+    typedef CXMLNode (*RequestServing) (CWebContext& tContext, const CXMLNode& xRequest);
+
+    CAzeServer*                     m_pServer;
+    QMap<QString, RequestServing>   m_mRequestFunctionMap;
 };
 
 //-------------------------------------------------------------------------------------------------

@@ -24,7 +24,9 @@
 
 CAzeServer::CAzeServer(int argc, char *argv[])
     : QCoreApplication(argc, argv)
+    , m_sRepositoriesBasePath(".")
     , m_tArguments(*this)
+    , m_pProcessor(new CAzeServerProcessor(this, m_tArguments.m_tParser.value(m_tArguments.m_oPort).toInt()))
 {
 }
 

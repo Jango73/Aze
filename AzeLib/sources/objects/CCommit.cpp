@@ -11,6 +11,7 @@ namespace Aze {
 CCommit::CCommit(QObject* parent)
     : CObject(parent)
     , m_bIsMerge(false)
+    , m_iDistance(0)
 {
     setDateToNow();
 }

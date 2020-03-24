@@ -42,7 +42,7 @@ bool CSaveStashCommand::execute()
 
     if (sDiff.isEmpty())
     {
-        OUT_ERROR(CStrings::s_sTextNothingToStash);
+        OUT_INFO(CStrings::s_sTextNothingToStash);
         return true;
     }
 
@@ -60,7 +60,7 @@ bool CSaveStashCommand::execute()
 
     m_pRepository->clearStage();
 
-    CCommit* pWorkingDirectory = m_pRepository->commitFunctions()->directoryAsCommit();
+    CCommit* pWorkingDirectory = m_pRepository->commitFunctions()->directoryAsCommit(this);
     CRevertCommand(m_pRepository, pWorkingDirectory, true).execute();
 
     return not sNewStashId.isEmpty();

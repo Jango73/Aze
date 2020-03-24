@@ -18,6 +18,8 @@ public:
 
     CAzeClientArguments(QCoreApplication& app);
 
+    void showHelp(QTextStream* pOutStream);
+
     QCommandLineParser      m_tParser;
     QCommandLineOption      m_oAll;
     QCommandLineOption      m_oLoose;
