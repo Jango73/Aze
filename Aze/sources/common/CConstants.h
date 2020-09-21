@@ -87,6 +87,7 @@ public:
     static const char* s_sSwitchMissing;
     static const char* s_sSwitchModified;
     static const char* s_sSwitchStart;
+    static const char* s_sSwitchSilent;
 
     // Server switches
     static const char* s_sSwitchPort;

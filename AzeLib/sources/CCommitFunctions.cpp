@@ -365,7 +365,7 @@ void CCommitFunctions::diffText(QString& sOutput, const QString& sFileName, cons
 
 //-------------------------------------------------------------------------------------------------
 
-bool CCommitFunctions::applyDiff(const QString& sFullDiff, bool bAddToStage, CCommit* pStagingCommit)
+bool CCommitFunctions::applyDiff(const QString& sFullDiff, bool bSilent, bool bAddToStage, CCommit* pStagingCommit)
 {
     // Keep track of merged files
     QDictionary mProcessedFiles;
@@ -394,8 +394,12 @@ bool CCommitFunctions::applyDiff(const QString& sFullDiff, bool bAddToStage, CCo
 
         if (sPreviousContent.isEmpty() && sNewContent.isEmpty())
         {
-            OUT_ERROR(QString(CStrings::s_sTextCouldNotApplyPatch).arg(sFileName));
-            OUT_INFO(sFileDiff);
+            if (!bSilent)
+            {
+                OUT_ERROR(QString(CStrings::s_sTextCouldNotApplyPatch).arg(sFileName));
+                OUT_INFO(sPreviousContent);
+                OUT_INFO(sFileDiff);
+            }
             return false;
         }
 
@@ -424,7 +428,10 @@ bool CCommitFunctions::applyDiff(const QString& sFullDiff, bool bAddToStage, CCo
         {
             if (not CUtils::moveFile(sFullSourceName, sFullTargetName))
             {
-                OUT_ERROR(QString("Could not move file %1.").arg(sFullSourceName));
+                if (!bSilent)
+                {
+                    OUT_ERROR(QString("Could not move file %1.").arg(sFullSourceName));
+                }
                 return false;
             }
 

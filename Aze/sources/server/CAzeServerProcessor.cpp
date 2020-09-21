@@ -55,8 +55,8 @@ CAzeServerProcessor::~CAzeServerProcessor()
 
 void CAzeServerProcessor::getContent(CWebContext& tContext, QString& sHead, QString& sBody, QString& sCustomResponse, QString& sCustomResponseMIME)
 {
-    Q_UNUSED(sHead);
-    Q_UNUSED(sBody);
+    Q_UNUSED(sHead)
+    Q_UNUSED(sBody)
 
     if (tContext.pathValid() && not tContext.m_baPostContent.isEmpty())
     {
@@ -114,6 +114,8 @@ CXMLNode CAzeServerProcessor::serveRequest(CWebContext& tContext, const CXMLNode
 
 CXMLNode CAzeServerProcessor::servePull(CWebContext& tContext, const CXMLNode& xRequest)
 {
+    Q_UNUSED(tContext)
+
     CXMLNode xResult;
 
     xResult.attributes()[Aze::CStrings::s_sParamResult] = Aze::CStrings::s_sParamSuccess;
@@ -130,6 +132,9 @@ CXMLNode CAzeServerProcessor::servePull(CWebContext& tContext, const CXMLNode& x
 
 CXMLNode CAzeServerProcessor::servePush(CWebContext& tContext, const CXMLNode& xRequest)
 {
+    Q_UNUSED(tContext)
+    Q_UNUSED(xRequest)
+
     CXMLNode xResult;
 
     xResult.attributes()[Aze::CStrings::s_sParamResult] = Aze::CStrings::s_sParamSuccess;

@@ -47,7 +47,7 @@ bool CStageCommand::addSingleFile(QString sRelativeFileName)
         }
         else
         {
-            OUT_ERROR(QString("%1: %2").arg(CStrings::s_sTextNoSuchFile).arg(sRelativeFileName));
+            m_pRepository->tellError(QString("%1: %2").arg(CStrings::s_sTextNoSuchFile).arg(sRelativeFileName));
         }
     }
 

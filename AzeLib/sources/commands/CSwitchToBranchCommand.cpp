@@ -28,7 +28,7 @@ bool CSwitchToBranchCommand::execute()
     // Check presence of current branch
     if (IS_NULL(m_pRepository->currentBranch()))
     {
-        OUT_ERROR(CStrings::s_sTextNoCurrentBranch);
+        m_pRepository->tellError(CStrings::s_sTextNoCurrentBranch);
         return false;
     }
 
@@ -42,7 +42,7 @@ bool CSwitchToBranchCommand::execute()
 
     if (not bStashSaved)
     {
-        OUT_ERROR(CStrings::s_sTextStashSaveFailed);
+        m_pRepository->tellError(CStrings::s_sTextStashSaveFailed);
         return false;
     }
 
@@ -64,7 +64,7 @@ bool CSwitchToBranchCommand::execute()
 
     if (not bStashPopped)
     {
-        OUT_ERROR(CStrings::s_sTextStashPopFailed);
+        m_pRepository->tellError(CStrings::s_sTextStashPopFailed);
         return false;
     }
 

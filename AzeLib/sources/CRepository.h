@@ -38,6 +38,7 @@ public:
     //-------------------------------------------------------------------------------------------------
 
     Q_FAST_PROPERTY(bool, b, ok, Ok)
+    Q_FAST_PROPERTY(bool, b, silent, Silent)
     Q_FAST_PROPERTY(CDatabase*, p, database, Database)
     Q_FAST_PROPERTY(CRemoteHostInfo*, p, remoteHostInfo, RemoteHostInfo)
     Q_FAST_PROPERTY(CCommitFunctions*, p, commitFunctions, CommitFunctions)
@@ -165,6 +166,12 @@ public:
     //-------------------------------------------------------------------------------------------------
     // Helper methods
     //-------------------------------------------------------------------------------------------------
+
+	//! Prints an error message
+    void tellError(const QString& sText);
+
+    //! Prints an info message
+    void tellInfo(const QString& sText);
 
     //! Replaces symbols in sText with their actual value (if any)
     QString processKeywords(const QString& sText);

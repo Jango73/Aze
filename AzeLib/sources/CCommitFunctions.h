@@ -96,7 +96,7 @@ public:
     void diffText(QString& sOutput, const QString& sFileName, const QString& sText1, const QString& sText2);
 
     //! Applies a diff to the working directory
-    bool applyDiff(const QString& sFullDiff, bool bAddToStage = false, CCommit* pStagingCommit = nullptr);
+    bool applyDiff(const QString& sFullDiff, bool bSilent = false, bool bAddToStage = false, CCommit* pStagingCommit = nullptr);
 };
 
 }

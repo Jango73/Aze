@@ -35,6 +35,7 @@ public:
     QCommandLineOption      m_oCount;
     QCommandLineOption      m_oAllowFileDelete;
     QCommandLineOption      m_oGraph;
+    QCommandLineOption      m_oSilent;
     CConstants::ECommand    m_eCommand;
     QStringList             m_lFilesAndIds;
 };

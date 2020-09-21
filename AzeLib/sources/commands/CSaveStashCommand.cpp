@@ -26,14 +26,14 @@ bool CSaveStashCommand::execute()
     // Check presence of current branch
     if (IS_NULL(m_pRepository->currentBranch()))
     {
-        OUT_ERROR(CStrings::s_sTextNoCurrentBranch);
+        m_pRepository->tellError(CStrings::s_sTextNoCurrentBranch);
         return false;
     }
 
     // Check presence of staging commit
     if (IS_NULL(m_pRepository->stagingCommit()))
     {
-        OUT_ERROR(CStrings::s_sTextNoStagingCommit);
+        m_pRepository->tellError(CStrings::s_sTextNoStagingCommit);
         return false;
     }
 
@@ -42,7 +42,7 @@ bool CSaveStashCommand::execute()
 
     if (sDiff.isEmpty())
     {
-        OUT_INFO(CStrings::s_sTextNothingToStash);
+        m_pRepository->tellInfo(CStrings::s_sTextNothingToStash);
         return true;
     }
 

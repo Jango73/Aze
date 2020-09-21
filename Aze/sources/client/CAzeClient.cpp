@@ -56,6 +56,8 @@ CAzeClient::~CAzeClient()
 
 int CAzeClient::run()
 {
+    m_pRepository->setSilent(m_tArguments.m_tParser.isSet(m_tArguments.m_oSilent));
+
     switch (m_tArguments.m_eCommand)
     {
     case CConstants::eCommandNone:

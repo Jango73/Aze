@@ -419,6 +419,26 @@ void CRepository::setRemoteHostName(const QString& sName)
 
 //-------------------------------------------------------------------------------------------------
 
+void CRepository::tellError(const QString& sText)
+{
+    if (!m_bSilent)
+    {
+        OUT_ERROR(sText);
+    }
+}
+
+//-------------------------------------------------------------------------------------------------
+
+void CRepository::tellInfo(const QString& sText)
+{
+    if (!m_bSilent)
+    {
+        OUT_INFO(sText);
+    }
+}
+
+//-------------------------------------------------------------------------------------------------
+
 QString CRepository::processKeywords(const QString& sText)
 {
     if (sText == CStrings::s_sParamTip && not IS_NULL(m_pCurrentBranch))

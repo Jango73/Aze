@@ -27,28 +27,28 @@ bool CMergeCommand::execute()
     // Check validity of arguments
     if (m_sFromBranch.isEmpty())
     {
-        OUT_ERROR(CStrings::s_sTextNoCurrentBranch);
+        m_pRepository->tellError(CStrings::s_sTextNoCurrentBranch);
         return false;
     }
 
     // Check presence of current branch
     if (IS_NULL(m_pRepository->currentBranch()))
     {
-        OUT_ERROR(CStrings::s_sTextBranchNameEmpty);
+        m_pRepository->tellError(CStrings::s_sTextBranchNameEmpty);
         return false;
     }
 
     // Check presence of stage
     if (IS_NULL(m_pRepository->stagingCommit()))
     {
-        OUT_ERROR(CStrings::s_sTextNoStagingCommit);
+        m_pRepository->tellError(CStrings::s_sTextNoStagingCommit);
         return false;
     }
 
     // Check presence of current branch tip commit
     if (IS_NULL(m_pRepository->tipCommit()))
     {
-        OUT_ERROR(CStrings::s_sTextNoTipCommit);
+        m_pRepository->tellError(CStrings::s_sTextNoTipCommit);
         return false;
     }
 
@@ -59,14 +59,14 @@ bool CMergeCommand::execute()
     // Check presence of 'from' branch tip commit
     if (IS_NULL(pFromBranch) || pFromBranch->tipCommitId().isEmpty())
     {
-        OUT_ERROR(CStrings::s_sTextNoSuchBranch);
+        m_pRepository->tellError(CStrings::s_sTextNoSuchBranch);
         return false;
     }
 
     //
     if (pFromBranch->tipCommitId() == m_pRepository->tipCommit()->id())
     {
-        OUT_ERROR(CStrings::s_sTextCannotMergeSameCommits);
+        m_pRepository->tellError(CStrings::s_sTextCannotMergeSameCommits);
         return false;
     }
 
@@ -75,7 +75,7 @@ bool CMergeCommand::execute()
     // Check presence of 'from' branch tip commit
     if (IS_NULL(pFromTipCommit))
     {
-        OUT_ERROR(CStrings::s_sTextNoSuchBranch);
+        m_pRepository->tellError(CStrings::s_sTextNoSuchBranch);
         return false;
     }
 
@@ -92,14 +92,14 @@ bool CMergeCommand::execute()
     // Check presence of common ancestor
     if (IS_NULL(pCommonAncestor))
     {
-        OUT_ERROR(CStrings::s_sTextNoCommonAncestor);
+        m_pRepository->tellError(CStrings::s_sTextNoCommonAncestor);
         return false;
     }
 
     // Check relevancy of 'from' commit
     if (pCommonAncestor == pFromTipCommit)
     {
-        OUT_ERROR(CStrings::s_sTextNoCommitToMerge);
+        m_pRepository->tellError(CStrings::s_sTextNoCommitToMerge);
         return false;
     }
 
@@ -108,7 +108,7 @@ bool CMergeCommand::execute()
 
     if (m_pRepository->status() != CEnums::eClean)
     {
-        OUT_ERROR(CStrings::s_sTextMergeWorkingDirectoryNotClean);
+        m_pRepository->tellError(CStrings::s_sTextMergeWorkingDirectoryNotClean);
         return false;
     }
 
@@ -119,14 +119,14 @@ bool CMergeCommand::execute()
     // Bail out if diff is empty
     if (sDiff.isEmpty())
     {
-        OUT_ERROR("Diff is empty.");
+        m_pRepository->tellError("Diff is empty.");
         return false;
     }
 
     // Apply the diff to the working directory
-    if (not m_pRepository->commitFunctions()->applyDiff(sDiff, true, m_pRepository->stagingCommit()))
+    if (not m_pRepository->commitFunctions()->applyDiff(sDiff, m_pRepository->silent(), true, m_pRepository->stagingCommit()))
     {
-        OUT_ERROR(CStrings::s_sTextMergeFailed);
+        m_pRepository->tellError(CStrings::s_sTextMergeFailed);
         return false;
     }
 

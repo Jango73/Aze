@@ -43,14 +43,14 @@ bool CLogCommand::execute()
     // Check presence of current branch
     if (IS_NULL(m_pRepository->currentBranch()))
     {
-        OUT_ERROR(CStrings::s_sTextNoCurrentBranch);
+        m_pRepository->tellError(CStrings::s_sTextNoCurrentBranch);
         return false;
     }
 
     // Check presence of tip commit
     if (IS_NULL(m_pRepository->tipCommit()))
     {
-        OUT_ERROR(CStrings::s_sTextNoTipCommit);
+        m_pRepository->tellError(CStrings::s_sTextNoTipCommit);
         return false;
     }
 

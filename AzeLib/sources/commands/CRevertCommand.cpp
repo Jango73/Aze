@@ -54,7 +54,7 @@ bool CRevertCommand::revertSingleFile(QString sRelativeFileName)
     // Check presence of stage
     if (IS_NULL(m_pRepository->stagingCommit()))
     {
-        OUT_ERROR(CStrings::s_sTextNoStagingCommit);
+        m_pRepository->tellError(CStrings::s_sTextNoStagingCommit);
         return false;
     }
 

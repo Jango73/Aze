@@ -25,14 +25,14 @@ bool CCommitCommand::execute()
     // Check presence of current branch
     if (IS_NULL(m_pRepository->currentBranch()))
     {
-        OUT_ERROR(CStrings::s_sTextNoCurrentBranch);
+        m_pRepository->tellError(CStrings::s_sTextNoCurrentBranch);
         return false;
     }
 
     // Check presence and relevancy of staging commmit
     if (IS_NULL(m_pRepository->stagingCommit()) || m_pRepository->stagingCommit()->files().count() == 0)
     {
-        OUT_ERROR(CStrings::s_sTextCommitEmpty);
+        m_pRepository->tellError(CStrings::s_sTextCommitEmpty);
         return false;
     }
 
