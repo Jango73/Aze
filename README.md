@@ -1,5 +1,5 @@
 # Aze
-A versioning system
+A versioning system (just for pleasure of coding)
 
 ## Dependencies
 
