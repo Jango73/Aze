@@ -111,6 +111,7 @@ public:
     // Properties
     //-------------------------------------------------------------------------------------------------
 
+    static QString s_sBadString;
     static float s_fMatchThreshold;
 };
 

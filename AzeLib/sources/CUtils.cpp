@@ -21,6 +21,7 @@
 
 namespace Aze {
 
+QString CUtils::s_sBadString = "xX!!!!Xx";
 float CUtils::s_fMatchThreshold = 0.2f;
 
 //-------------------------------------------------------------------------------------------------
@@ -293,7 +294,7 @@ QString CUtils::applyUnifiedDiff(const QString& sText, const QString& sDiff)
     QPair<QString, QVector<bool> > returnValue = diff.patch_apply(patches, sText);
 
     if (returnValue.second.contains(false))
-        return "";
+        return s_sBadString;
 
     return returnValue.first;
 }

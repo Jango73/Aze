@@ -117,32 +117,33 @@ void CCommitFunctions::getCommitAncestorListRecurse(QList<CCommit*>& lCommitList
 CCommit* CCommitFunctions::getCommonCommitChains(CCommit* pCommit1, CCommit* pCommit2, QObject* owner, QList<CCommit*>* lCommit1Chain, QList<CCommit*>* lCommit2Chain)
 {
     CCommit* pAncestor = nullptr;
-    QList<CCommit*> pAncestors1 = getCommitAncestorList(pCommit1, owner, false);
-    QList<CCommit*> pAncestors2 = getCommitAncestorList(pCommit2, owner, false);
+    QList<CCommit*> lAncestors1 = getCommitAncestorList(pCommit1, owner, false);
+    QList<CCommit*> lAncestors2 = getCommitAncestorList(pCommit2, owner, false);
     QMap<int, CCommit*> commonAncestors;
 
     // Add commits themselves to lists
-    pAncestors1.prepend(pCommit1->clone(this));
-    pAncestors2.prepend(pCommit2->clone(this));
+    lAncestors1.prepend(pCommit1->clone(this));
+    lAncestors2.prepend(pCommit2->clone(this));
 
     if (m_bDebug)
     {
         OUT_DEBUG("--------------------");
         OUT_DEBUG("pAncestors1:");
-        for (CCommit* pCommit : pAncestors1)
+        for (CCommit* pCommit : lAncestors1)
             OUT_DEBUG(QString("%1 %2").arg(pCommit->shortId()).arg(pCommit->message()));
         OUT_DEBUG("--------------------");
         OUT_DEBUG("pAncestors2:");
-        for (CCommit* pCommit : pAncestors2)
+        for (CCommit* pCommit : lAncestors2)
             OUT_DEBUG(QString("%1 %2").arg(pCommit->shortId()).arg(pCommit->message()));
         OUT_DEBUG("--------------------");
     }
 
-    for (CCommit* pCommit1 : pAncestors1)
+    // Find the common ancestor
+    for (CCommit* pCommit1 : lAncestors1)
     {
         QString sId = pCommit1->id();
 
-        for (CCommit* pCommit2 : pAncestors2)
+        for (CCommit* pCommit2 : lAncestors2)
         {
             if (sId == pCommit2->id())
             {
@@ -170,11 +171,11 @@ CCommit* CCommitFunctions::getCommonCommitChains(CCommit* pCommit1, CCommit* pCo
     // Populate the commit lists if required
     if (IS_NOT_NULL(lCommit1Chain))
     {
-        for (CCommit* pCommit : pAncestors1)
+        for (CCommit* pCommit : lAncestors1)
         {
             (*lCommit1Chain) << pCommit;
 
-            if (pCommit == pAncestor)
+            if (pCommit->id() == pAncestor->id())
                 break;
         }
 
@@ -183,11 +184,11 @@ CCommit* CCommitFunctions::getCommonCommitChains(CCommit* pCommit1, CCommit* pCo
 
     if (IS_NOT_NULL(lCommit2Chain))
     {
-        for (CCommit* pCommit : pAncestors2)
+        for (CCommit* pCommit : lAncestors2)
         {
             (*lCommit2Chain) << pCommit;
 
-            if (pCommit == pAncestor)
+            if (pCommit->id() == pAncestor->id())
                 break;
         }
 
@@ -196,10 +197,10 @@ CCommit* CCommitFunctions::getCommonCommitChains(CCommit* pCommit1, CCommit* pCo
 
     // Delete the ancestor lists if required
     if (IS_NULL(lCommit1Chain))
-        qDeleteAll(pAncestors1);
+        qDeleteAll(lAncestors1);
 
     if (IS_NULL(lCommit2Chain))
-        qDeleteAll(pAncestors2);
+        qDeleteAll(lAncestors2);
 
     if (m_bDebug)
     {
@@ -336,7 +337,10 @@ void CCommitFunctions::diffCommitLists(QString& sOutput, const QList<CCommit*>& 
 
         for (CCommit* pCommit : lToList)
             if (pCommit->id() == pCommit2->id())
-                { bFound = true; break; }
+            {
+                bFound = true;
+                break;
+            }
 
 //        if (foundCommit == lIgnoreList.end())
         if (bFound == false)
@@ -439,7 +443,7 @@ bool CCommitFunctions::applyDiff(const QString& sFullDiff, bool bAddToStage, CCo
             OUT_DEBUG("----------------------------------------");
         }
 
-        if (sPreviousContent.isEmpty() && sNewContent.isEmpty())
+        if (sNewContent == CUtils::s_sBadString)
         {
             if (not m_bSilent)
             {
