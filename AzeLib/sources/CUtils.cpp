@@ -305,8 +305,12 @@ QString CUtils::printableUnifiedDiff(const QString& sText)
 
     while (tRegExp.indexIn(sReturnValue) != -1)
     {
-        int iChar = tRegExp.cap(1).right(2).toInt();
-        sReturnValue.replace(tRegExp.cap(1), QChar(iChar));
+        bool bOK;
+        QString sCapture = tRegExp.cap(1);
+        int iChar = sCapture.right(2).toInt(&bOK, 16);
+        QString sReplace = QChar(iChar);
+        if (iChar == 10) sReplace = "";
+        sReturnValue.replace(sCapture, sReplace);
     }
 
     return sReturnValue;

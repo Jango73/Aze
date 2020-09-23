@@ -58,7 +58,7 @@ CXMLNode CRemoteRepository::getPushRequest()
                 nullptr
                 );
 
-    REVERSE_LIST(lCommitList);
+    reverseList(lCommitList);
 
     xRequest << m_pLocalRepository->tipCommit()->toNode();
 

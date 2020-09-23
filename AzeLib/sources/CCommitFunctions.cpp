@@ -149,7 +149,7 @@ CCommit* CCommitFunctions::getCommonCommitChains(CCommit* pCommit1, CCommit* pCo
         }
     }
 
-    // Bail ou if not common ancestor found
+    // Bail out if no common ancestor found
     if (commonAncestors.count() == 0)
         return nullptr;
 
@@ -157,7 +157,7 @@ CCommit* CCommitFunctions::getCommonCommitChains(CCommit* pCommit1, CCommit* pCo
     int iKey = commonAncestors.keys()[0];
     pAncestor = commonAncestors[iKey]->clone(owner);
 
-//    OUT_INFO(QString(CStrings::s_sTextCommonAncestor).arg(iKey).arg(pAncestor->message()));
+//    OUT_DEBUG(QString(CStrings::s_sTextCommonAncestor).arg(iKey).arg(pAncestor->message()));
 
     // Populate the commit lists if required
     if (IS_NOT_NULL(lCommit1Chain))
@@ -170,7 +170,7 @@ CCommit* CCommitFunctions::getCommonCommitChains(CCommit* pCommit1, CCommit* pCo
                 break;
         }
 
-        REVERSE_LIST(*lCommit1Chain);
+        reverseList(*lCommit1Chain);
     }
 
     if (IS_NOT_NULL(lCommit2Chain))
@@ -183,7 +183,7 @@ CCommit* CCommitFunctions::getCommonCommitChains(CCommit* pCommit1, CCommit* pCo
                 break;
         }
 
-        REVERSE_LIST(*lCommit2Chain);
+        reverseList(*lCommit2Chain);
     }
 
     // Delete the ancestor lists if required
@@ -192,6 +192,19 @@ CCommit* CCommitFunctions::getCommonCommitChains(CCommit* pCommit1, CCommit* pCo
 
     if (IS_NULL(lCommit2Chain))
         qDeleteAll(pAncestors2);
+
+//    if (IS_NOT_NULL(lCommit1Chain) && IS_NOT_NULL(lCommit2Chain))
+//    {
+//        OUT_DEBUG("--------------------");
+//        OUT_DEBUG("lCommit1Chain:");
+//        for (CCommit* pCommit : *lCommit1Chain)
+//            OUT_DEBUG(QString("%1 %2").arg(pCommit->shortId()).arg(pCommit->message()));
+//        OUT_DEBUG("--------------------");
+//        OUT_DEBUG("lCommit2Chain:");
+//        for (CCommit* pCommit : *lCommit2Chain)
+//            OUT_DEBUG(QString("%1 %2").arg(pCommit->shortId()).arg(pCommit->message()));
+//        OUT_DEBUG("--------------------");
+//    }
 
     return pAncestor;
 }
@@ -319,7 +332,12 @@ void CCommitFunctions::diffCommitLists(QString& sOutput, const QList<CCommit*>& 
                 QByteArray baContent1 = pCommit1->fileContent(m_pDatabase, sName);
                 QByteArray baContent2 = pCommit2->fileContent(m_pDatabase, sName);
 
+//                OUT_DEBUG(QString("X: %1").arg(QString(baContent1)));
+//                OUT_DEBUG(QString("Y: %1").arg(QString(baContent2)));
+
                 QString sDiffText = CUtils::unifiedDiff(QString(baContent1), QString(baContent2));
+
+//                OUT_DEBUG(QString("Z: %1").arg(CUtils::printableUnifiedDiff(sDiffText)));
 
                 if (not sDiffText.isEmpty())
                 {
@@ -371,6 +389,7 @@ bool CCommitFunctions::applyDiff(const QString& sFullDiff, bool bSilent, bool bA
     QDictionary mProcessedFiles;
     QStringList mMovedFiles;
 
+    // Get a list of diffs per file
     QList<QPair<QString, QString> > mFileDiffs = CUtils::splitDiff(sFullDiff);
 
     for (QPair<QString, QString> tPair : mFileDiffs)
@@ -392,13 +411,16 @@ bool CCommitFunctions::applyDiff(const QString& sFullDiff, bool bSilent, bool bA
         QString sPreviousContent = CUtils::getTextFileContent(sFullSourceName);
         QString sNewContent = CUtils::applyUnifiedDiff(sPreviousContent, sFileDiff);
 
+//        OUT_DEBUG(QString("A: %1").arg(sPreviousContent));
+//        OUT_DEBUG(QString("B: %1").arg(CUtils::printableUnifiedDiff(sFileDiff)));
+//        OUT_DEBUG(QString("C: %1").arg(sNewContent));
+//        OUT_DEBUG("----------------------------------------");
+
         if (sPreviousContent.isEmpty() && sNewContent.isEmpty())
         {
             if (!bSilent)
             {
                 OUT_ERROR(QString(CStrings::s_sTextCouldNotApplyPatch).arg(sFileName));
-                OUT_INFO(sPreviousContent);
-                OUT_INFO(sFileDiff);
             }
             return false;
         }

@@ -29,7 +29,8 @@ public:
     // QML properties
     //-------------------------------------------------------------------------------------------------
 
-    Q_FAST_PROPERTY(QString, s, id, Id)
+    Q_FAST_PROPERTY_NO_SET_IMPL(QString, s, id, Id)
+    Q_PROPERTY(QString shortId READ shortId NOTIFY shortIdChanged)
 
 public:
 
@@ -43,11 +44,25 @@ public:
     //!
     virtual ~CObject() override;
 
+    //-------------------------------------------------------------------------------------------------
+    // Getters
+    //-------------------------------------------------------------------------------------------------
+
+    //!
+    QString shortId() const;
+
+    //-------------------------------------------------------------------------------------------------
+    // Control methods
+    //-------------------------------------------------------------------------------------------------
+
     //!
     QString generateId() const;
 
     //!
     virtual CXMLNode toNode() const;
+
+signals:
+    void shortIdChanged();
 };
 
 }
