@@ -21,6 +21,8 @@
 
 namespace Aze {
 
+float CUtils::s_fMatchThreshold = 0.2f;
+
 //-------------------------------------------------------------------------------------------------
 
 void CUtils::ensureFilePathExists(const QString& sFilePath)
@@ -273,8 +275,8 @@ QString CUtils::fileDiffHeader(const QString& sLeft, const QString& sRight)
 QString CUtils::unifiedDiff(const QString& sText1, const QString& sText2)
 {
     diff_match_patch diff;
-    diff.Match_Threshold = 0.2f;
-    diff.Patch_DeleteThreshold = 0.2f;
+    diff.Match_Threshold = s_fMatchThreshold;
+    diff.Patch_DeleteThreshold = s_fMatchThreshold;
 
     return diff.patch_toText(diff.patch_make(sText1, sText2));
 }
@@ -284,8 +286,8 @@ QString CUtils::unifiedDiff(const QString& sText1, const QString& sText2)
 QString CUtils::applyUnifiedDiff(const QString& sText, const QString& sDiff)
 {
     diff_match_patch diff;
-    diff.Match_Threshold = 0.2f;
-    diff.Patch_DeleteThreshold = 0.2f;
+    diff.Match_Threshold = s_fMatchThreshold;
+    diff.Patch_DeleteThreshold = s_fMatchThreshold;
 
     QList<Patch> patches = diff.patch_fromText(sDiff);
     QPair<QString, QVector<bool> > returnValue = diff.patch_apply(patches, sText);
