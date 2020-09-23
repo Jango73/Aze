@@ -33,7 +33,7 @@ bool CPopStashCommand::execute()
     if (IS_NOT_NULL(pStash) && not pStash->diff().isEmpty())
     {
         // Apply the stash
-        bool ok = m_pRepository->commitFunctions()->applyDiff(pStash->diff(), m_pRepository->silent());
+        bool ok = m_pRepository->commitFunctions()->applyDiff(pStash->diff());
 
         if (ok)
         {

@@ -24,12 +24,14 @@ namespace Aze {
 
 //-------------------------------------------------------------------------------------------------
 
-CRepository::CRepository(const QString& sRootPath, QObject* parent)
+CRepository::CRepository(const QString& sRootPath, QObject* parent, bool bSilent, bool bDebug)
     : CObject(parent)
     , m_bOk(false)
+    , m_bSilent(bSilent)
+    , m_bDebug(bDebug)
     , m_pDatabase(new CDatabase(sRootPath, this))
     , m_pRemoteHostInfo(new CRemoteHostInfo(this))
-    , m_pCommitFunctions(new CCommitFunctions(m_pDatabase, this))
+    , m_pCommitFunctions(new CCommitFunctions(m_pDatabase, this, bSilent, bDebug))
     , m_eStatus(CEnums::eUnknown)
     , m_pCurrentBranch(nullptr)
     , m_pStagingCommit(nullptr)

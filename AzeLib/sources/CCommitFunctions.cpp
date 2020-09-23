@@ -13,9 +13,11 @@ namespace Aze {
 
 //-------------------------------------------------------------------------------------------------
 
-CCommitFunctions::CCommitFunctions(CDatabase* pDatabase, QObject* parent)
+CCommitFunctions::CCommitFunctions(CDatabase* pDatabase, QObject* parent, bool bSilent, bool bDebug)
     : QObject(parent)
     , m_pDatabase(pDatabase)
+    , m_bSilent(bSilent)
+    , m_bDebug(bDebug)
 {
 }
 
@@ -123,15 +125,18 @@ CCommit* CCommitFunctions::getCommonCommitChains(CCommit* pCommit1, CCommit* pCo
     pAncestors1.prepend(pCommit1->clone(this));
     pAncestors2.prepend(pCommit2->clone(this));
 
-//    OUT_DEBUG("--------------------");
-//    OUT_DEBUG("pAncestors1:");
-//    for (CCommit* pCommit : pAncestors1)
-//        OUT_DEBUG(QString("%1 %2").arg(pCommit->id()).arg(pCommit->message()));
-//    OUT_DEBUG("--------------------");
-//    OUT_DEBUG("pAncestors2:");
-//    for (CCommit* pCommit : pAncestors2)
-//        OUT_DEBUG(QString("%1 %2").arg(pCommit->id()).arg(pCommit->message()));
-//    OUT_DEBUG("--------------------");
+    if (m_bDebug)
+    {
+        OUT_DEBUG("--------------------");
+        OUT_DEBUG("pAncestors1:");
+        for (CCommit* pCommit : pAncestors1)
+            OUT_DEBUG(QString("%1 %2").arg(pCommit->shortId()).arg(pCommit->message()));
+        OUT_DEBUG("--------------------");
+        OUT_DEBUG("pAncestors2:");
+        for (CCommit* pCommit : pAncestors2)
+            OUT_DEBUG(QString("%1 %2").arg(pCommit->shortId()).arg(pCommit->message()));
+        OUT_DEBUG("--------------------");
+    }
 
     for (CCommit* pCommit1 : pAncestors1)
     {
@@ -157,7 +162,10 @@ CCommit* CCommitFunctions::getCommonCommitChains(CCommit* pCommit1, CCommit* pCo
     int iKey = commonAncestors.keys()[0];
     pAncestor = commonAncestors[iKey]->clone(owner);
 
-//    OUT_DEBUG(QString(CStrings::s_sTextCommonAncestor).arg(iKey).arg(pAncestor->message()));
+    if (m_bDebug)
+    {
+        OUT_DEBUG(QString(CStrings::s_sTextCommonAncestor).arg(iKey).arg(pAncestor->message()));
+    }
 
     // Populate the commit lists if required
     if (IS_NOT_NULL(lCommit1Chain))
@@ -193,18 +201,21 @@ CCommit* CCommitFunctions::getCommonCommitChains(CCommit* pCommit1, CCommit* pCo
     if (IS_NULL(lCommit2Chain))
         qDeleteAll(pAncestors2);
 
-//    if (IS_NOT_NULL(lCommit1Chain) && IS_NOT_NULL(lCommit2Chain))
-//    {
-//        OUT_DEBUG("--------------------");
-//        OUT_DEBUG("lCommit1Chain:");
-//        for (CCommit* pCommit : *lCommit1Chain)
-//            OUT_DEBUG(QString("%1 %2").arg(pCommit->shortId()).arg(pCommit->message()));
-//        OUT_DEBUG("--------------------");
-//        OUT_DEBUG("lCommit2Chain:");
-//        for (CCommit* pCommit : *lCommit2Chain)
-//            OUT_DEBUG(QString("%1 %2").arg(pCommit->shortId()).arg(pCommit->message()));
-//        OUT_DEBUG("--------------------");
-//    }
+    if (m_bDebug)
+    {
+        if (IS_NOT_NULL(lCommit1Chain) && IS_NOT_NULL(lCommit2Chain))
+        {
+            OUT_DEBUG("--------------------");
+            OUT_DEBUG("lCommit1Chain:");
+            for (CCommit* pCommit : *lCommit1Chain)
+                OUT_DEBUG(QString("%1 %2").arg(pCommit->shortId()).arg(pCommit->message()));
+            OUT_DEBUG("--------------------");
+            OUT_DEBUG("lCommit2Chain:");
+            for (CCommit* pCommit : *lCommit2Chain)
+                OUT_DEBUG(QString("%1 %2").arg(pCommit->shortId()).arg(pCommit->message()));
+            OUT_DEBUG("--------------------");
+        }
+    }
 
     return pAncestor;
 }
@@ -295,17 +306,20 @@ void CCommitFunctions::diffCommits(QString& sOutput, CCommit* pCommit1, CCommit*
 
 void CCommitFunctions::diffCommitLists(QString& sOutput, const QList<CCommit*>& lToList, const QList<CCommit*>& lFromList)
 {
-//    OUT_DEBUG("--------------------");
-//    OUT_DEBUG("To list:");
-//    for (CCommit* pCommit : lToList)
-//        OUT_DEBUG(QString("%1 %2").arg(pCommit->id()).arg(pCommit->message()));
+    if (m_bDebug)
+    {
+        OUT_DEBUG("--------------------");
+        OUT_DEBUG("To list:");
+        for (CCommit* pCommit : lToList)
+            OUT_DEBUG(QString("%1 %2").arg(pCommit->shortId()).arg(pCommit->message()));
 
-//    OUT_DEBUG("--------------------");
-//    OUT_DEBUG("From list:");
-//    for (CCommit* pCommit : lFromList)
-//        OUT_DEBUG(QString("%1 %2").arg(pCommit->id()).arg(pCommit->message()));
+        OUT_DEBUG("--------------------");
+        OUT_DEBUG("From list:");
+        for (CCommit* pCommit : lFromList)
+            OUT_DEBUG(QString("%1 %2").arg(pCommit->shortId()).arg(pCommit->message()));
 
-//    OUT_DEBUG("--------------------");
+        OUT_DEBUG("--------------------");
+    }
 
     for (int index = 1; index < lFromList.count(); index++)
     {
@@ -332,12 +346,18 @@ void CCommitFunctions::diffCommitLists(QString& sOutput, const QList<CCommit*>& 
                 QByteArray baContent1 = pCommit1->fileContent(m_pDatabase, sName);
                 QByteArray baContent2 = pCommit2->fileContent(m_pDatabase, sName);
 
-//                OUT_DEBUG(QString("X: %1").arg(QString(baContent1)));
-//                OUT_DEBUG(QString("Y: %1").arg(QString(baContent2)));
+                if (m_bDebug)
+                {
+                    OUT_DEBUG(QString("X: %1").arg(QString(baContent1)));
+                    OUT_DEBUG(QString("Y: %1").arg(QString(baContent2)));
+                }
 
                 QString sDiffText = CUtils::unifiedDiff(QString(baContent1), QString(baContent2));
 
-//                OUT_DEBUG(QString("Z: %1").arg(CUtils::printableUnifiedDiff(sDiffText)));
+                if (m_bDebug)
+                {
+                    OUT_DEBUG(QString("Z: %1").arg(CUtils::printableUnifiedDiff(sDiffText)));
+                }
 
                 if (not sDiffText.isEmpty())
                 {
@@ -383,7 +403,7 @@ void CCommitFunctions::diffText(QString& sOutput, const QString& sFileName, cons
 
 //-------------------------------------------------------------------------------------------------
 
-bool CCommitFunctions::applyDiff(const QString& sFullDiff, bool bSilent, bool bAddToStage, CCommit* pStagingCommit)
+bool CCommitFunctions::applyDiff(const QString& sFullDiff, bool bAddToStage, CCommit* pStagingCommit)
 {
     // Keep track of merged files
     QDictionary mProcessedFiles;
@@ -411,14 +431,17 @@ bool CCommitFunctions::applyDiff(const QString& sFullDiff, bool bSilent, bool bA
         QString sPreviousContent = CUtils::getTextFileContent(sFullSourceName);
         QString sNewContent = CUtils::applyUnifiedDiff(sPreviousContent, sFileDiff);
 
-//        OUT_DEBUG(QString("A: %1").arg(sPreviousContent));
-//        OUT_DEBUG(QString("B: %1").arg(CUtils::printableUnifiedDiff(sFileDiff)));
-//        OUT_DEBUG(QString("C: %1").arg(sNewContent));
-//        OUT_DEBUG("----------------------------------------");
+        if (m_bDebug)
+        {
+            OUT_DEBUG(QString("A: %1").arg(sPreviousContent));
+            OUT_DEBUG(QString("B: %1").arg(CUtils::printableUnifiedDiff(sFileDiff)));
+            OUT_DEBUG(QString("C: %1").arg(sNewContent));
+            OUT_DEBUG("----------------------------------------");
+        }
 
         if (sPreviousContent.isEmpty() && sNewContent.isEmpty())
         {
-            if (!bSilent)
+            if (not m_bSilent)
             {
                 OUT_ERROR(QString(CStrings::s_sTextCouldNotApplyPatch).arg(sFileName));
             }
@@ -450,7 +473,7 @@ bool CCommitFunctions::applyDiff(const QString& sFullDiff, bool bSilent, bool bA
         {
             if (not CUtils::moveFile(sFullSourceName, sFullTargetName))
             {
-                if (!bSilent)
+                if (not m_bSilent)
                 {
                     OUT_ERROR(QString("Could not move file %1.").arg(sFullSourceName));
                 }

@@ -39,6 +39,7 @@ public:
 
     Q_FAST_PROPERTY(bool, b, ok, Ok)
     Q_FAST_PROPERTY(bool, b, silent, Silent)
+    Q_FAST_PROPERTY(bool, b, debug, Debug)
     Q_FAST_PROPERTY(CDatabase*, p, database, Database)
     Q_FAST_PROPERTY(CRemoteHostInfo*, p, remoteHostInfo, RemoteHostInfo)
     Q_FAST_PROPERTY(CCommitFunctions*, p, commitFunctions, CommitFunctions)
@@ -61,7 +62,7 @@ public:
     //-------------------------------------------------------------------------------------------------
 
     //!
-    CRepository(const QString& sRootPath, QObject* parent = nullptr);
+    CRepository(const QString& sRootPath, QObject* parent = nullptr, bool bSilent = false, bool bDebug = false);
 
     //!
     ~CRepository();

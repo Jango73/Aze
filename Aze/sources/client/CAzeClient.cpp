@@ -26,7 +26,11 @@ CAzeClient::CAzeClient(int argc, char *argv[], QTextStream* pOutStream)
     : QCoreApplication(argc, argv)
     , m_tArguments(*this)
     , m_pOutStream(pOutStream)
-    , m_pRepository(new Aze::CRepository(QDir::currentPath(), this))
+    , m_pRepository(new Aze::CRepository(
+                        QDir::currentPath(), this,
+                        m_tArguments.m_tParser.isSet(m_tArguments.m_oSilent),
+                        m_tArguments.m_tParser.isSet(m_tArguments.m_oDebug)
+                        ))
     , m_pNetworkAccessManager(new QNetworkAccessManager(this))
     , m_bOutputStreamIsMine(false)
     , m_bNetworkAccessFinished(false)
@@ -56,8 +60,6 @@ CAzeClient::~CAzeClient()
 
 int CAzeClient::run()
 {
-    m_pRepository->setSilent(m_tArguments.m_tParser.isSet(m_tArguments.m_oSilent));
-
     switch (m_tArguments.m_eCommand)
     {
     case CConstants::eCommandNone:

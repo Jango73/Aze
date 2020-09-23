@@ -32,6 +32,7 @@ CAzeClientArguments::CAzeClientArguments(QCoreApplication& app)
     , m_oAllowFileDelete(QStringList() << "d" << CConstants::s_sSwitchAllowFileDelete, TRT("Allow Aze to delete files."))
     , m_oGraph(QStringList() << "g" << CConstants::s_sSwitchGraph, TRT("Show log as a graph."))
     , m_oSilent(QStringList() << CConstants::s_sSwitchSilent, TRT("Silent mode (no messages)."))
+    , m_oDebug(QStringList() << CConstants::s_sSwitchDebug, TRT("Debug mode (tons of messages)."))
     , m_eCommand(CConstants::eCommandNone)
 {
     CConstants::initCommandMap();
@@ -56,7 +57,8 @@ CAzeClientArguments::CAzeClientArguments(QCoreApplication& app)
                              m_oCount,
                              m_oAllowFileDelete,
                              m_oGraph,
-                             m_oSilent
+                             m_oSilent,
+                             m_oDebug
                          });
 
     // Finalize option array

@@ -124,7 +124,7 @@ bool CMergeCommand::execute()
     }
 
     // Apply the diff to the working directory
-    if (not m_pRepository->commitFunctions()->applyDiff(sDiff, m_pRepository->silent(), true, m_pRepository->stagingCommit()))
+    if (not m_pRepository->commitFunctions()->applyDiff(sDiff, true, m_pRepository->stagingCommit()))
     {
         m_pRepository->tellError(CStrings::s_sTextMergeFailed);
         return false;
