@@ -50,29 +50,26 @@ public:
     //!
     CCommit* getCommitAncestor(CCommit* pCommit, QObject* owner = nullptr, int iDelta = 1);
 
-    //!
-    QList<CCommit*> getCommitAncestorList(
-            CCommit* pCommit,
-            QObject* owner = nullptr,
+    //! Returns a list of pairs (distance, id) of ancestors of sCommitId
+    QList<QPair<int, QString>> getCommitAncestorList(
+            const QString& sCommitId,
             bool bStayOnBranch = true,
             int iMaxCount = 0,
-            QString sStopAtCommitId = ""
-            );
-
-    //! Returns the shortest path between two commits (if any)
-    QStringList getShortestCommitChain(
-            QString sCommit1,
-            QString sCommit2,
-            QObject* owner = nullptr
+            const QString& sStopAtCommitId = ""
             );
 
     //!
-    CCommit* getCommonCommitChains(
-            CCommit* pCommit1,
-            CCommit* pCommit2,
-            QObject* owner = nullptr,
-            QList<CCommit*>* lCommit1Chain = nullptr,
-            QList<CCommit*>* lCommit2Chain = nullptr
+    QStringList getShortestCommitChain(
+            const QString& sTipCommitId,
+            const QString& sAncestorCommitId
+            );
+
+    //!
+    QString getCommonCommitChains(
+            const QString& sCommitId1,
+            const QString& sCommitId2,
+            QStringList* lCommitChainIds1 = nullptr,
+            QStringList* lCommitChainIds2 = nullptr
             );
 
     //!
@@ -102,25 +99,21 @@ public:
 
     //!
     void getCommitAncestorListRecurse(
-            QList<CCommit*>& lCommitList,
-            int& iNextTag,
-            CCommit* pCommit,
-            QObject* owner = nullptr,
+            QList<QPair<int, QString>>& lCommitList,
+            const QString& sCommitId,
             int iDepth = 0,
             bool bStayOnBranch = true,
             int iGuard = 0,
-            int iTag = 0,
-            QString sStopAtCommitId = ""
+            const QString& sStopAtCommitId = ""
             );
 
     //!
     void getShortestCommitChainRecurse(
             QList<QStringList>& lCommitListList,
-            QStringList lCurrentCommitList,
-            QString pCommit,
-            QString sStopAtCommitId,
-            int iGuard,
-            QObject* owner = nullptr
+            const QStringList& lCurrentCommitList,
+            const QString& pCommit,
+            const QString& sStopAtCommitId,
+            int iGuard
             );
 };
 

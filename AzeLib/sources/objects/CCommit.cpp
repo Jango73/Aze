@@ -11,8 +11,6 @@ namespace Aze {
 CCommit::CCommit(QObject* parent)
     : CObject(parent)
     , m_bIsMerge(false)
-    , m_iDistance(0)
-    , m_iTag(0)
 {
     setDateToNow();
 }
@@ -37,9 +35,6 @@ CCommit* CCommit::clone(QObject* parent) const
     pResult->setParents(m_lParents);
     pResult->setUser(m_mUser);
     pResult->setFiles(m_mFiles);
-
-    pResult->setDistance(m_iDistance);
-    pResult->setTag(m_iTag);
 
     return pResult;
 }
@@ -259,6 +254,20 @@ CCommit* CCommit::fromId(CDatabase* pDatabase, QString sCommitId, QObject* paren
 {
     QString sCommitFileName = pDatabase->composeCommitFileName(sCommitId);
     return fromFile(sCommitFileName, parent, sCommitId);
+}
+
+//-------------------------------------------------------------------------------------------------
+
+QList<CCommit*> CCommit::fromIdList(CDatabase* pDatabase, const QStringList& sCommitIdList, QObject* parent)
+{
+    QList<CCommit*> lCommits;
+
+    for (QString sCommitId : sCommitIdList)
+    {
+        lCommits << fromId(pDatabase, sCommitId, parent);
+    }
+
+    return lCommits;
 }
 
 //-------------------------------------------------------------------------------------------------

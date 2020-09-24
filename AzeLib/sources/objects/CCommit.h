@@ -44,10 +44,6 @@ public:
     // This list will be filled only by calling readParents
     Q_FAST_PROPERTY(QList<CCommit*>, l, parentCommits, ParentCommits)
 
-    // For internal use
-    Q_FAST_PROPERTY(int, i, distance, Distance)
-    Q_FAST_PROPERTY(int, i, tag, Tag)
-
 public:
 
     //-------------------------------------------------------------------------------------------------
@@ -111,6 +107,9 @@ public:
 
     //!
     static CCommit* fromId(CDatabase* pDatabase, QString sCommitId, QObject* parent);
+
+    //!
+    static QList<CCommit*> fromIdList(CDatabase* pDatabase, const QStringList& sCommitIdList, QObject* parent);
 
     //!
     static QList<CCommit*> parentList(CDatabase* pDatabase, const CCommit* pCommit, QObject* parent);
