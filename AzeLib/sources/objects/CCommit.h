@@ -46,6 +46,7 @@ public:
 
     // For internal use
     Q_FAST_PROPERTY(int, i, distance, Distance)
+    Q_FAST_PROPERTY(int, i, tag, Tag)
 
 public:
 
@@ -109,7 +110,13 @@ public:
     static CCommit* fromFile(const QString& sFileName, QObject* parent, QString sCommitId);
 
     //!
+    static CCommit* fromId(CDatabase* pDatabase, QString sCommitId, QObject* parent);
+
+    //!
     static QList<CCommit*> parentList(CDatabase* pDatabase, const CCommit* pCommit, QObject* parent);
+
+    //!
+    static QStringList parentIds(CDatabase* pDatabase, const QString& sCommitId);
 };
 
 }

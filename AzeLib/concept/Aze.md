@@ -158,7 +158,7 @@ Work on B and C.
 
 ### Step 5
 Merge B on A.
-Common ancestor of MA5 and CB5 is CB3.
+Common ancestors of MA5 and CB5 is CB3.
 
 ```
     Branch A root                                                                   Branch A tip
@@ -176,7 +176,7 @@ Common ancestor of MA5 and CB5 is CB3.
 
 ### Step 6
 Merge A on C.
-Common ancestor of CC3 and MA6 is CC2.
+Common ancestors of CC3 and MA6 are multiple: CC2, CB3, CA2...
 
 ```
     Branch A root                                                                   Branch A tip

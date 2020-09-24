@@ -64,20 +64,37 @@ CCommit* CCommitFunctions::getCommitAncestor(CCommit* pCommit, QObject* owner, i
 
 //-------------------------------------------------------------------------------------------------
 
-QList<CCommit*> CCommitFunctions::getCommitAncestorList(CCommit* pCommit, QObject* owner, bool bStayOnBranch, int iMaxCount, QString sStopAtCommitId)
+QList<CCommit*> CCommitFunctions::getCommitAncestorList(
+        CCommit* pCommit,
+        QObject* owner,
+        bool bStayOnBranch,
+        int iMaxCount,
+        QString sStopAtCommitId
+        )
 {
     int iGuard = iMaxCount == 0 ? 999999 : iMaxCount;
-    int iDepth = 0;
+    int iDepth = 1;
+    int iNextTag = 0;
     QList<CCommit*> lReturnValue;
 
-    getCommitAncestorListRecurse(lReturnValue, pCommit, owner, iDepth, bStayOnBranch, iGuard, sStopAtCommitId);
+    getCommitAncestorListRecurse(lReturnValue, iNextTag, pCommit, owner, iDepth, bStayOnBranch, iGuard, iNextTag, sStopAtCommitId);
 
     return lReturnValue;
 }
 
 //-------------------------------------------------------------------------------------------------
 
-void CCommitFunctions::getCommitAncestorListRecurse(QList<CCommit*>& lCommitList, CCommit* pCommit, QObject* owner, int iDepth, bool bStayOnBranch, int iGuard, QString sStopAtCommitId)
+void CCommitFunctions::getCommitAncestorListRecurse(
+        QList<CCommit*>& lCommitList,
+        int& iNextTag,
+        CCommit* pCommit,
+        QObject* owner,
+        int iDepth,
+        bool bStayOnBranch,
+        int iGuard,
+        int iTag,
+        QString sStopAtCommitId
+        )
 {
     if (iGuard <= 0)
         return;
@@ -93,22 +110,160 @@ void CCommitFunctions::getCommitAncestorListRecurse(QList<CCommit*>& lCommitList
             if (lParents[0]->id() != sStopAtCommitId)
             {
                 lParents[0]->setDistance(iDepth);
+                lParents[0]->setTag(iTag);
                 lCommitList << lParents[0];
-                getCommitAncestorListRecurse(lCommitList, lParents[0], owner, iDepth + 1, bStayOnBranch, iGuard - 1, sStopAtCommitId);
+
+                getCommitAncestorListRecurse(
+                            lCommitList,
+                            iNextTag,
+                            lParents[0],
+                        owner,
+                        iDepth + 1,
+                        bStayOnBranch,
+                        iGuard - 1,
+                        iTag,
+                        sStopAtCommitId
+                        );
             }
         }
     }
     else
     {
+        int iParentIndex = 0;
+
         for (CCommit* pParent : lParents)
         {
             if (pParent->id() != sStopAtCommitId)
             {
+                if (iParentIndex > 0)
+                    iNextTag++;
+
                 pParent->setDistance(iDepth);
+                pParent->setTag(iNextTag);
                 lCommitList << pParent;
-                getCommitAncestorListRecurse(lCommitList, pParent, owner, iDepth + 1, bStayOnBranch, iGuard - 1, sStopAtCommitId);
+
+                getCommitAncestorListRecurse(
+                            lCommitList,
+                            iNextTag,
+                            pParent,
+                            owner,
+                            iDepth + 1,
+                            bStayOnBranch,
+                            iGuard - 1,
+                            iNextTag,
+                            sStopAtCommitId
+                            );
+            }
+
+            iParentIndex++;
+        }
+    }
+}
+
+//-------------------------------------------------------------------------------------------------
+
+QStringList CCommitFunctions::getShortestCommitChain(
+        QString sCommit1,
+        QString sCommit2,
+        QObject* owner
+        )
+{
+    if (sCommit1 != sCommit2)
+    {
+        QList<QStringList> lCommitList;
+
+        lCommitList << QStringList();
+        lCommitList.last() << sCommit1;
+
+        getShortestCommitChainRecurse(
+                    lCommitList,
+                    lCommitList.last(),
+                    sCommit1,
+                    sCommit2,
+                    999999,
+                    owner
+                    );
+
+        for (int index = 0; index < lCommitList.count(); index++)
+        {
+            if (not lCommitList[index].contains(sCommit2))
+            {
+                lCommitList.removeAt(index);
+                index--;
             }
         }
+
+        if (m_bDebug)
+        {
+            OUT_DEBUG("----------------------------------------");
+            OUT_DEBUG(QString("%1").arg(lCommitList.count()));
+            for (QStringList lSomeCommits : lCommitList)
+            {
+                OUT_DEBUG("--------------------");
+                OUT_DEBUG(QString("%1").arg(lSomeCommits.count()));
+                for (QString pSomeCommit : lSomeCommits)
+                {
+                    OUT_DEBUG(QString("%1").arg(pSomeCommit));
+                }
+            }
+        }
+
+        if (lCommitList.count() == 1)
+            return lCommitList[0];
+
+        if (lCommitList.count() > 1)
+        {
+            QStringList* lReturnedList = &(lCommitList[0]);
+
+            for (int index = 1; index < lCommitList.count(); index++)
+            {
+                if (lCommitList[index].count() < lReturnedList->count())
+                {
+                    lReturnedList = &(lCommitList[index]);
+                }
+            }
+
+            return *lReturnedList;
+        }
+    }
+
+    return QStringList();
+}
+
+//-------------------------------------------------------------------------------------------------
+
+void CCommitFunctions::getShortestCommitChainRecurse(
+        QList<QStringList>& lCommitListList,
+        QStringList lCurrentCommitList,
+        QString pCommit,
+        QString sStopAtCommitId,
+        int iGuard,
+        QObject* owner
+        )
+{
+    if (iGuard <= 0)
+        return;
+
+    if (pCommit == sStopAtCommitId)
+        return;
+
+    QStringList lParents = CCommit::parentIds(m_pDatabase, pCommit);
+
+    for (QString pParent : lParents)
+    {
+        QStringList lNewList = lCurrentCommitList;
+        lNewList << pParent;
+
+        getShortestCommitChainRecurse(
+            lCommitListList,
+            lNewList,
+            pParent,
+            sStopAtCommitId,
+            iGuard - 1,
+            owner
+            );
+
+        lCommitListList << lNewList;
     }
 }
 
@@ -116,10 +271,9 @@ void CCommitFunctions::getCommitAncestorListRecurse(QList<CCommit*>& lCommitList
 
 CCommit* CCommitFunctions::getCommonCommitChains(CCommit* pCommit1, CCommit* pCommit2, QObject* owner, QList<CCommit*>* lCommit1Chain, QList<CCommit*>* lCommit2Chain)
 {
-    CCommit* pAncestor = nullptr;
     QList<CCommit*> lAncestors1 = getCommitAncestorList(pCommit1, owner, false);
     QList<CCommit*> lAncestors2 = getCommitAncestorList(pCommit2, owner, false);
-    QMap<int, CCommit*> commonAncestors;
+    QMap<int, QPair<CCommit*, CCommit*>> commonAncestors;
 
     // Add commits themselves to lists
     lAncestors1.prepend(pCommit1->clone(this));
@@ -130,27 +284,25 @@ CCommit* CCommitFunctions::getCommonCommitChains(CCommit* pCommit1, CCommit* pCo
         OUT_DEBUG("--------------------");
         OUT_DEBUG("pAncestors1:");
         for (CCommit* pCommit : lAncestors1)
-            OUT_DEBUG(QString("%1 %2").arg(pCommit->shortId()).arg(pCommit->message()));
+            OUT_DEBUG(QString("%1 %2 (tag %3)").arg(pCommit->shortId()).arg(pCommit->message()).arg(pCommit->tag()));
         OUT_DEBUG("--------------------");
         OUT_DEBUG("pAncestors2:");
         for (CCommit* pCommit : lAncestors2)
-            OUT_DEBUG(QString("%1 %2").arg(pCommit->shortId()).arg(pCommit->message()));
+            OUT_DEBUG(QString("%1 %2 (tag %3)").arg(pCommit->shortId()).arg(pCommit->message()).arg(pCommit->tag()));
         OUT_DEBUG("--------------------");
     }
 
     // Find the common ancestor
-    for (CCommit* pCommit1 : lAncestors1)
+    for (CCommit* pSubCommit1 : lAncestors1)
     {
-        QString sId = pCommit1->id();
+        QString sId = pSubCommit1->id();
 
-        for (CCommit* pCommit2 : lAncestors2)
+        for (CCommit* pSubCommit2 : lAncestors2)
         {
-            if (sId == pCommit2->id())
+            if (sId == pSubCommit2->id())
             {
-                int iDistance = pCommit1->distance() + pCommit2->distance();
-
-                if (not commonAncestors.contains(iDistance))
-                    commonAncestors[iDistance] = pCommit1;
+                int iDistance = pSubCommit1->distance() + pSubCommit2->distance();
+                commonAncestors[iDistance] = { pSubCommit1, pSubCommit2 };
             }
         }
     }
@@ -161,45 +313,67 @@ CCommit* CCommitFunctions::getCommonCommitChains(CCommit* pCommit1, CCommit* pCo
 
     // Clone the common ancestor
     int iKey = commonAncestors.keys()[0];
-    pAncestor = commonAncestors[iKey]->clone(owner);
+    CCommit* pAncestor1 = commonAncestors[iKey].first->clone(owner);
+    CCommit* pAncestor2 = commonAncestors[iKey].second;
 
     if (m_bDebug)
     {
-        OUT_DEBUG(QString(CStrings::s_sTextCommonAncestor).arg(iKey).arg(pAncestor->message()));
+        for (int iTempKey : commonAncestors.keys())
+        {
+            OUT_DEBUG(QString("Common ancestor at %1: %2 (tag %3)")
+                      .arg(iTempKey)
+                      .arg(commonAncestors[iTempKey].first->message())
+                      .arg(commonAncestors[iTempKey].first->tag())
+                      );
+        }
     }
 
     // Populate the commit lists if required
     if (IS_NOT_NULL(lCommit1Chain))
     {
-        for (CCommit* pCommit : lAncestors1)
-        {
-            (*lCommit1Chain) << pCommit;
+        QStringList shortestCommitList1 = getShortestCommitChain(pCommit1->id(), pAncestor1->id(), owner);
 
-            if (pCommit->id() == pAncestor->id())
-                break;
+        for (QString sCommitId : shortestCommitList1)
+        {
+            (*lCommit1Chain) << CCommit::fromId(m_pDatabase, sCommitId, owner);
         }
+
+//        for (CCommit* pCommit : lAncestors1)
+//        {
+//            (*lCommit1Chain) << pCommit;
+
+//            if (pCommit->id() == pAncestor1->id())
+//                break;
+//        }
 
         reverseList(*lCommit1Chain);
     }
 
     if (IS_NOT_NULL(lCommit2Chain))
     {
-        for (CCommit* pCommit : lAncestors2)
-        {
-            (*lCommit2Chain) << pCommit;
+        QStringList shortestCommitList2 = getShortestCommitChain(pCommit2->id(), pAncestor2->id(), owner);
 
-            if (pCommit->id() == pAncestor->id())
-                break;
+        for (QString sCommitId : shortestCommitList2)
+        {
+            (*lCommit2Chain) << CCommit::fromId(m_pDatabase, sCommitId, owner);
         }
+
+//        for (CCommit* pCommit : lAncestors2)
+//        {
+//            (*lCommit2Chain) << pCommit;
+
+//            if (pCommit->id() == pAncestor2->id())
+//                break;
+//        }
 
         reverseList(*lCommit2Chain);
     }
 
     // Delete the ancestor lists if required
-    if (IS_NULL(lCommit1Chain))
+    // if (IS_NULL(lCommit1Chain))
         qDeleteAll(lAncestors1);
 
-    if (IS_NULL(lCommit2Chain))
+    // if (IS_NULL(lCommit2Chain))
         qDeleteAll(lAncestors2);
 
     if (m_bDebug)
@@ -209,16 +383,16 @@ CCommit* CCommitFunctions::getCommonCommitChains(CCommit* pCommit1, CCommit* pCo
             OUT_DEBUG("--------------------");
             OUT_DEBUG("lCommit1Chain:");
             for (CCommit* pCommit : *lCommit1Chain)
-                OUT_DEBUG(QString("%1 %2").arg(pCommit->shortId()).arg(pCommit->message()));
+                OUT_DEBUG(QString("%1 %2 (tag %3)").arg(pCommit->shortId()).arg(pCommit->message()).arg(pCommit->tag()));
             OUT_DEBUG("--------------------");
             OUT_DEBUG("lCommit2Chain:");
             for (CCommit* pCommit : *lCommit2Chain)
-                OUT_DEBUG(QString("%1 %2").arg(pCommit->shortId()).arg(pCommit->message()));
+                OUT_DEBUG(QString("%1 %2 (tag %3)").arg(pCommit->shortId()).arg(pCommit->message()).arg(pCommit->tag()));
             OUT_DEBUG("--------------------");
         }
     }
 
-    return pAncestor;
+    return pAncestor1;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -312,12 +486,12 @@ void CCommitFunctions::diffCommitLists(QString& sOutput, const QList<CCommit*>& 
         OUT_DEBUG("--------------------");
         OUT_DEBUG("To list:");
         for (CCommit* pCommit : lToList)
-            OUT_DEBUG(QString("%1 %2").arg(pCommit->shortId()).arg(pCommit->message()));
+            OUT_DEBUG(QString("%1 %2 (tag %3)").arg(pCommit->shortId()).arg(pCommit->message()).arg(pCommit->tag()));
 
         OUT_DEBUG("--------------------");
         OUT_DEBUG("From list:");
         for (CCommit* pCommit : lFromList)
-            OUT_DEBUG(QString("%1 %2").arg(pCommit->shortId()).arg(pCommit->message()));
+            OUT_DEBUG(QString("%1 %2 (tag %3)").arg(pCommit->shortId()).arg(pCommit->message()).arg(pCommit->tag()));
 
         OUT_DEBUG("--------------------");
     }

@@ -59,15 +59,11 @@ public:
             QString sStopAtCommitId = ""
             );
 
-    //!
-    void getCommitAncestorListRecurse(
-            QList<CCommit*>& lCommitList,
-            CCommit* pCommit,
-            QObject* owner = nullptr,
-            int iDepth = 0,
-            bool bStayOnBranch = true,
-            int iGuard = 0,
-            QString sStopAtCommitId = ""
+    //! Returns the shortest path between two commits (if any)
+    QStringList getShortestCommitChain(
+            QString sCommit1,
+            QString sCommit2,
+            QObject* owner = nullptr
             );
 
     //!
@@ -99,6 +95,33 @@ public:
 
     //! Applies a diff to the working directory
     bool applyDiff(const QString& sFullDiff, bool bAddToStage = false, CCommit* pStagingCommit = nullptr);
+
+    //-------------------------------------------------------------------------------------------------
+    // Protected control methods
+    //-------------------------------------------------------------------------------------------------
+
+    //!
+    void getCommitAncestorListRecurse(
+            QList<CCommit*>& lCommitList,
+            int& iNextTag,
+            CCommit* pCommit,
+            QObject* owner = nullptr,
+            int iDepth = 0,
+            bool bStayOnBranch = true,
+            int iGuard = 0,
+            int iTag = 0,
+            QString sStopAtCommitId = ""
+            );
+
+    //!
+    void getShortestCommitChainRecurse(
+            QList<QStringList>& lCommitListList,
+            QStringList lCurrentCommitList,
+            QString pCommit,
+            QString sStopAtCommitId,
+            int iGuard,
+            QObject* owner = nullptr
+            );
 };
 
 }
