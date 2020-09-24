@@ -50,20 +50,25 @@ CXMLNode CRemoteRepository::getPushRequest()
     xRequest.attributes()[CStrings::s_sParamRequest] = CStrings::s_sParamPush;
     xRequest.attributes()[CStrings::s_sParamBranch] = m_pLocalRepository->currentBranchName();
 
-    QList<CCommit*> lCommitList = m_pLocalRepository->commitFunctions()->getCommitAncestorList(
-                m_pLocalRepository->tipCommit(),
-                this,
+    QList<QPair<int, QString>> lCommitList = m_pLocalRepository->commitFunctions()->getCommitAncestorList(
+                m_pLocalRepository->tipCommit()->id(),
                 true,
-                0,
-                nullptr
+                0
                 );
 
-    reverseList(lCommitList);
+    QStringList lCommmitIds;
+    for (QPair<int, QString> pCommit : lCommitList)
+        lCommmitIds << pCommit.second;
+
+    QList<CCommit*> lCommits  =CCommit::fromIdList(m_pLocalRepository->database(), lCommmitIds, nullptr);
+    reverseList(lCommits);
 
     xRequest << m_pLocalRepository->tipCommit()->toNode();
 
-    for (CCommit* pCommit : lCommitList)
+    for (CCommit* pCommit : lCommits)
         xRequest << pCommit->toNode();
+
+    qDeleteAll(lCommits);
 
     return xRequest;
 }

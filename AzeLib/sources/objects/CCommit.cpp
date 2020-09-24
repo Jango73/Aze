@@ -11,7 +11,6 @@ namespace Aze {
 CCommit::CCommit(QObject* parent)
     : CObject(parent)
     , m_bIsMerge(false)
-    , m_iDistance(0)
 {
     setDateToNow();
 }
@@ -65,7 +64,7 @@ CXMLNode CCommit::toNode() const
     QStringList lFiles;
     for (QString sId : m_mFiles.keys())
     {
-        QString sText = CUtils::packIdAndFile(sId, m_mFiles[sId]);;
+        QString sText = CUtils::packIdAndFile(sId, m_mFiles[sId]);
         lFiles << sText;
     }
     xFiles.setValue(lFiles.join(CStrings::s_sNewLine));
@@ -251,6 +250,28 @@ CCommit* CCommit::fromFile(const QString& sFileName, QObject* parent, QString sC
 
 //-------------------------------------------------------------------------------------------------
 
+CCommit* CCommit::fromId(CDatabase* pDatabase, QString sCommitId, QObject* parent)
+{
+    QString sCommitFileName = pDatabase->composeCommitFileName(sCommitId);
+    return fromFile(sCommitFileName, parent, sCommitId);
+}
+
+//-------------------------------------------------------------------------------------------------
+
+QList<CCommit*> CCommit::fromIdList(CDatabase* pDatabase, const QStringList& sCommitIdList, QObject* parent)
+{
+    QList<CCommit*> lCommits;
+
+    for (QString sCommitId : sCommitIdList)
+    {
+        lCommits << fromId(pDatabase, sCommitId, parent);
+    }
+
+    return lCommits;
+}
+
+//-------------------------------------------------------------------------------------------------
+
 QList<CCommit*> CCommit::parentList(CDatabase* pDatabase, const CCommit* pCommit, QObject* parent)
 {
     QList<CCommit*> lParents;
@@ -258,10 +279,19 @@ QList<CCommit*> CCommit::parentList(CDatabase* pDatabase, const CCommit* pCommit
     for (QString sParentId : pCommit->parents())
     {
         QString sCommitFileName = pDatabase->composeCommitFileName(sParentId);
-
         lParents << CCommit::fromFile(sCommitFileName, parent, sParentId);
     }
 
+    return lParents;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+QStringList CCommit::parentIds(CDatabase* pDatabase, const QString& sCommitId)
+{
+    CCommit* pCommit = fromNode(CXMLNode::load(pDatabase->composeCommitFileName(sCommitId)), nullptr, sCommitId);
+    QStringList lParents = pCommit->parents();
+    delete pCommit;
     return lParents;
 }
 

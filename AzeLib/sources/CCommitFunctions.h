@@ -50,33 +50,26 @@ public:
     //!
     CCommit* getCommitAncestor(CCommit* pCommit, QObject* owner = nullptr, int iDelta = 1);
 
-    //!
-    QList<CCommit*> getCommitAncestorList(
-            CCommit* pCommit,
-            QObject* owner = nullptr,
+    //! Returns a list of pairs (distance, id) of ancestors of sCommitId
+    QList<QPair<int, QString>> getCommitAncestorList(
+            const QString& sCommitId,
             bool bStayOnBranch = true,
             int iMaxCount = 0,
-            QString sStopAtCommitId = ""
+            const QString& sStopAtCommitId = ""
             );
 
     //!
-    void getCommitAncestorListRecurse(
-            QList<CCommit*>& lCommitList,
-            CCommit* pCommit,
-            QObject* owner = nullptr,
-            int iDepth = 0,
-            bool bStayOnBranch = true,
-            int iGuard = 0,
-            QString sStopAtCommitId = ""
+    QStringList getShortestCommitChain(
+            const QString& sTipCommitId,
+            const QString& sAncestorCommitId
             );
 
     //!
-    CCommit* getCommonCommitChains(
-            CCommit* pCommit1,
-            CCommit* pCommit2,
-            QObject* owner = nullptr,
-            QList<CCommit*>* lCommit1Chain = nullptr,
-            QList<CCommit*>* lCommit2Chain = nullptr
+    QString getCommonCommitChains(
+            const QString& sCommitId1,
+            const QString& sCommitId2,
+            QStringList* lCommitChainIds1 = nullptr,
+            QStringList* lCommitChainIds2 = nullptr
             );
 
     //!
@@ -99,6 +92,29 @@ public:
 
     //! Applies a diff to the working directory
     bool applyDiff(const QString& sFullDiff, bool bAddToStage = false, CCommit* pStagingCommit = nullptr);
+
+    //-------------------------------------------------------------------------------------------------
+    // Protected control methods
+    //-------------------------------------------------------------------------------------------------
+
+    //!
+    void getCommitAncestorListRecurse(
+            QList<QPair<int, QString>>& lCommitList,
+            const QString& sCommitId,
+            int iDepth = 0,
+            bool bStayOnBranch = true,
+            int iGuard = 0,
+            const QString& sStopAtCommitId = ""
+            );
+
+    //!
+    void getShortestCommitChainRecurse(
+            QList<QStringList>& lCommitListList,
+            QStringList lCurrentCommitList,
+            const QString& pCommit,
+            const QString& sStopAtCommitId,
+            int iGuard
+            );
 };
 
 }

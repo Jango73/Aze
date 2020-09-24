@@ -21,8 +21,8 @@ CMergeCommand::CMergeCommand(CRepository* pRepository, const QString& sFromBranc
 
 bool CMergeCommand::execute()
 {
-    QList<CCommit*> lFromCommitChain;
-    QList<CCommit*> lToCommitChain;
+    QStringList lFromCommitChainIds;
+    QStringList lToCommitChainIds;
 
     // Check validity of arguments
     if (m_sFromBranch.isEmpty())
@@ -63,7 +63,7 @@ bool CMergeCommand::execute()
         return false;
     }
 
-    //
+    // Check if trying to merge a commit on itself (yes it may happen...)
     if (pFromBranch->tipCommitId() == m_pRepository->tipCommit()->id())
     {
         m_pRepository->tellError(CStrings::s_sTextCannotMergeSameCommits);
@@ -72,7 +72,7 @@ bool CMergeCommand::execute()
 
     CCommit* pFromTipCommit = m_pRepository->database()->getCommit(pFromBranch->tipCommitId(), this);
 
-    // Check presence of 'from' branch tip commit
+    // Check validity of 'from' branch tip commit
     if (IS_NULL(pFromTipCommit))
     {
         m_pRepository->tellError(CStrings::s_sTextNoSuchBranch);
@@ -81,12 +81,11 @@ bool CMergeCommand::execute()
 
     // Get the common commit chains of the two commits
     // Lists are from root to tip
-    CCommit* pCommonAncestor = m_pRepository->commitFunctions()->getCommonCommitChains(
-                pToTipCommit,
-                pFromTipCommit,
-                this,
-                &lToCommitChain,
-                &lFromCommitChain
+    QString pCommonAncestor = m_pRepository->commitFunctions()->getCommonCommitChains(
+                pToTipCommit->id(),
+                pFromTipCommit->id(),
+                &lToCommitChainIds,
+                &lFromCommitChainIds
                 );
 
     // Check presence of common ancestor
@@ -97,7 +96,7 @@ bool CMergeCommand::execute()
     }
 
     // Check relevancy of 'from' commit
-    if (pCommonAncestor == pFromTipCommit)
+    if (pCommonAncestor == pFromTipCommit->id())
     {
         m_pRepository->tellError(CStrings::s_sTextNoCommitToMerge);
         return false;
@@ -112,9 +111,15 @@ bool CMergeCommand::execute()
         return false;
     }
 
+    QList<CCommit*> lToCommitChain = CCommit::fromIdList(m_pRepository->database(), lToCommitChainIds, nullptr);
+    QList<CCommit*> lFromCommitChain = CCommit::fromIdList(m_pRepository->database(), lFromCommitChainIds, nullptr);
+
     // Get a diff between the two commits
     QString sDiff;
     m_pRepository->commitFunctions()->diffCommitLists(sDiff, lToCommitChain, lFromCommitChain);
+
+    qDeleteAll(lToCommitChain);
+    qDeleteAll(lFromCommitChain);
 
     // Bail out if diff is empty
     if (sDiff.isEmpty())

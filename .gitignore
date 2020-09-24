@@ -44,3 +44,5 @@ CMakeLists.txt.user*
 
 # Project specific
 *.bak
+AzeMergeTestFolder
+GitMergeTestFolder
