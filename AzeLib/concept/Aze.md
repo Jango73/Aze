@@ -192,6 +192,59 @@ Common ancestors of CC3 and MA6 are multiple: CC2, CB3, CA2...
                                     Branch C root                                           Branch C tip
 ```
 
+### Step 7
+Work on B and C.
+
+```
+    Branch A root                                                                   Branch A tip
+    v                                                                               v
+  [CA1] - [CA2] - [CA3] ----------------- [MA4] --------- [MA5] ----------------- [MA6] ----\
+            |                               |               |                       |       |
+            \---- [CB1] - [CB2] - [CB3] ----/-------------- | --- [CB4] - [CB5] ----/------ | --- [CB6]
+            ^                       |                       |               ^               |
+            Branch B root           |                       |               Branch B tip    |
+                                    |                       |                               |
+                                    \---- [CC1] - [CC2] ----/ --- [CC3] ----------------- [MC4] - [CC5]
+                                    ^                                                       ^
+                                    Branch C root                                           Branch C tip
+```
+
+### Step 8
+Merge B on A.
+Common ancestor of CB6 and MA6 is CB5.
+
+```
+    Branch A root                                                                                           Branch A tip
+    v                                                                                                       v
+  [CA1] - [CA2] - [CA3] ----------------- [MA4] --------- [MA5] ----------------- [MA6] ----\-------------[MA7]
+            |                               |               |                       |       |               |
+            \---- [CB1] - [CB2] - [CB3] ----/-------------- | --- [CB4] - [CB5] ----/------ | --- [CB6] ----/
+            ^                       |                       |                               |       ^
+            Branch B root           |                       |                               |       Branch B tip
+                                    |                       |                               |
+                                    \---- [CC1] - [CC2] ----/ --- [CC3] ----------------- [MC4] - [CC5]
+                                    ^                                                               ^
+                                    Branch C root                                                   Branch C tip
+```
+
+### Step 9
+Merge C on A.
+Common ancestors of CC5 and MA7 are MA6, CB5...
+
+```
+    Branch A root                                                                                                   Branch A tip
+    v                                                                                                               v
+  [CA1] - [CA2] - [CA3] ----------------- [MA4] --------- [MA5] ----------------- [MA6] ----\-------------[MA7] - [MA8]
+            |                               |               |                       |       |               |       |
+            \---- [CB1] - [CB2] - [CB3] ----/-------------- | --- [CB4] - [CB5] ----/------ | --- [CB6] ----/       |
+            ^                       |                       |                               |       ^               |
+            Branch B root           |                       |                               |       Branch B tip    |
+                                    |                       |                               |                       |
+                                    \---- [CC1] - [CC2] ----/ --- [CC3] ----------------- [MC4] - [CC5] ------------/
+                                    ^                                                               ^
+                                    Branch C root                                                   Branch C tip
+```
+
 ## Workflow samples
 
 ```

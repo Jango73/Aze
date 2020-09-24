@@ -210,7 +210,7 @@ QStringList CCommitFunctions::getShortestCommitChain(const QString& sTipCommitId
 
 void CCommitFunctions::getShortestCommitChainRecurse(
         QList<QStringList>& lCommitListList,
-        const QStringList& lCurrentCommitList,
+        QStringList lCurrentCommitList,
         const QString& sCommiId,
         const QString& sStopAtCommitId,
         int iGuard
@@ -222,17 +222,17 @@ void CCommitFunctions::getShortestCommitChainRecurse(
     if (sCommiId == sStopAtCommitId)
         return;
 
-    QStringList lParents = CCommit::parentIds(m_pDatabase, sCommiId);
+    QStringList lParentIds = CCommit::parentIds(m_pDatabase, sCommiId);
 
-    for (QString pParent : lParents)
+    for (QString sParentId : lParentIds)
     {
         QStringList lNewList = lCurrentCommitList;
-        lNewList << pParent;
+        lNewList << sParentId;
 
         getShortestCommitChainRecurse(
             lCommitListList,
             lNewList,
-            pParent,
+            sParentId,
             sStopAtCommitId,
             iGuard - 1
             );
@@ -467,15 +467,15 @@ void CCommitFunctions::diffCommitLists(QString& sOutput, const QList<CCommit*>& 
 
                 if (m_bDebug)
                 {
-                OUT_DEBUG(QString("X: %1").arg(QString(baContent1)));
-                OUT_DEBUG(QString("Y: %1").arg(QString(baContent2)));
+                    OUT_DEBUG(QString("X (%1): %2").arg(pCommit1->message()).arg(QString(baContent1)));
+                    OUT_DEBUG(QString("Y (%1): %2").arg(pCommit2->message()).arg(QString(baContent2)));
                 }
 
                 QString sDiffText = CUtils::unifiedDiff(QString(baContent1), QString(baContent2));
 
                 if (m_bDebug)
                 {
-                OUT_DEBUG(QString("Z: %1").arg(CUtils::printableUnifiedDiff(sDiffText)));
+                    OUT_DEBUG(QString("Diff: %1").arg(CUtils::printableUnifiedDiff(sDiffText)));
                 }
 
                 if (not sDiffText.isEmpty())

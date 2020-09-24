@@ -110,7 +110,7 @@ public:
     //!
     void getShortestCommitChainRecurse(
             QList<QStringList>& lCommitListList,
-            const QStringList& lCurrentCommitList,
+            QStringList lCurrentCommitList,
             const QString& pCommit,
             const QString& sStopAtCommitId,
             int iGuard
