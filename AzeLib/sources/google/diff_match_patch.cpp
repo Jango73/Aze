@@ -184,7 +184,7 @@ QList<Diff> diff_match_patch::diff_main(const QString &text1,
   if (Diff_Timeout <= 0) {
     deadline = std::numeric_limits<clock_t>::max();
   } else {
-    deadline = clock() + (clock_t)(Diff_Timeout * CLOCKS_PER_SEC);
+    deadline = clock() + clock_t(Diff_Timeout * CLOCKS_PER_SEC);
   }
   return diff_main(text1, text2, checklines, deadline);
 }
@@ -327,8 +327,8 @@ QList<Diff> diff_match_patch::diff_lineMode(QString text1, QString text2,
   QString text_insert = "";
 
   QMutableListIterator<Diff> pointer(diffs);
-  Diff *thisDiff = pointer.hasNext() ? &pointer.next() : NULL;
-  while (thisDiff != NULL) {
+  Diff *thisDiff = pointer.hasNext() ? &pointer.next() : nullptr;
+  while (thisDiff != nullptr) {
     switch (thisDiff->operation) {
       case INSERT:
         count_insert++;
@@ -358,7 +358,7 @@ QList<Diff> diff_match_patch::diff_lineMode(QString text1, QString text2,
         text_insert = "";
         break;
     }
-    thisDiff = pointer.hasNext() ? &pointer.next() : NULL;
+    thisDiff = pointer.hasNext() ? &pointer.next() : nullptr;
   }
   diffs.removeLast();  // Remove the dummy entry at the end.
 
@@ -374,8 +374,8 @@ QList<Diff> diff_match_patch::diff_bisect(const QString &text1,
   const int max_d = (text1_length + text2_length + 1) / 2;
   const int v_offset = max_d;
   const int v_length = 2 * max_d;
-  int *v1 = new int[v_length];
-  int *v2 = new int[v_length];
+  int *v1 = new int[size_t(v_length)];
+  int *v2 = new int[size_t(v_length)];
   for (int x = 0; x < v_length; x++) {
     v1[x] = -1;
     v2[x] = -1;
@@ -724,8 +724,8 @@ void diff_match_patch::diff_cleanupSemantic(QList<Diff> &diffs) {
   // Number of characters that changed after the equality.
   int length_insertions2 = 0;
   int length_deletions2 = 0;
-  Diff *thisDiff = pointer.hasNext() ? &pointer.next() : NULL;
-  while (thisDiff != NULL) {
+  Diff *thisDiff = pointer.hasNext() ? &pointer.next() : nullptr;
+  while (thisDiff != nullptr) {
     if (thisDiff->operation == EQUAL) {
       // Equality found.
       equalities.push(*thisDiff);
@@ -786,7 +786,7 @@ void diff_match_patch::diff_cleanupSemantic(QList<Diff> &diffs) {
         changes = true;
       }
     }
-    thisDiff = pointer.hasNext() ? &pointer.next() : NULL;
+    thisDiff = pointer.hasNext() ? &pointer.next() : nullptr;
   }
 
   // Normalize the diff.
@@ -802,15 +802,15 @@ void diff_match_patch::diff_cleanupSemantic(QList<Diff> &diffs) {
   //   -> <ins>def</ins>xxx<del>abc</del>
   // Only extract an overlap if it is as big as the edit ahead or behind it.
   pointer.toFront();
-  Diff *prevDiff = NULL;
-  thisDiff = NULL;
+  Diff *prevDiff = nullptr;
+  thisDiff = nullptr;
   if (pointer.hasNext()) {
     prevDiff = &pointer.next();
     if (pointer.hasNext()) {
       thisDiff = &pointer.next();
     }
   }
-  while (thisDiff != NULL) {
+  while (thisDiff != nullptr) {
     if (prevDiff->operation == DELETE &&
         thisDiff->operation == INSERT) {
       QString deletion = prevDiff->text;
@@ -845,10 +845,10 @@ void diff_match_patch::diff_cleanupSemantic(QList<Diff> &diffs) {
           // no need to step past the new element.
         }
       }
-      thisDiff = pointer.hasNext() ? &pointer.next() : NULL;
+      thisDiff = pointer.hasNext() ? &pointer.next() : nullptr;
     }
     prevDiff = thisDiff;
-    thisDiff = pointer.hasNext() ? &pointer.next() : NULL;
+    thisDiff = pointer.hasNext() ? &pointer.next() : nullptr;
   }
 }
 
@@ -861,12 +861,12 @@ void diff_match_patch::diff_cleanupSemanticLossless(QList<Diff> &diffs) {
   QString bestEquality1, bestEdit, bestEquality2;
   // Create a new iterator at the start.
   QMutableListIterator<Diff> pointer(diffs);
-  Diff *prevDiff = pointer.hasNext() ? &pointer.next() : NULL;
-  Diff *thisDiff = pointer.hasNext() ? &pointer.next() : NULL;
-  Diff *nextDiff = pointer.hasNext() ? &pointer.next() : NULL;
+  Diff *prevDiff = pointer.hasNext() ? &pointer.next() : nullptr;
+  Diff *thisDiff = pointer.hasNext() ? &pointer.next() : nullptr;
+  Diff *nextDiff = pointer.hasNext() ? &pointer.next() : nullptr;
 
   // Intentionally ignore the first and last element (don't need checking).
-  while (nextDiff != NULL) {
+  while (nextDiff != nullptr) {
     if (prevDiff->operation == EQUAL &&
       nextDiff->operation == EQUAL) {
         // This is a single edit surrounded by equalities.
@@ -929,7 +929,7 @@ void diff_match_patch::diff_cleanupSemanticLossless(QList<Diff> &diffs) {
     }
     prevDiff = thisDiff;
     thisDiff = nextDiff;
-    nextDiff = pointer.hasNext() ? &pointer.next() : NULL;
+    nextDiff = pointer.hasNext() ? &pointer.next() : nullptr;
   }
 }
 
@@ -999,10 +999,10 @@ void diff_match_patch::diff_cleanupEfficiency(QList<Diff> &diffs) {
   // Is there a deletion operation after the last equality.
   bool post_del = false;
 
-  Diff *thisDiff = pointer.hasNext() ? &pointer.next() : NULL;
+  Diff *thisDiff = pointer.hasNext() ? &pointer.next() : nullptr;
   Diff *safeDiff = thisDiff;
 
-  while (thisDiff != NULL) {
+  while (thisDiff != nullptr) {
     if (thisDiff->operation == EQUAL) {
       // Equality found.
       if (thisDiff->text.length() < Diff_EditCost && (post_ins || post_del)) {
@@ -1081,7 +1081,7 @@ void diff_match_patch::diff_cleanupEfficiency(QList<Diff> &diffs) {
         changes = true;
       }
     }
-    thisDiff = pointer.hasNext() ? &pointer.next() : NULL;
+    thisDiff = pointer.hasNext() ? &pointer.next() : nullptr;
   }
 
   if (changes) {
@@ -1097,20 +1097,20 @@ void diff_match_patch::diff_cleanupMerge(QList<Diff> &diffs) {
   int count_insert = 0;
   QString text_delete = "";
   QString text_insert = "";
-  Diff *thisDiff = pointer.hasNext() ? &pointer.next() : NULL;
-  Diff *prevEqual = NULL;
+  Diff *thisDiff = pointer.hasNext() ? &pointer.next() : nullptr;
+  Diff *prevEqual = nullptr;
   int commonlength;
-  while (thisDiff != NULL) {
+  while (thisDiff != nullptr) {
     switch (thisDiff->operation) {
       case INSERT:
         count_insert++;
         text_insert += thisDiff->text;
-        prevEqual = NULL;
+        prevEqual = nullptr;
         break;
       case DELETE:
         count_delete++;
         text_delete += thisDiff->text;
-        prevEqual = NULL;
+        prevEqual = nullptr;
         break;
       case EQUAL:
         if (count_delete + count_insert > 1) {
@@ -1163,9 +1163,9 @@ void diff_match_patch::diff_cleanupMerge(QList<Diff> &diffs) {
             pointer.insert(Diff(INSERT, text_insert));
           }
           // Step forward to the equality.
-          thisDiff = pointer.hasNext() ? &pointer.next() : NULL;
+          thisDiff = pointer.hasNext() ? &pointer.next() : nullptr;
 
-        } else if (prevEqual != NULL) {
+        } else if (prevEqual != nullptr) {
           // Merge this equality with the previous one.
           prevEqual->text += thisDiff->text;
           pointer.remove();
@@ -1179,7 +1179,7 @@ void diff_match_patch::diff_cleanupMerge(QList<Diff> &diffs) {
         prevEqual = thisDiff;
         break;
       }
-      thisDiff = pointer.hasNext() ? &pointer.next() : NULL;
+      thisDiff = pointer.hasNext() ? &pointer.next() : nullptr;
   }
   if (diffs.back().text.isEmpty()) {
     diffs.removeLast();  // Remove the dummy entry at the end.
@@ -1194,12 +1194,12 @@ void diff_match_patch::diff_cleanupMerge(QList<Diff> &diffs) {
   // Create a new iterator at the start.
   // (As opposed to walking the current one back.)
   pointer.toFront();
-  Diff *prevDiff = pointer.hasNext() ? &pointer.next() : NULL;
-  thisDiff = pointer.hasNext() ? &pointer.next() : NULL;
-  Diff *nextDiff = pointer.hasNext() ? &pointer.next() : NULL;
+  Diff *prevDiff = pointer.hasNext() ? &pointer.next() : nullptr;
+  thisDiff = pointer.hasNext() ? &pointer.next() : nullptr;
+  Diff *nextDiff = pointer.hasNext() ? &pointer.next() : nullptr;
 
   // Intentionally ignore the first and last element (don't need checking).
-  while (nextDiff != NULL) {
+  while (nextDiff != nullptr) {
     if (prevDiff->operation == EQUAL &&
       nextDiff->operation == EQUAL) {
         // This is a single edit surrounded by equalities.
@@ -1215,7 +1215,7 @@ void diff_match_patch::diff_cleanupMerge(QList<Diff> &diffs) {
           pointer.remove();  // Delete prevDiff.
           pointer.next();  // Walk past thisDiff.
           thisDiff = &pointer.next();  // Walk past nextDiff.
-          nextDiff = pointer.hasNext() ? &pointer.next() : NULL;
+          nextDiff = pointer.hasNext() ? &pointer.next() : nullptr;
           changes = true;
         } else if (thisDiff->text.startsWith(nextDiff->text)) {
           // Shift the edit over the next equality.
@@ -1223,13 +1223,13 @@ void diff_match_patch::diff_cleanupMerge(QList<Diff> &diffs) {
           thisDiff->text = safeMid(thisDiff->text, nextDiff->text.length())
               + nextDiff->text;
           pointer.remove(); // Delete nextDiff.
-          nextDiff = pointer.hasNext() ? &pointer.next() : NULL;
+          nextDiff = pointer.hasNext() ? &pointer.next() : nullptr;
           changes = true;
         }
     }
     prevDiff = thisDiff;
     thisDiff = nextDiff;
-    nextDiff = pointer.hasNext() ? &pointer.next() : NULL;
+    nextDiff = pointer.hasNext() ? &pointer.next() : nullptr;
   }
   // If shifts were made, the diff needs reordering and another shift sweep.
   if (changes) {
@@ -1457,7 +1457,7 @@ int diff_match_patch::match_bitap(const QString &text, const QString &pattern,
   QMap<QChar, int> s = match_alphabet(pattern);
 
   // Highest score beyond which we give up.
-  double score_threshold = Match_Threshold;
+  double score_threshold = double(Match_Threshold);
   // Is there a nearby exact match? (speedup)
   int best_loc = text.indexOf(pattern, loc);
   if (best_loc != -1) {
@@ -1477,8 +1477,8 @@ int diff_match_patch::match_bitap(const QString &text, const QString &pattern,
 
   int bin_min, bin_mid;
   int bin_max = pattern.length() + text.length();
-  int *rd;
-  int *last_rd = NULL;
+  int *rd = nullptr;
+  int *last_rd = nullptr;
   for (int d = 0; d < pattern.length(); d++) {
     // Scan for the best match; each iteration allows for one more error.
     // Run a binary search to determine how far from 'loc' we can stray at
@@ -1499,7 +1499,7 @@ int diff_match_patch::match_bitap(const QString &text, const QString &pattern,
     int start = std::max(1, loc - bin_mid + 1);
     int finish = std::min(loc + bin_mid, text.length()) + pattern.length();
 
-    rd = new int[finish + 2];
+    rd = new int[size_t(finish + 2)];
     rd[finish + 1] = (1 << d) - 1;
     for (int j = finish; j >= start; j--) {
       int charMatch;
@@ -1555,9 +1555,9 @@ double diff_match_patch::match_bitapScore(int e, int x, int loc,
   const int proximity = qAbs(loc - x);
   if (Match_Distance == 0) {
     // Dodge divide by zero error.
-    return proximity == 0 ? accuracy : 1.0;
+    return proximity == 0 ? double(accuracy) : 1.0;
   }
-  return accuracy + (proximity / static_cast<float> (Match_Distance));
+  return double(accuracy + (proximity / static_cast<float> (Match_Distance)));
 }
 
 
@@ -1863,7 +1863,7 @@ QString diff_match_patch::patch_addPadding(QList<Patch> &patches) {
   short paddingLength = Patch_Margin;
   QString nullPadding = "";
   for (short x = 1; x <= paddingLength; x++) {
-    nullPadding += QChar((ushort)x);
+    nullPadding += QChar(ushort(x));
   }
 
   // Bump all the patches forward.

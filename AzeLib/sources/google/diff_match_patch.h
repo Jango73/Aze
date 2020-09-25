@@ -67,6 +67,10 @@ enum Operation {
   DELETE, INSERT, EQUAL
 };
 
+#include <QString>
+#include <QVector>
+#include <QList>
+#include <QMap>
 
 /**
 * Class representing one diff operation.
