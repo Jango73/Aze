@@ -245,6 +245,57 @@ Common ancestors of CC5 and MA7 are MA6, CB5...
                                     Branch C root                                                   Branch C tip
 ```
 
+### Step 10
+Merge A on B.
+
+```
+    Branch A root                                                                                                   Branch A tip
+    v                                                                                                               v
+  [CA1] - [CA2] - [CA3] ----------------- [MA4] --------- [MA5] ----------------- [MA6] ----\-------------[MA7] - [MA8] ---\
+            |                               |               |                       |       |               |       |      |
+            \---- [CB1] - [CB2] - [CB3] ----/-------------- | --- [CB4] - [CB5] ----/------ | --- [CB6] ----/------ | ---[MB7]
+            ^                       |                       |                               |                       |      ^
+            Branch B root           |                       |                               |                       |      Branch B tip
+                                    |                       |                               |                       |
+                                    \---- [CC1] - [CC2] ----/ --- [CC3] ----------------- [MC4] - [CC5] ------------/
+                                    ^                                                               ^
+                                    Branch C root                                                   Branch C tip
+```
+
+### Step 11
+Work on B and C at same spot.
+
+```
+    Branch A root                                                                                                   Branch A tip
+    v                                                                                                               v
+  [CA1] - [CA2] - [CA3] ----------------- [MA4] --------- [MA5] ----------------- [MA6] ----\-------------[MA7] - [MA8] ---\
+            |                               |               |                       |       |               |       |      |
+            \---- [CB1] - [CB2] - [CB3] ----/-------------- | --- [CB4] - [CB5] ----/------ | --- [CB6] ----/------ | ---[MB7] - [CB8]
+            ^                       |                       |                               |                       |              ^
+            Branch B root           |                       |                               |                       |              Branch B tip
+                                    |                       |                               |                       |
+                                    \---- [CC1] - [CC2] ----/ --- [CC3] ----------------- [MC4] - [CC5] ------------/-- [CC6]
+                                    ^                                                                                     ^
+                                    Branch C root                                                                         Branch C tip
+```
+
+### Step 12
+Merge C on B. Conflict.
+
+```
+    Branch A root                                                                                                   Branch A tip
+    v                                                                                                               v
+  [CA1] - [CA2] - [CA3] ----------------- [MA4] --------- [MA5] ----------------- [MA6] ----\-------------[MA7] - [MA8] ---\                        Branch B tip
+            |                               |               |                       |       |               |       |      |                        v
+            \---- [CB1] - [CB2] - [CB3] ----/-------------- | --- [CB4] - [CB5] ----/------ | --- [CB6] ----/------ | ---[MB7] - [CB8] ---------- [MB9]
+            ^                       |                       |                               |                       |                               |
+            Branch B root           |                       |                               |                       |                               |
+                                    |                       |                               |                       |                               |
+                                    \---- [CC1] - [CC2] ----/ --- [CC3] ----------------- [MC4] - [CC5] ------------/--- [CC6] ---------------------/
+                                    ^                                                                                     ^
+                                    Branch C root                                                                         Branch C tip
+```
+
 ## Workflow samples
 
 ```

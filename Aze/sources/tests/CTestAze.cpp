@@ -275,17 +275,21 @@ void CTestAze::testMerge()
     QString sCB4("CA1\nCA2\n--\nCB1\nCB2\nCB3\nCB4\n--");
     QString sCB5("CA1\nCA2\n--\nCB1\nCB2\nCB3\nCB4\nCB5\n--");
     QString sCB6("CA1\nCA2\n--\nCB1\nCB2\nCB3\nCB4\nCB5\nCB6\n--");
+    QString sCB8("CA1\nCA2\nCA3\n--\nCX1\nCX2\nCB3\nCB4\nCB5\nCB6\n--\nCC1\nCC2\nCC3\nCC4");
 
     QString sCC1("CA1\nCA2\n--\nCB1\nCB2\nCB3\n--\nCC1");
     QString sCC2("CA1\nCA2\n--\nCB1\nCB2\nCB3\n--\nCC1\nCC2");
     QString sCC3("CA1\nCA2\n--\nCB1\nCB2\nCB3\n--\nCC1\nCC2\nCC3");
     QString sCC5("CA1\nCA2\nCA3\n--\nCB1\nCB2\nCB3\nCB4\nCB5\n--\nCC1\nCC2\nCC3\nCC4");
+    QString sCC6("CA1\nCA2\nCA3\n--\nCZ1\nCZ2\nCB3\nCB4\nCB5\n--\nCC1\nCC2\nCC3\nCC4");
 
     QString sMA4("CA1\nCA2\nCA3\n--\nCB1\nCB2\nCB3\n--");
     QString sMA5("CA1\nCA2\nCA3\n--\nCB1\nCB2\nCB3\n--\nCC1\nCC2");
     QString sMA6("CA1\nCA2\nCA3\n--\nCB1\nCB2\nCB3\nCB4\nCB5\n--\nCC1\nCC2");
     QString sMA7("CA1\nCA2\nCA3\n--\nCB1\nCB2\nCB3\nCB4\nCB5\nCB6\n--\nCC1\nCC2");
     QString sMA8("CA1\nCA2\nCA3\n--\nCB1\nCB2\nCB3\nCB4\nCB5\nCB6\n--\nCC1\nCC2\nCC3\nCC4");
+
+    QString sMB7("CA1\nCA2\nCA3\n--\nCB1\nCB2\nCB3\nCB4\nCB5\nCB6\n--\nCC1\nCC2\nCC3\nCC4");
 
     QString sMC4("CA1\nCA2\nCA3\n--\nCB1\nCB2\nCB3\nCB4\nCB5\n--\nCC1\nCC2\nCC3");
 
@@ -452,6 +456,39 @@ void CTestAze::testMerge()
     // Check merged file contents
     QVERIFY(readFile(sFile1Path, sFile1Content));
     QVERIFY(sFile1Content == sMA8);
+
+    // Switch to branch B
+    SWITCH_TO_BRANCH("B");
+
+    // Merge A on B
+    MERGE_BRANCH(sResult, "A");
+    QVERIFY(sResult == "0");
+    COMMIT("MB7");
+
+    // Check merged file contents
+    QVERIFY(readFile(sFile1Path, sFile1Content));
+    QVERIFY(sFile1Content == sMB7);
+
+    // CB8
+    QVERIFY(createFile(sFile1Path, sCB8));
+    STAGE(sFile1Path);
+    COMMIT("CB8");
+
+    // Switch to branch C
+    SWITCH_TO_BRANCH("C");
+
+    // CC6
+    QVERIFY(createFile(sFile1Path, sCC6));
+    STAGE(sFile1Path);
+    COMMIT("CC6");
+
+    // Switch to branch B
+    SWITCH_TO_BRANCH("B");
+
+    // Merge C on B : conflict
+    MERGE_BRANCH(sResult, "C");
+    QVERIFY(sResult == "0");
+    //COMMIT("MB7");
 }
 
 //-------------------------------------------------------------------------------------------------
