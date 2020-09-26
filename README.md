@@ -7,9 +7,8 @@ A versioning system (just for pleasure of coding)
 * QtCreator 4.9.1
 * qt-plus - Copyright myself
   * https://github.com/Jango73/qt-plus
-* Diff Match and Patch - Copyright 2018 The diff-match-patch Authors.
-  * Qt/C++ port by mikeslemmer@gmail.com (Mike Slemmer)
-  * Original : https://github.com/google/diff-match-patch
+* Diff template library - Copyright (c) 2015 Tatsuhiko Kubo <cubicdaiya@gmail.com>
+  * https://github.com/cubicdaiya/dtl
 
 ## Building
 
