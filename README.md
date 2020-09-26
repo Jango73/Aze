@@ -37,7 +37,8 @@ A versioning system (just for pleasure of coding)
 * Show commit log
 * Show commit graph => needs rework to show commits in correct order
 * Diff between two commits
-* Merge a branch onto the current one
+* Merge a branch onto the current one => WIP
+  * Need to handle merge conflicts
 * Save stash
 * Pop stash
 
