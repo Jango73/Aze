@@ -13,13 +13,17 @@
 #include "../common/CConstants.h"
 #include "CTestAze.h"
 
+// For debug info on tests, swap next two lines
+#define SILENT_OR_DEBUG CConstants::s_sSwitchSilent
+// #define SILENT_OR_DEBUG CConstants::s_sSwitchDebug
+
 //-------------------------------------------------------------------------------------------------
 // Some macros to hide boiler plate code
 
 #define COMMIT(a) \
 exec({ \
     CConstants::s_sSwitchCommit, \
-    QString("--%1").arg(CConstants::s_sSwitchSilent), \
+    QString("--%1").arg(SILENT_OR_DEBUG), \
     QString("--%1").arg(CConstants::s_sSwitchMessage), \
     a, \
     QString("--%1").arg(CConstants::s_sSwitchAuthor), \
@@ -29,7 +33,7 @@ exec({ \
 #define STAGE(...) \
     exec({ \
     CConstants::s_sSwitchStage, \
-    QString("--%1").arg(CConstants::s_sSwitchSilent), \
+    QString("--%1").arg(SILENT_OR_DEBUG), \
     __VA_ARGS__ \
     })
 
@@ -41,21 +45,35 @@ exec({ \
 #define CREATE_BRANCH(a) \
     exec({ \
     CConstants::s_sSwitchCreateBranch, \
-    QString("--%1").arg(CConstants::s_sSwitchSilent), a \
+    QString("--%1").arg(SILENT_OR_DEBUG), a \
     })
 
 #define SWITCH_TO_BRANCH(a) \
     exec({ \
     CConstants::s_sSwitchSwitchToBranch, \
     QString("--%1").arg(CConstants::s_sSwitchAllowFileDelete), \
-    QString("--%1").arg(CConstants::s_sSwitchSilent), a \
+    QString("--%1").arg(SILENT_OR_DEBUG), a \
     })
 
 #define MERGE_BRANCH(a, b) \
     a = exec({ \
     CConstants::s_sSwitchMerge, \
-    QString("--%1").arg(CConstants::s_sSwitchSilent), \
+    QString("--%1").arg(SILENT_OR_DEBUG), \
     b \
+    })
+
+#define SAVE_STASH(...) \
+    exec({ \
+    CConstants::s_sSwitchSaveStash, \
+    QString("--%1").arg(SILENT_OR_DEBUG), \
+    __VA_ARGS__ \
+    })
+
+#define POP_STASH(...) \
+    exec({ \
+    CConstants::s_sSwitchPopStash, \
+    QString("--%1").arg(SILENT_OR_DEBUG), \
+    __VA_ARGS__ \
     })
 
 //-------------------------------------------------------------------------------------------------
@@ -253,7 +271,7 @@ void CTestAze::checkCommitDiff(const QString& sDiff, QVector<CTransformedFile> v
 
 //-------------------------------------------------------------------------------------------------
 
-void CTestAze::testMerge()
+void CTestAze::testAll()
 {
     clearRepository();
 
@@ -268,6 +286,8 @@ void CTestAze::testMerge()
     QString sCA1("CA1\n--");
     QString sCA2("CA1\nCA2\n--");
     QString sCA3("CA1\nCA2\nCA3\n--");
+
+    QString sCA1Stash("CA1\nzz\n--");
 
     QString sCB1("CA1\nCA2\n--\nCB1\n--");
     QString sCB2("CA1\nCA2\n--\nCB1\nCB2\n--");
@@ -293,7 +313,7 @@ void CTestAze::testMerge()
 
     QString sMC4("CA1\nCA2\nCA3\n--\nCB1\nCB2\nCB3\nCB4\nCB5\n--\nCC1\nCC2\nCC3");
 
-    QString sDA2("diff --aze Files/MergeTest.txt Files/MergeTest.txt\n--- Files/MergeTest.txt\n+++ Files/MergeTest.txt\n@@ -1,8 +1,12 @@\n CA1\n+.CA2\n --*--\n");
+    QString sDA2("diff --aze Files/MergeTest.txt Files/MergeTest.txt\n--- Files/MergeTest.txt\n+++ Files/MergeTest.txt\n@@ -1,2 +1,3 @@\n CA1\n+CA2\n --\n");
 
     QDir rootDir(m_sRootPath);
     QVERIFY(rootDir.mkdir(m_sFilesFolderName));
@@ -307,13 +327,26 @@ void CTestAze::testMerge()
     STAGE(sFile1Path);
     COMMIT("CA1");
 
+    // Stash
+    QVERIFY(createFile(sFile1Path, sCA1Stash));
+
+    SAVE_STASH();
+    QVERIFY(readFile(sFile1Path, sFile1Content));
+    QVERIFY(sFile1Content == sCA1);
+
+    POP_STASH();
+    QVERIFY(readFile(sFile1Path, sFile1Content));
+    QVERIFY(sFile1Content == sCA1Stash);
+
+    QVERIFY(createFile(sFile1Path, sCA1));
+
     // CA2
     QVERIFY(createFile(sFile1Path, sCA2));
     STAGE(sFile1Path);
     COMMIT("CA2");
 
     DIFF_LAST(sDiffContent);
-    // QVERIFY(sDiffContent == sDA2);
+    QVERIFY(sDiffContent == sDA2);
 
     // Create branch B
     CREATE_BRANCH("B");
@@ -487,7 +520,7 @@ void CTestAze::testMerge()
 
     // Merge C on B : conflict
     MERGE_BRANCH(sResult, "C");
-    QVERIFY(sResult == "0");
+    QVERIFY(sResult == QString::number(CConstants::s_iError_CouldNotMerge));
     //COMMIT("MB7");
 }
 

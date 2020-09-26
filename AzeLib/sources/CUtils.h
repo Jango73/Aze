@@ -100,6 +100,9 @@ public:
     //! Applies a unified diff to sText (using diff-match-patch)
     static QString applyUnifiedDiff(const QString& sText, const QString& sDiff);
 
+    //! Applies a unified diff to sText (using diff-match-patch)
+    static QString applyThreeWayMerge(const QString& sBase, const QString& sText1, const QString& sText2);
+
     //! Returns a printable version of sText
     static QString printableUnifiedDiff(const QString& sText);
 

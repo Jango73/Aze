@@ -20,7 +20,6 @@ HEADERS += \
     sources/CRepository.h \
     sources/CStrings.h \
     sources/CUtils.h \
-    sources/google/diff_match_patch.h \
     sources/objects/CBranch.h \
     sources/objects/CCommit.h \
     sources/objects/CDatabase.h \
@@ -49,7 +48,6 @@ SOURCES += \
     sources/CRepository.cpp \
     sources/CStrings.cpp \
     sources/CUtils.cpp \
-    sources/google/diff_match_patch.cpp \
     sources/objects/CBranch.cpp \
     sources/objects/CCommit.cpp \
     sources/objects/CDatabase.cpp \

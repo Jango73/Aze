@@ -11,13 +11,35 @@
 #include <QDataStream>
 #include <QCryptographicHash>
 
-// diff-match-patch
-// https://github.com/google/diff-match-patch
-#include "diff_match_patch.h"
+// Std
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <time.h>
+#include <sys/stat.h>
+
+// dtl
+#include "dtl/dtl/dtl.hpp"
 
 // Application
 #include "CUtils.h"
 #include "CStrings.h"
+
+using namespace dtl;
+using std::vector;
+using std::string;
+using std::pair;
+using std::ostream;
+using std::list;
+using std::for_each;
+using std::distance;
+using std::fill;
+using std::cout;
+using std::endl;
+using std::rotate;
+using std::swap;
+using std::max;
 
 namespace Aze {
 
@@ -275,28 +297,99 @@ QString CUtils::fileDiffHeader(const QString& sLeft, const QString& sRight)
 
 QString CUtils::unifiedDiff(const QString& sText1, const QString& sText2)
 {
-    diff_match_patch diff;
-    diff.Match_Threshold = s_fMatchThreshold;
-    diff.Patch_DeleteThreshold = s_fMatchThreshold;
+    typedef std::string                    elem;
+    typedef std::vector<elem>              sequence;
+    typedef std::pair<elem, dtl::elemInfo> sesElem;
 
-    return diff.patch_toText(diff.patch_make(sText1, sText2));
+    sequence          ALines, BLines;
+    std::stringstream outputStream;
+
+    QStringList sLines1 = sText1.split("\n");
+    QStringList sLines2 = sText2.split("\n");
+
+    for (QString sLine : sLines1)
+        ALines.push_back(sLine.toStdString());
+
+    for (QString sLine : sLines2)
+        BLines.push_back(sLine.toStdString());
+
+    dtl::Diff< elem > diff(ALines, BLines);
+    diff.compose();
+
+    dtl::uniHunk< sesElem > hunk;
+
+    diff.composeUnifiedHunks();
+    diff.printUnifiedFormat(outputStream);
+
+    QString sReturnValue = QString::fromStdString(outputStream.str());
+    return sReturnValue;
 }
 
 //-------------------------------------------------------------------------------------------------
 
 QString CUtils::applyUnifiedDiff(const QString& sText, const QString& sDiff)
 {
-    diff_match_patch diff;
-    diff.Match_Threshold = s_fMatchThreshold;
-    diff.Patch_DeleteThreshold = s_fMatchThreshold;
+    typedef std::string         elem;
+    typedef std::vector< elem > sequence;
+    dtl_typedefs(elem, sequence)
 
-    QList<Patch> patches = diff.patch_fromText(sDiff);
-    QPair<QString, QVector<bool> > returnValue = diff.patch_apply(patches, sText);
+    sequence          ALines;
+    std::stringstream inputStream;
+    std::stringstream outputStream;
 
-    if (returnValue.second.contains(false))
+    QStringList sLines1 = sText.split("\n");
+
+    for (QString sLine : sLines1)
+        ALines.push_back(sLine.toStdString());
+
+    inputStream.str(sDiff.toStdString());
+
+    const Ses<elem> ses = Diff<elem, sequence>::composeSesFromStream<std::stringstream>(inputStream);
+
+    sesElemVec    sesSeq = ses.getSequence();
+    elemList      seqLst(ALines.begin(), ALines.end());
+    elemList_iter lstIt  = seqLst.begin();
+    for (sesElemVec_iter sesIt = sesSeq.begin(); sesIt != sesSeq.end(); ++sesIt)
+    {
+        switch (sesIt->second.type)
+        {
+        case dtl::SES_ADD :
+            seqLst.insert(lstIt, sesIt->first);
+            break;
+        case dtl::SES_DELETE :
+            lstIt = seqLst.erase(lstIt);
+            break;
+        case dtl::SES_COMMON :
+            ++lstIt;
+            break;
+        default :
+            // no through
+            break;
+        }
+    }
+    sequence patchedSeq(seqLst.begin(), seqLst.end());
+
+    QStringList lReturnValue;
+    QString sReturnValue;
+
+    for (elem line : patchedSeq)
+        lReturnValue << QString::fromStdString(line);
+
+    return lReturnValue.join("\n");
+}
+
+//-------------------------------------------------------------------------------------------------
+
+QString CUtils::applyThreeWayMerge(const QString& sBase, const QString& sText1, const QString& sText2)
+{
+    dtl::Diff3<char, std::string> diff3(sText1.toStdString(), sBase.toStdString(), sText2.toStdString());
+    diff3.compose();
+
+    if (!diff3.merge())
+    {
         return s_sBadString;
-
-    return returnValue.first;
+    }
+    return QString::fromStdString(diff3.getMergedSequence());
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -326,8 +419,8 @@ QList<QPair<QString, QString> > CUtils::splitDiff(const QString& sFullDiff)
     QList<QPair<QString, QString> > mReturnValue;
 
     QRegExp tRegExp1(QString("%1\\s+[a-zA-Z0-9\\.\\/\\+-_]+\\s+[a-zA-Z0-9\\.\\/\\+-_]+\\s*\\r*\\n")
-                    .arg(CStrings::s_sDiffChunkHeader)
-                    );
+                     .arg(CStrings::s_sDiffChunkHeader)
+                     );
     QRegExp tRegExp2(QString("---\\s+([a-zA-Z0-9\\.\\/\\+-_]+)\\s*\\r*\\n"));
     QRegExp tRegExp3(QString("\\+\\+\\+\\s+([a-zA-Z0-9\\.\\/\\+-_]+)\\s*\\r*\\n"));
 

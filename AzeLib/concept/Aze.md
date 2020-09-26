@@ -80,6 +80,26 @@ Each object file holds data for a single file in the repository at a specific mo
 A single object file may be referenced by many commits.
 
 ## Branching and merging
+
+### Three-way merge
+
+Apply (B-A) and (C-A) to [ A ] in order to create [ D ].
+
+               [ A ]
+                 |
+                / \
+      (B-A)    /   \    (C-A)
+              /     \
+             /       \
+          [ B ]     [ C ]
+            \         /
+             \       /
+              \     /
+               \   /
+                \ /
+                 |
+               [ D ]
+
 In the following diagrams:
 * Labels beginning with a C refer to a standard commit
 * Labels beginning with a M refer to a merge commit

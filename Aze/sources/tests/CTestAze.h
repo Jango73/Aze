@@ -71,7 +71,7 @@ private:
 
 private slots:
 
-    void testMerge();
+    void testAll();
 
     void testHeavy();
 

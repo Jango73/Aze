@@ -21,6 +21,9 @@ CMergeCommand::CMergeCommand(CRepository* pRepository, const QString& sFromBranc
 
 bool CMergeCommand::execute()
 {
+    QStringList lFromCommitChainIds;
+    QStringList lToCommitChainIds;
+
     // Check validity of arguments
     if (m_sFromBranch.isEmpty())
     {
@@ -78,22 +81,22 @@ bool CMergeCommand::execute()
 
     // Get the common commit chains of the two commits
     // Lists are from root to tip
-    QString sCommonAncestorId = m_pRepository->commitFunctions()->getCommonCommitChains(
+    QString pCommonAncestor = m_pRepository->commitFunctions()->getCommonCommitChains(
                 pToTipCommit->id(),
                 pFromTipCommit->id(),
-                nullptr,
-                nullptr
+                &lToCommitChainIds,
+                &lFromCommitChainIds
                 );
 
     // Check presence of common ancestor
-    if (sCommonAncestorId.isEmpty())
+    if (IS_NULL(pCommonAncestor))
     {
         m_pRepository->tellError(CStrings::s_sTextNoCommonAncestor);
         return false;
     }
 
     // Check relevancy of 'from' commit
-    if (sCommonAncestorId == pFromTipCommit->id())
+    if (pCommonAncestor == pFromTipCommit->id())
     {
         m_pRepository->tellError(CStrings::s_sTextNoCommitToMerge);
         return false;
@@ -108,14 +111,25 @@ bool CMergeCommand::execute()
         return false;
     }
 
-    CCommit* pCommonAncestor = CCommit::fromId(m_pRepository->database(), sCommonAncestorId, this);
-    if (IS_NULL(pCommonAncestor))
+    QList<CCommit*> lToCommitChain = CCommit::fromIdList(m_pRepository->database(), lToCommitChainIds, nullptr);
+    QList<CCommit*> lFromCommitChain = CCommit::fromIdList(m_pRepository->database(), lFromCommitChainIds, nullptr);
+
+    // Get a diff between the two commits
+    QString sDiff;
+    m_pRepository->commitFunctions()->diffCommitLists(sDiff, lToCommitChain, lFromCommitChain);
+
+    qDeleteAll(lToCommitChain);
+    qDeleteAll(lFromCommitChain);
+
+    // Bail out if diff is empty
+    if (sDiff.isEmpty())
     {
-        m_pRepository->tellError(CStrings::s_sTextNoCommonAncestor);
+        m_pRepository->tellError("Diff is empty.");
         return false;
     }
 
-    if (not m_pRepository->commitFunctions()->threeWayMerge(pCommonAncestor, pFromTipCommit, pToTipCommit, true, m_pRepository->stagingCommit()))
+    // Apply the diff to the working directory
+    if (not m_pRepository->commitFunctions()->applyDiff(sDiff, true, m_pRepository->stagingCommit()))
     {
         m_pRepository->tellError(CStrings::s_sTextMergeFailed);
         return false;
