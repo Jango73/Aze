@@ -347,7 +347,7 @@ bool CUtils::applyUnifiedDiff(const QString& sText, const QString& sDiff, QStrin
 
     sesElemVec    sesSeq = ses.getSequence();
     elemList      seqLst(ALines.begin(), ALines.end());
-    elemList_iter lstIt  = seqLst.begin();
+    elemList_iter lstIt = seqLst.begin();
     for (sesElemVec_iter sesIt = sesSeq.begin(); sesIt != sesSeq.end(); ++sesIt)
     {
         switch (sesIt->second.type)

@@ -82,7 +82,7 @@ public:
     void addParent(const QString& sParentId);
 
     //!
-    bool addFile(CDatabase* pDatabase, QString sRelativeFileName, QString sId = "");
+    bool addFile(CDatabase* pDatabase, QString sRelativeFileName, QString sId = "", bool bForce = false);
 
     //!
     bool removeFile(QString sRelativeFileName);

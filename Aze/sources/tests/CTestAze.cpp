@@ -15,7 +15,7 @@
 
 // For debug info on tests, swap next two lines
 #define SILENT_OR_DEBUG CConstants::s_sSwitchSilent
-// #define SILENT_OR_DEBUG CConstants::s_sSwitchDebug
+//#define SILENT_OR_DEBUG CConstants::s_sSwitchDebug
 
 //-------------------------------------------------------------------------------------------------
 // Some macros to hide boiler plate code
@@ -527,7 +527,6 @@ void CTestAze::testAll()
 
     // Check merged file contents
     QVERIFY(readFile(sFile1Path, sFile1Content));
-    // QVERIFY(sFile1Content == sMB9);
     QVERIFY(QRegExp(sMB9).indexIn(sFile1Content) != -1);
 }
 

@@ -115,10 +115,7 @@ bool CMergeCommand::execute()
         return false;
     }
 
-    if (not m_pRepository->commitFunctions()->threeWayMerge(pCommonAncestor, pFromTipCommit, pToTipCommit, true, m_pRepository->stagingCommit()))
-    {
-        return false;
-    }
+    bool bMergeOK = m_pRepository->commitFunctions()->threeWayMerge(pCommonAncestor, pFromTipCommit, pToTipCommit, true, m_pRepository->stagingCommit());
 
     // Set merge information in staging commit
     // Only the 'from' commit is added as a parent here, the other will be added by commit command
@@ -131,7 +128,7 @@ bool CMergeCommand::execute()
                 .arg(m_pRepository->currentBranchName())
                 );
 
-    return true;
+    return bMergeOK;
 }
 
 //-------------------------------------------------------------------------------------------------

@@ -347,9 +347,12 @@ int CAzeClient::merge()
         return CConstants::s_iError_CouldNotMerge;
     }
 
-    ERROR_WHEN_FALSE(m_pRepository->merge(sBranchName), CConstants::s_iError_CouldNotMerge);
+    bool bMergeOK = m_pRepository->merge(sBranchName);
 
     ERROR_WHEN_FALSE(m_pRepository->writeStage(), CConstants::s_iError_CouldNotWriteStage);
+
+    if (not bMergeOK)
+        return CConstants::s_iError_CouldNotMerge;
 
     return CConstants::s_iError_None;
 }

@@ -622,48 +622,110 @@ bool CCommitFunctions::threeWayMerge(CCommit* pBaseCommit, CCommit* pFromTipComm
     diffCommits(sToDiff, pBaseCommit, pToTipCommit, QStringList(), 0, 0);
 
     // Bail out if diff is empty
-    if (sFromDiff.isEmpty())
+    if (sFromDiff.isEmpty() && sToDiff.isEmpty())
     {
         return false;
     }
 
     // Keep track of merged files
     QMap<QString, QPair<QString, bool>> mProcessedFiles;    // Maps IDs to relative file names
-    QStringList mMovedFiles;
+    QList<QPair<QString, QString>> mFromSideFiles;
+    QList<QPair<QString, QString>> mToSideFiles;
+    QStringList mBothSideFiles;
 
     // Get a list of diffs per file
     QList<QPair<QString, QString>> mFromFileDiffs = CUtils::splitDiff(sFromDiff);
     QList<QPair<QString, QString>> mToFileDiffs = CUtils::splitDiff(sToDiff);
 
-    // Iterate through from files
+    // Find files that need a 3-way merge
     for (QPair<QString, QString> tFromPair : mFromFileDiffs)
     {
+        for (QPair<QString, QString> tToPair : mToFileDiffs)
+            if (tToPair.first == tFromPair.first)
+            {
+                mBothSideFiles << tFromPair.first;
+                break;
+            }
+    }
+
+    for (QPair<QString, QString> tFromPair : mFromFileDiffs)
+    {
+        if (not mBothSideFiles.contains(tFromPair.first))
+        {
+            mFromSideFiles << tFromPair;
+        }
+    }
+
+    for (QPair<QString, QString> tToPair : mToFileDiffs)
+    {
+        if (not mBothSideFiles.contains(tToPair.first))
+        {
+            mToSideFiles << tToPair;
+        }
+    }
+
+    // Iterate through files that are modified in the from commit
+    for (QPair<QString, QString> pFile : mFromSideFiles)
+    {
+        // Read the file, apply the diff and write back
+        QString sFullSourceName = m_pDatabase->composeLocalFileName(pFile.first);
+
+        // Copy the file from the commit
+        CUtils::putTextFileContent(sFullSourceName, QString(pFromTipCommit->fileContent(m_pDatabase, pFile.first)));
+
+        // Get the Id of the file from the commit
+        QString sId = mapKeyForValue(pFromTipCommit->files(), pFile.first);
+
+        mProcessedFiles[sId] = QPair<QString, bool>(pFile.first, true);
+    }
+
+    // Iterate through files that are modified in the to commit
+    for (QPair<QString, QString> pFile : mToSideFiles)
+    {
+        // Read the file, apply the diff and write back
+        QString sFullSourceName = m_pDatabase->composeLocalFileName(pFile.first);
+
+        // Copy the file from the commit
+        CUtils::putTextFileContent(sFullSourceName, QString(pToTipCommit->fileContent(m_pDatabase, pFile.first)));
+
+        // Get the Id of the file from the commit
+        QString sId = mapKeyForValue(pToTipCommit->files(), pFile.first);
+
+        mProcessedFiles[sId] = QPair<QString, bool>(pFile.first, true);
+    }
+
+    // Iterate through files that need a 3-way merge
+    for (QString sFileName : mBothSideFiles)
+    {
+        if (m_bDebug)
+        {
+            OUT_DEBUG(QString("3-way merging: %1").arg(sFileName));
+        }
+
+        QString sFromFileDiff;
         QString sToFileDiff;
 
-        QString sFromFileName = tFromPair.first;
-        QString sFromFileDiff = tFromPair.second;
+        for (QPair<QString, QString> tFromPair : mFromFileDiffs)
+            if (tFromPair.first == sFileName)
+            {
+                sFromFileDiff = tFromPair.second;
+                break;
+            }
 
         for (QPair<QString, QString> tToPair : mToFileDiffs)
-            if (tToPair.first == sFromFileName)
+            if (tToPair.first == sFileName)
             {
                 sToFileDiff = tToPair.second;
                 break;
             }
 
         // Read the file, apply the diff and write to merge directory
-        QString sFullSourceName = m_pDatabase->composeLocalFileName(sFromFileName);
-        QString sFullTargetName = m_pDatabase->composeMergeFileName(sFromFileName);
-
-        // Check if file is already present in merge directory
-        bool bMergedFileExists = QFile(sFullTargetName).exists();
-
-        if (bMergedFileExists)
-            sFullSourceName = sFullTargetName;
+        QString sFullSourceName = m_pDatabase->composeLocalFileName(sFileName);
 
         // Get the content of the file
-        QString sBaseContent = QString(pBaseCommit->fileContent(m_pDatabase, sFromFileName));
-        QString sFromContent = QString(pFromTipCommit->fileContent(m_pDatabase, sFromFileName));
-        QString sToContent = QString(pToTipCommit->fileContent(m_pDatabase, sFromFileName));
+        QString sBaseContent = QString(pBaseCommit->fileContent(m_pDatabase, sFileName));
+        QString sFromContent = QString(pFromTipCommit->fileContent(m_pDatabase, sFileName));
+        QString sToContent = QString(pToTipCommit->fileContent(m_pDatabase, sFileName));
         QString sNewContent;
 
         QString sFromMarker = QString("%1 %2").arg(pFromTipCommit->shortId()).arg(pFromTipCommit->message().left(16));
@@ -683,9 +745,9 @@ bool CCommitFunctions::threeWayMerge(CCommit* pBaseCommit, CCommit* pFromTipComm
         if (not bMergeOk)
             bHasConflicts = true;
 
-        CUtils::putTextFileContent(sFullTargetName, sNewContent);
+        CUtils::putTextFileContent(sFullSourceName, sNewContent);
         QString sId = CUtils::idFromByteArray(sNewContent.toUtf8());
-        mProcessedFiles[sId] = QPair<QString, bool>(sFromFileName, bMergeOk);
+        mProcessedFiles[sId] = QPair<QString, bool>(sFileName, bMergeOk);
     }
 
     // Stage the merged files
@@ -694,32 +756,12 @@ bool CCommitFunctions::threeWayMerge(CCommit* pBaseCommit, CCommit* pFromTipComm
         for (QPair<QString, bool> pFile : mProcessedFiles.values())
         {
             QString sKey = mapKeyForValue(mProcessedFiles, pFile);
+
             // Stage only if merge ok
             if (pFile.second)
             {
-                pStagingCommit->addFile(m_pDatabase, mProcessedFiles[sKey].first, pFile.first);
+                pStagingCommit->addFile(m_pDatabase, pFile.first, sKey, true);
             }
-        }
-    }
-
-    // Move the merged files
-    for (QPair<QString, bool> pFile : mProcessedFiles.values())
-    {
-        QString sFullSourceName = m_pDatabase->composeMergeFileName(pFile.first);
-        QString sFullTargetName = m_pDatabase->composeLocalFileName(pFile.first);
-
-        if (not mMovedFiles.contains(sFullSourceName))
-        {
-            if (not CUtils::moveFile(sFullSourceName, sFullTargetName))
-            {
-                if (not m_bSilent)
-                {
-                    OUT_ERROR(QString("Could not move file %1.").arg(sFullSourceName));
-                }
-                return false;
-            }
-
-            mMovedFiles << sFullSourceName;
         }
     }
 

@@ -111,9 +111,9 @@ void CCommit::addParent(const QString& sParentId)
 
 //-------------------------------------------------------------------------------------------------
 
-bool CCommit::addFile(CDatabase* pDatabase, QString sRelativeFileName, QString sId)
+bool CCommit::addFile(CDatabase* pDatabase, QString sRelativeFileName, QString sId, bool bForce)
 {
-    if (not m_mFiles.values().contains(sRelativeFileName))
+    if (not m_mFiles.values().contains(sRelativeFileName) || bForce)
     {
         if (sId.isEmpty())
         {
