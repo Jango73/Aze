@@ -117,7 +117,6 @@ bool CMergeCommand::execute()
 
     if (not m_pRepository->commitFunctions()->threeWayMerge(pCommonAncestor, pFromTipCommit, pToTipCommit, true, m_pRepository->stagingCommit()))
     {
-        m_pRepository->tellError(CStrings::s_sTextMergeFailed);
         return false;
     }
 

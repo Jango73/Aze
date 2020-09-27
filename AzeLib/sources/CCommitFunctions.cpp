@@ -614,6 +614,7 @@ bool CCommitFunctions::applyDiff(const QString& sFullDiff, bool bAddToStage, CCo
 
 bool CCommitFunctions::threeWayMerge(CCommit* pBaseCommit, CCommit* pFromTipCommit, CCommit* pToTipCommit, bool bAddToStage, CCommit* pStagingCommit)
 {
+    bool bHasConflicts = false;
     QString sFromDiff;
     QString sToDiff;
 
@@ -627,7 +628,7 @@ bool CCommitFunctions::threeWayMerge(CCommit* pBaseCommit, CCommit* pFromTipComm
     }
 
     // Keep track of merged files
-    QDictionary mProcessedFiles;
+    QMap<QString, QPair<QString, bool>> mProcessedFiles;    // Maps IDs to relative file names
     QStringList mMovedFiles;
 
     // Get a list of diffs per file
@@ -679,35 +680,33 @@ bool CCommitFunctions::threeWayMerge(CCommit* pBaseCommit, CCommit* pFromTipComm
             OUT_DEBUG("----------------------------------------");
         }
 
-        if (!bMergeOk)
-        {
-            if (not m_bSilent)
-            {
-                OUT_ERROR(QString(CStrings::s_sTextCouldNotApplyPatch).arg(sFromFileName));
-            }
-            return false;
-        }
+        if (not bMergeOk)
+            bHasConflicts = true;
 
         CUtils::putTextFileContent(sFullTargetName, sNewContent);
         QString sId = CUtils::idFromByteArray(sNewContent.toUtf8());
-        mProcessedFiles[sId] = sFromFileName;
+        mProcessedFiles[sId] = QPair<QString, bool>(sFromFileName, bMergeOk);
     }
 
     // Stage the merged files
     if (bAddToStage && IS_NOT_NULL(pStagingCommit))
     {
-        for (QString sFileName : mProcessedFiles.values())
+        for (QPair<QString, bool> pFile : mProcessedFiles.values())
         {
-            QString sKey = mapKeyForValue(mProcessedFiles, sFileName);
-            pStagingCommit->addFile(m_pDatabase, mProcessedFiles[sKey], sFileName);
+            QString sKey = mapKeyForValue(mProcessedFiles, pFile);
+            // Stage only if merge ok
+            if (pFile.second)
+            {
+                pStagingCommit->addFile(m_pDatabase, mProcessedFiles[sKey].first, pFile.first);
+            }
         }
     }
 
     // Move the merged files
-    for (QString sFileName : mProcessedFiles.values())
+    for (QPair<QString, bool> pFile : mProcessedFiles.values())
     {
-        QString sFullSourceName = m_pDatabase->composeMergeFileName(sFileName);
-        QString sFullTargetName = m_pDatabase->composeLocalFileName(sFileName);
+        QString sFullSourceName = m_pDatabase->composeMergeFileName(pFile.first);
+        QString sFullTargetName = m_pDatabase->composeLocalFileName(pFile.first);
 
         if (not mMovedFiles.contains(sFullSourceName))
         {
@@ -724,7 +723,22 @@ bool CCommitFunctions::threeWayMerge(CCommit* pBaseCommit, CCommit* pFromTipComm
         }
     }
 
-    return true;
+    // Warn about conflict files
+    if (bHasConflicts && not m_bSilent)
+    {
+        OUT_ERROR(QString("/!\\ Merge cannot be finished automatically. /!\\"));
+        OUT_ERROR(QString("Files that are in conflict state:"));
+
+        for (QPair<QString, bool> pFile : mProcessedFiles.values())
+        {
+            if (not pFile.second)
+            {
+                OUT_ERROR(pFile.first);
+            }
+        }
+    }
+
+    return not bHasConflicts;
 }
 
 //-------------------------------------------------------------------------------------------------

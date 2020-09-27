@@ -312,6 +312,7 @@ void CTestAze::testAll()
     QString sMA8("CA1\nCA2\nCA3\n--\nCB1\nCB2\nCB3\nCB4\nCB5\nCB6\n--\nCC1\nCC2\nCC3\nCC4");
 
     QString sMB7("CA1\nCA2\nCA3\n--\nCB1\nCB2\nCB3\nCB4\nCB5\nCB6\n--\nCC1\nCC2\nCC3\nCC4");
+    QString sMB9("CA1\nCA2\nCA3\n--\n<<<<<<< [0-9a-f]+ CC6\nCZ1\nCZ2\n|||||||\nCX1\nCX2\n>>>>>>> [0-9a-f]+ CB8\nCB3\nCB4\nCB5\nCB6\n--\n<<<<<<< [0-9a-f]+ CC6\nCZ1\nCZ2\n|||||||\nCY1\nCY2\n>>>>>>> [0-9a-f]+ CB8\nCC3\nCC4");
 
     QString sMC4("CA1\nCA2\nCA3\n--\nCB1\nCB2\nCB3\nCB4\nCB5\n--\nCC1\nCC2\nCC3");
 
@@ -523,7 +524,11 @@ void CTestAze::testAll()
     // Merge C on B : conflict
     MERGE_BRANCH(sResult, "C");
     QVERIFY(sResult == QString::number(CConstants::s_iError_CouldNotMerge));
-    //COMMIT("MB7");
+
+    // Check merged file contents
+    QVERIFY(readFile(sFile1Path, sFile1Content));
+    // QVERIFY(sFile1Content == sMB9);
+    QVERIFY(QRegExp(sMB9).indexIn(sFile1Content) != -1);
 }
 
 //-------------------------------------------------------------------------------------------------
