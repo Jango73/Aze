@@ -3,4 +3,4 @@
 	url = https://github.com/Jango73/qt-plus.git
 [submodule "AzeLib/sources/dtl"]
 	path = AzeLib/sources/dtl
-	url = https://github.com/cubicdaiya/dtl.git
+	url = https://github.com/Jango73/dtl.git

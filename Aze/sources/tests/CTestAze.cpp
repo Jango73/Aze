@@ -264,7 +264,9 @@ void CTestAze::checkCommitDiff(const QString& sDiff, QVector<CTransformedFile> v
         QVERIFY(sItFileDiff != mFileDiffs.end());
         // Apply the diff for this file
         QString sPatch = (*sItFileDiff).second;
-        QString sFilePatched = Aze::CUtils::applyUnifiedDiff(file.m_sFileContent1, sPatch);
+        QString sFilePatched;
+        bool bPatchOk = Aze::CUtils::applyUnifiedDiff(file.m_sFileContent1, sPatch, sFilePatched);
+        QVERIFY(bPatchOk);
         QVERIFY(file.m_sFileContent2 == sFilePatched);
     }
 }
@@ -295,13 +297,13 @@ void CTestAze::testAll()
     QString sCB4("CA1\nCA2\n--\nCB1\nCB2\nCB3\nCB4\n--");
     QString sCB5("CA1\nCA2\n--\nCB1\nCB2\nCB3\nCB4\nCB5\n--");
     QString sCB6("CA1\nCA2\n--\nCB1\nCB2\nCB3\nCB4\nCB5\nCB6\n--");
-    QString sCB8("CA1\nCA2\nCA3\n--\nCX1\nCX2\nCB3\nCB4\nCB5\nCB6\n--\nCC1\nCC2\nCC3\nCC4");
+    QString sCB8("CA1\nCA2\nCA3\n--\nCX1\nCX2\nCB3\nCB4\nCB5\nCB6\n--\nCY1\nCY2\nCC3\nCC4");
 
     QString sCC1("CA1\nCA2\n--\nCB1\nCB2\nCB3\n--\nCC1");
     QString sCC2("CA1\nCA2\n--\nCB1\nCB2\nCB3\n--\nCC1\nCC2");
     QString sCC3("CA1\nCA2\n--\nCB1\nCB2\nCB3\n--\nCC1\nCC2\nCC3");
     QString sCC5("CA1\nCA2\nCA3\n--\nCB1\nCB2\nCB3\nCB4\nCB5\n--\nCC1\nCC2\nCC3\nCC4");
-    QString sCC6("CA1\nCA2\nCA3\n--\nCZ1\nCZ2\nCB3\nCB4\nCB5\n--\nCC1\nCC2\nCC3\nCC4");
+    QString sCC6("CA1\nCA2\nCA3\n--\nCZ1\nCZ2\nCB3\nCB4\nCB5\n--\nCZ1\nCZ2\nCC3\nCC4");
 
     QString sMA4("CA1\nCA2\nCA3\n--\nCB1\nCB2\nCB3\n--");
     QString sMA5("CA1\nCA2\nCA3\n--\nCB1\nCB2\nCB3\n--\nCC1\nCC2");

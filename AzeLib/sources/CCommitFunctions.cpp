@@ -550,7 +550,9 @@ bool CCommitFunctions::applyDiff(const QString& sFullDiff, bool bAddToStage, CCo
 
         // Get the content of the file
         QString sPreviousContent = CUtils::getTextFileContent(sFullSourceName);
-        QString sNewContent = CUtils::applyUnifiedDiff(sPreviousContent, sFileDiff);
+        QString sNewContent;
+
+        bool bApplyOk = CUtils::applyUnifiedDiff(sPreviousContent, sFileDiff, sNewContent);
 
         if (m_bDebug)
         {
@@ -560,7 +562,7 @@ bool CCommitFunctions::applyDiff(const QString& sFullDiff, bool bAddToStage, CCo
             OUT_DEBUG("----------------------------------------");
         }
 
-        if (sNewContent == CUtils::s_sBadString)
+        if (not bApplyOk)
         {
             if (not m_bSilent)
             {
@@ -661,17 +663,23 @@ bool CCommitFunctions::threeWayMerge(CCommit* pBaseCommit, CCommit* pFromTipComm
         QString sBaseContent = QString(pBaseCommit->fileContent(m_pDatabase, sFromFileName));
         QString sFromContent = QString(pFromTipCommit->fileContent(m_pDatabase, sFromFileName));
         QString sToContent = QString(pToTipCommit->fileContent(m_pDatabase, sFromFileName));
-        QString sNewContent = CUtils::applyThreeWayMerge(sBaseContent, sFromContent, sToContent);
+        QString sNewContent;
+
+        QString sFromMarker = QString("%1 %2").arg(pFromTipCommit->shortId()).arg(pFromTipCommit->message().left(16));
+        QString sToMarker = QString("%1 %2").arg(pToTipCommit->shortId()).arg(pToTipCommit->message().left(16));
+
+        bool bMergeOk = CUtils::applyThreeWayMerge(sBaseContent, sFromMarker, sFromContent, sToMarker, sToContent, sNewContent);
 
         if (m_bDebug)
         {
+            OUT_DEBUG(QString("AC: %1").arg(sFromContent));
             OUT_DEBUG(QString("BC: %1").arg(sBaseContent));
-            OUT_DEBUG(QString("D1: %1").arg(sFromFileDiff));
+            OUT_DEBUG(QString("CC: %1").arg(sToContent));
             OUT_DEBUG(QString("NC: %1").arg(sNewContent));
             OUT_DEBUG("----------------------------------------");
         }
 
-        if (sNewContent == CUtils::s_sBadString)
+        if (!bMergeOk)
         {
             if (not m_bSilent)
             {

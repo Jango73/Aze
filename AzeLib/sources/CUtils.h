@@ -98,10 +98,10 @@ public:
     static QString unifiedDiff(const QString& sText1, const QString& sText2);
 
     //! Applies a unified diff to sText (using diff-match-patch)
-    static QString applyUnifiedDiff(const QString& sText, const QString& sDiff);
+    static bool applyUnifiedDiff(const QString& sText, const QString& sDiff, QString& sResult);
 
     //! Applies a unified diff to sText (using diff-match-patch)
-    static QString applyThreeWayMerge(const QString& sBase, const QString& sText1, const QString& sText2);
+    static bool applyThreeWayMerge(const QString& sBase, const QString& sTitle1, const QString& sText1, const QString& sTitle2, const QString& sText2, QString& sResult);
 
     //! Returns a printable version of sText
     static QString printableUnifiedDiff(const QString& sText);
@@ -114,7 +114,6 @@ public:
     // Properties
     //-------------------------------------------------------------------------------------------------
 
-    static QString s_sBadString;
     static float s_fMatchThreshold;
 };
 

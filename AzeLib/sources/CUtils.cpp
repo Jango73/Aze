@@ -43,7 +43,6 @@ using std::max;
 
 namespace Aze {
 
-QString CUtils::s_sBadString = "xX!!!!Xx";
 float CUtils::s_fMatchThreshold = 0.2f;
 
 //-------------------------------------------------------------------------------------------------
@@ -327,7 +326,7 @@ QString CUtils::unifiedDiff(const QString& sText1, const QString& sText2)
 
 //-------------------------------------------------------------------------------------------------
 
-QString CUtils::applyUnifiedDiff(const QString& sText, const QString& sDiff)
+bool CUtils::applyUnifiedDiff(const QString& sText, const QString& sDiff, QString& sResult)
 {
     typedef std::string         elem;
     typedef std::vector< elem > sequence;
@@ -370,26 +369,64 @@ QString CUtils::applyUnifiedDiff(const QString& sText, const QString& sDiff)
     sequence patchedSeq(seqLst.begin(), seqLst.end());
 
     QStringList lReturnValue;
-    QString sReturnValue;
 
     for (elem line : patchedSeq)
         lReturnValue << QString::fromStdString(line);
 
-    return lReturnValue.join("\n");
+    sResult = lReturnValue.join("\n");
+
+    return true;
 }
 
 //-------------------------------------------------------------------------------------------------
 
-QString CUtils::applyThreeWayMerge(const QString& sBase, const QString& sText1, const QString& sText2)
+bool CUtils::applyThreeWayMerge(
+        const QString& sBase,
+        const QString& sTitle1,
+        const QString& sText1,
+        const QString& sTitle2,
+        const QString& sText2,
+        QString& sResult
+        )
 {
-    dtl::Diff3<char, std::string> diff3(sText1.toStdString(), sBase.toStdString(), sText2.toStdString());
-    diff3.compose();
+    typedef std::string       elem;
+    typedef std::vector<elem> sequence;
 
-    if (!diff3.merge())
-    {
-        return s_sBadString;
-    }
-    return QString::fromStdString(diff3.getMergedSequence());
+    sequence BaseLines, Lines1, Lines2;
+
+    QStringList sLinesBase = sBase.split("\n");
+    QStringList sLines1 = sText1.split("\n");
+    QStringList sLines2 = sText2.split("\n");
+
+    for (QString sLine : sLinesBase)
+        BaseLines.push_back(sLine.toStdString());
+
+    for (QString sLine : sLines1)
+        Lines1.push_back(sLine.toStdString());
+
+    for (QString sLine : sLines2)
+        Lines2.push_back(sLine.toStdString());
+
+    dtl::Diff3<elem, sequence> diff(Lines1, BaseLines, Lines2);
+    diff.enableConflictMarkers(
+                QString("<<<<<<< %1").arg(sTitle1).toStdString(),
+                "|||||||",
+                QString(">>>>>>> %1").arg(sTitle2).toStdString()
+                );
+
+    diff.compose();
+
+    bool bResult = diff.merge();
+
+    QStringList lReturnValue;
+    std::vector<elem> vec = diff.getMergedSequence();
+
+    for (elem line : vec)
+        lReturnValue << QString::fromStdString(line);
+
+    sResult = lReturnValue.join("\n");
+
+    return bResult;
 }
 
 //-------------------------------------------------------------------------------------------------
