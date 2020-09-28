@@ -523,7 +523,7 @@ void CTestAze::testAll()
 
     // Merge C on B : conflict
     MERGE_BRANCH(sResult, "C");
-    QVERIFY(sResult == QString::number(CConstants::s_iError_CouldNotMerge));
+    QVERIFY(sResult == QString::number(CConstants::s_iError_MergeHasConflicts));
 
     // Check merged file contents
     QVERIFY(readFile(sFile1Path, sFile1Content));

@@ -111,7 +111,7 @@ public:
     QString diff(const QString& sFirst, const QString& sSecond);
 
     //! Merges the branch sName onto the current one
-    bool merge(const QString& sName);
+    bool merge(const QString& sName, bool& bHasConflicts);
 
     //! Stashes the working directory changes
     bool saveStash(const QString& sMessage);

@@ -196,9 +196,9 @@ QString CRepository::diff(const QString& sFirst, const QString& sSecond)
 
 //-------------------------------------------------------------------------------------------------
 
-bool CRepository::merge(const QString& sName)
+bool CRepository::merge(const QString& sName, bool& bHasConflicts)
 {
-    return CMergeCommand(this, sName).execute();
+    return CMergeCommand(this, sName, bHasConflicts).execute();
 }
 
 //-------------------------------------------------------------------------------------------------

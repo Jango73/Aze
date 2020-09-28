@@ -11,10 +11,12 @@ namespace Aze {
 
 //-------------------------------------------------------------------------------------------------
 
-CMergeCommand::CMergeCommand(CRepository* pRepository, const QString& sFromBranch)
+CMergeCommand::CMergeCommand(CRepository* pRepository, const QString& sFromBranch, bool& bHasConflicts)
     : CBaseCommand(pRepository)
     , m_sFromBranch(sFromBranch)
+    , m_bHasConflicts(bHasConflicts)
 {
+    m_bHasConflicts = false;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -115,7 +117,7 @@ bool CMergeCommand::execute()
         return false;
     }
 
-    bool bMergeOK = m_pRepository->commitFunctions()->threeWayMerge(pCommonAncestor, pFromTipCommit, pToTipCommit, true, m_pRepository->stagingCommit());
+    m_bHasConflicts = not m_pRepository->commitFunctions()->threeWayMerge(pCommonAncestor, pFromTipCommit, pToTipCommit, true, m_pRepository->stagingCommit());
 
     // Set merge information in staging commit
     // Only the 'from' commit is added as a parent here, the other will be added by commit command
@@ -128,7 +130,7 @@ bool CMergeCommand::execute()
                 .arg(m_pRepository->currentBranchName())
                 );
 
-    return bMergeOK;
+    return true;
 }
 
 //-------------------------------------------------------------------------------------------------

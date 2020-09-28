@@ -21,7 +21,7 @@ public:
     // Constructor
     //-------------------------------------------------------------------------------------------------
 
-    CMergeCommand(CRepository* pRepository, const QString& sFromBranch);
+    CMergeCommand(CRepository* pRepository, const QString& sFromBranch, bool& bHasConflicts);
 
     //-------------------------------------------------------------------------------------------------
     // Control methods
@@ -36,7 +36,8 @@ public:
 
 protected:
 
-    QString m_sFromBranch;
+    QString     m_sFromBranch;
+    bool&       m_bHasConflicts;
 };
 
 }

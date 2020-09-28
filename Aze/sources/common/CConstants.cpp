@@ -80,8 +80,9 @@ const int CConstants::s_iError_NoBranchNameGiven                = 14;
 const int CConstants::s_iError_NoFileNameGiven                  = 15;
 const int CConstants::s_iError_NoRemoteHostNameGiven            = 16;
 const int CConstants::s_iError_NotARepository                   = 17;
-const int CConstants::s_iError_UnknownCommand                   = 18;
-const int CConstants::s_iError_UnknownSwitch                    = 19;
+const int CConstants::s_iError_MergeHasConflicts                = 18;
+const int CConstants::s_iError_UnknownCommand                   = 19;
+const int CConstants::s_iError_UnknownSwitch                    = 20;
 
 const QString CConstants::s_sAllFilesAreClean               = tr("All files are clean on branch %1.");
 const QString CConstants::s_sStatusOfFiles                  = tr("Status of working directory files, on branch %1:");

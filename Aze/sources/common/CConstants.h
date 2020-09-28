@@ -113,6 +113,7 @@ public:
     static const int s_iError_NoFileNameGiven;
     static const int s_iError_NoRemoteHostNameGiven;
     static const int s_iError_NotARepository;
+    static const int s_iError_MergeHasConflicts;
     static const int s_iError_UnknownCommand;
     static const int s_iError_UnknownSwitch;
 

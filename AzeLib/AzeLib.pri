@@ -26,6 +26,15 @@ HEADERS += \
     sources/objects/CFile.h \
     sources/objects/CObject.h \
     sources/objects/CStash.h \
+    sources/dtl/dtl/Conflict.hpp \
+    sources/dtl/dtl/Diff.hpp \
+    sources/dtl/dtl/Diff3.hpp \
+    sources/dtl/dtl/dtl.hpp \
+    sources/dtl/dtl/functors.hpp \
+    sources/dtl/dtl/Lcs.hpp \
+    sources/dtl/dtl/Sequence.hpp \
+    sources/dtl/dtl/Ses.hpp \
+    sources/dtl/dtl/variables.hpp \
 
 SOURCES += \
     sources/CCommitFunctions.cpp \
