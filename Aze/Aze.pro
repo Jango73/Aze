@@ -34,9 +34,3 @@ CONFIG(debug, debug|release) {
 } else {
     LIBS += -L$$OUT_PWD/../AzeLib/bin -laze
 }
-
-CONFIG(debug, debug|release) {
-    LIBS += -L$$PWD/../qt-plus/bin -lqt-plusd
-} else {
-    LIBS += -L$$PWD/../qt-plus/bin -lqt-plus
-}
