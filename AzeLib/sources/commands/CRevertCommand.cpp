@@ -26,7 +26,7 @@ CRevertCommand::CRevertCommand(CRepository* pRepository, CCommit* pWorkingDirect
     : CBaseCommand(pRepository)
     , m_bAllowFileDelete(bAllowFileDeleted)
     , m_pWorkingDirectory(pWorkingDirectory)
-    , m_lFileNames(pWorkingDirectory->files().values())
+    , m_lFileNames(pWorkingDirectory->files().keys())
 {
 }
 
@@ -58,19 +58,19 @@ bool CRevertCommand::revertSingleFile(QString sRelativeFileName)
         return false;
     }
 
-    bInStage = m_pRepository->stagingCommit()->files().values().contains(sRelativeFileName);
+    bInStage = m_pRepository->stagingCommit()->files().keys().contains(sRelativeFileName);
 
     // Proceed only when there is a tip commit
     if (not IS_NULL(m_pRepository->tipCommit()))
     {
         // Get the id of this file in the tip commit
-        QString sIdInTip = mapKeyForValue(m_pRepository->tipCommit()->files(), sRelativeFileName);
+        QString sIdInTip = m_pRepository->tipCommit()->files()[sRelativeFileName];
 
         // If file exists in tip, copy it from DB if required
         if (not sIdInTip.isEmpty())
         {
             // Get the id of this file in the working directory
-            QString sIdInWorkingDir = mapKeyForValue(m_pWorkingDirectory->files(), sRelativeFileName);
+            QString sIdInWorkingDir = m_pWorkingDirectory->files()[sRelativeFileName];
 
             // Copy the commited file back to the working directory when required
             if (sIdInTip != sIdInWorkingDir)

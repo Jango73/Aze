@@ -401,7 +401,7 @@ void CCommitFunctions::diffCommits(QString& sOutput, CCommit* pCommit1, CCommit*
     if (IS_NOT_NULL(pCommit1) && IS_NOT_NULL(pCommit2))
     {
 
-        for (QString sName : pCommit2->files().values())
+        for (QString sName : pCommit2->files().keys())
         {
             if (not lIgnoreFiles.contains(sName))
             {
@@ -460,7 +460,7 @@ void CCommitFunctions::diffCommitLists(QString& sOutput, const QList<CCommit*>& 
 //        if (foundCommit == lIgnoreList.end())
         if (bFound == false)
         {
-            for (QString sName : pCommit2->files().values())
+            for (QString sName : pCommit2->files().keys())
             {
                 QByteArray baContent1 = pCommit1->fileContent(m_pDatabase, sName);
                 QByteArray baContent2 = pCommit2->fileContent(m_pDatabase, sName);
@@ -528,8 +528,6 @@ bool CCommitFunctions::applyDiff(const QString& sFullDiff, bool bAddToStage, CCo
     QDictionary mProcessedFiles;
     QStringList mMovedFiles;
 
-    // TODO: Handle files missing left or right
-
     // Get a list of diffs per file
     QList<QPair<QString, QString> > mFileDiffs = CUtils::splitDiff(sFullDiff);
 
@@ -573,21 +571,21 @@ bool CCommitFunctions::applyDiff(const QString& sFullDiff, bool bAddToStage, CCo
 
         CUtils::putTextFileContent(sFullTargetName, sNewContent);
         QString sId = CUtils::idFromByteArray(sNewContent.toUtf8());
-        mProcessedFiles[sId] = sFileName;
+        mProcessedFiles[sFileName] = sId;
     }
 
     // Stage the merged files
     if (bAddToStage && IS_NOT_NULL(pStagingCommit))
     {
-        for (QString sFileName : mProcessedFiles.values())
+        for (QString sFileName : mProcessedFiles.keys())
         {
-            QString sKey = mapKeyForValue(mProcessedFiles, sFileName);
-            pStagingCommit->addFile(m_pDatabase, mProcessedFiles[sKey], sFileName);
+            QString sId = mProcessedFiles[sFileName];
+            pStagingCommit->addFile(m_pDatabase, sFileName, sId);
         }
     }
 
     // Move the merged files
-    for (QString sFileName : mProcessedFiles.values())
+    for (QString sFileName : mProcessedFiles.keys())
     {
         QString sFullSourceName = m_pDatabase->composeMergeFileName(sFileName);
         QString sFullTargetName = m_pDatabase->composeLocalFileName(sFileName);
@@ -618,6 +616,8 @@ bool CCommitFunctions::threeWayMerge(CCommit* pBaseCommit, CCommit* pFromTipComm
     QString sFromDiff;
     QString sToDiff;
 
+    // TODO: Handle files missing left or right
+
     diffCommits(sFromDiff, pBaseCommit, pFromTipCommit, QStringList(), 0, 0);
     diffCommits(sToDiff, pBaseCommit, pToTipCommit, QStringList(), 0, 0);
 
@@ -628,7 +628,7 @@ bool CCommitFunctions::threeWayMerge(CCommit* pBaseCommit, CCommit* pFromTipComm
     }
 
     // Keep track of merged files
-    QMap<QString, QPair<QString, bool>> mProcessedFiles;    // Maps IDs to relative file names
+    QMap<QPair<QString, bool>, QString> mProcessedFiles;    // Maps relative file names to IDs
     QList<QPair<QString, QString>> mFromSideFiles;
     QList<QPair<QString, QString>> mToSideFiles;
     QStringList mBothSideFiles;
@@ -674,9 +674,9 @@ bool CCommitFunctions::threeWayMerge(CCommit* pBaseCommit, CCommit* pFromTipComm
         CUtils::putTextFileContent(sFullSourceName, QString(pFromTipCommit->fileContent(m_pDatabase, pFile.first)));
 
         // Get the Id of the file from the commit
-        QString sId = mapKeyForValue(pFromTipCommit->files(), pFile.first);
+        QString sId = pFromTipCommit->files()[pFile.first];
 
-        mProcessedFiles[sId] = QPair<QString, bool>(pFile.first, true);
+        mProcessedFiles[QPair<QString, bool>(pFile.first, true)] = sId;
     }
 
     // Iterate through files that are modified in the to commit
@@ -689,9 +689,9 @@ bool CCommitFunctions::threeWayMerge(CCommit* pBaseCommit, CCommit* pFromTipComm
         CUtils::putTextFileContent(sFullSourceName, QString(pToTipCommit->fileContent(m_pDatabase, pFile.first)));
 
         // Get the Id of the file from the commit
-        QString sId = mapKeyForValue(pToTipCommit->files(), pFile.first);
+        QString sId = pToTipCommit->files()[pFile.first];
 
-        mProcessedFiles[sId] = QPair<QString, bool>(pFile.first, true);
+        mProcessedFiles[QPair<QString, bool>(pFile.first, true)] = sId;
     }
 
     // Iterate through files that need a 3-way merge
@@ -747,15 +747,15 @@ bool CCommitFunctions::threeWayMerge(CCommit* pBaseCommit, CCommit* pFromTipComm
 
         CUtils::putTextFileContent(sFullSourceName, sNewContent);
         QString sId = CUtils::idFromByteArray(sNewContent.toUtf8());
-        mProcessedFiles[sId] = QPair<QString, bool>(sFileName, bMergeOk);
+        mProcessedFiles[QPair<QString, bool>(sFileName, bMergeOk)] = sId;
     }
 
     // Stage the merged files
     if (bAddToStage && IS_NOT_NULL(pStagingCommit))
     {
-        for (QPair<QString, bool> pFile : mProcessedFiles.values())
+        for (QPair<QString, bool> pFile : mProcessedFiles.keys())
         {
-            QString sKey = mapKeyForValue(mProcessedFiles, pFile);
+            QString sKey = mProcessedFiles[pFile];
 
             // Stage only if merge ok
             if (pFile.second)
@@ -771,7 +771,7 @@ bool CCommitFunctions::threeWayMerge(CCommit* pBaseCommit, CCommit* pFromTipComm
         OUT_ERROR(QString("/!\\ Merge cannot be finished automatically. /!\\"));
         OUT_ERROR(QString("Files that are in conflict state:"));
 
-        for (QPair<QString, bool> pFile : mProcessedFiles.values())
+        for (QPair<QString, bool> pFile : mProcessedFiles.keys())
         {
             if (not pFile.second)
             {

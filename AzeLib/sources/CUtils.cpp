@@ -192,20 +192,20 @@ bool CUtils::idValid(const QString& sId)
 
 //-------------------------------------------------------------------------------------------------
 
-QString CUtils::packIdAndFile(const QString& sId, const QString& sFilePath)
+QString CUtils::packFileAndId(const QString& sFilename, const QString& sId)
 {
-    return QString("%1%2%3").arg(sId).arg(CStrings::s_sPathIdSeparator).arg(sFilePath);
+    return QString("%1%2%3").arg(sFilename).arg(CStrings::s_sPathIdSeparator).arg(sId);
 }
 
 //-------------------------------------------------------------------------------------------------
 
-void CUtils::unpackIdAndFile(const QString& sPack, QString& sId, QString& sFilePath)
+void CUtils::unpackFileAndId(const QString& sPack, QString& sFilename, QString& sId)
 {
     QStringList sValues = sPack.split(CStrings::s_sPathIdSeparator);
     if (sValues.count() == 2)
     {
-        sId = sValues[0];
-        sFilePath = sValues[1];
+        sFilename = sValues[0];
+        sId = sValues[1];
     }
 }
 

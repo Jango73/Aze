@@ -124,7 +124,7 @@ bool CDiffCommand::execute()
             return false;
         }
 
-        QString sId2 = mapKeyForValue(m_pRepository->tipCommit()->files(), sObject1);
+        QString sId2 = m_pRepository->tipCommit()->files()[sObject1];
 
         if (sId2.isEmpty())
             return false;

@@ -82,11 +82,11 @@ public:
     //! Returns true if sId has the length of a SHAxxx string
     static bool idValid(const QString& sId);
 
-    //! Returns a string that joins sId and sFilePath with '@'
-    static QString packIdAndFile(const QString& sId, const QString& sFilePath);
+    //! Returns a string that joins sFilename and sId with '@'
+    static QString packFileAndId(const QString& sFilename, const QString& sFilePath);
 
-    //! Unjoins sPack with '@', yielding sId and sFilePath
-    static void unpackIdAndFile(const QString& sPack, QString& sId, QString& sFilePath);
+    //! Unjoins sPack with '@', yielding sFilename and sId
+    static void unpackFileAndId(const QString& sPack, QString& sFilename, QString& sId);
 
     //!
     static std::vector<std::string> textToStdStringVector(const QString& sText);

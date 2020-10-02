@@ -62,9 +62,9 @@ CXMLNode CCommit::toNode() const
 
     CXMLNode xFiles(CStrings::s_sParamFiles);
     QStringList lFiles;
-    for (QString sId : m_mFiles.keys())
+    for (QString sFilename : m_mFiles.keys())
     {
-        QString sText = CUtils::packIdAndFile(sId, m_mFiles[sId]);
+        QString sText = CUtils::packFileAndId(sFilename, m_mFiles[sFilename]);
         lFiles << sText;
     }
     xFiles.setValue(lFiles.join(CStrings::s_sNewLine));
@@ -113,7 +113,7 @@ void CCommit::addParent(const QString& sParentId)
 
 bool CCommit::addFile(CDatabase* pDatabase, QString sRelativeFileName, QString sId, bool bForce)
 {
-    if (not m_mFiles.values().contains(sRelativeFileName) || bForce)
+    if (not m_mFiles.keys().contains(sRelativeFileName) || bForce)
     {
         if (sId.isEmpty())
         {
@@ -121,7 +121,7 @@ bool CCommit::addFile(CDatabase* pDatabase, QString sRelativeFileName, QString s
             sId = CUtils::idFromFileContent(sAbsoluteFileName);
         }
 
-        m_mFiles[sId] = sRelativeFileName;
+        m_mFiles[sRelativeFileName] = sId;
     }
 
     return true;
@@ -131,10 +131,10 @@ bool CCommit::addFile(CDatabase* pDatabase, QString sRelativeFileName, QString s
 
 bool CCommit::removeFile(QString sRelativeFileName)
 {
-    QString sKey = mapKeyForValue(m_mFiles, sRelativeFileName);
-
-    if (not sKey.isEmpty())
-        m_mFiles.remove(sKey);
+    if (m_mFiles.keys().contains(sRelativeFileName))
+    {
+        m_mFiles.remove(sRelativeFileName);
+    }
 
     return true;
 }
@@ -143,15 +143,14 @@ bool CCommit::removeFile(QString sRelativeFileName)
 
 bool CCommit::addCommit(CDatabase* pDatabase, const CCommit* pCommitToAdd)
 {
-    for (QString sAddKey : pCommitToAdd->m_mFiles.keys())
+    for (QString sRelativeFileName : pCommitToAdd->m_mFiles.keys())
     {
-        QString sRelativeFileName = pCommitToAdd->m_mFiles[sAddKey];
         QString sAbsoluteFileName = pDatabase->absoluteFileName(sRelativeFileName);
 
         if (CUtils::fileExists(pDatabase->rootPath(), sRelativeFileName))
         {
             // This file exists in working directory
-            QString sExistingId = mapKeyForValue(m_mFiles, sRelativeFileName);
+            QString sExistingId = m_mFiles[sRelativeFileName];
             QString sNewId = CUtils::idFromFileContent(sAbsoluteFileName);
 
             if (sExistingId.isEmpty() || sExistingId != sNewId)
@@ -161,8 +160,8 @@ bool CCommit::addCommit(CDatabase* pDatabase, const CCommit* pCommitToAdd)
 
                 if (not sNewObjectId.isEmpty())
                 {
-                    m_mFiles.remove(sExistingId);
-                    m_mFiles[sNewObjectId] = sRelativeFileName;
+                    m_mFiles.remove(sRelativeFileName);
+                    m_mFiles[sRelativeFileName] = sNewObjectId;
                 }
             }
         }
@@ -180,7 +179,7 @@ bool CCommit::addCommit(CDatabase* pDatabase, const CCommit* pCommitToAdd)
 
 QByteArray CCommit::fileContent(CDatabase* pDatabase, QString sFileName)
 {
-    QString sId = mapKeyForValue(m_mFiles, sFileName);
+    QString sId = m_mFiles[sFileName];
 
     if (pDatabase->fileWithIdExists(sId))
     {
@@ -198,7 +197,7 @@ CCommit* CCommit::fromNode(const CXMLNode& xNode, QObject* parent, QString sComm
 {
     QDictionary mFiles;
     QString sId;
-    QString sFilePath;
+    QString sFilename;
 
     CCommit* pCommit = new CCommit(parent);
 
@@ -231,10 +230,10 @@ CCommit* CCommit::fromNode(const CXMLNode& xNode, QObject* parent, QString sComm
 
     for (QString sLine : sLines)
     {
-        CUtils::unpackIdAndFile(sLine, sId, sFilePath);
+        CUtils::unpackFileAndId(sLine, sFilename, sId);
 
-        if (not sId.isEmpty())
-            mFiles[sId] = sFilePath;
+        if (not sFilename.isEmpty())
+            mFiles[sFilename] = sId;
     }
     pCommit->setFiles(mFiles);
 

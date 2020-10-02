@@ -53,16 +53,16 @@ bool CStatusCommand::execute()
     // Get the working directory
     CCommit* pWorkCommit = m_pRepository->commitFunctions()->directoryAsCommit(this);
 
-    QStringList lWorkFiles = pWorkCommit->files().values();
+    QStringList lWorkFiles = pWorkCommit->files().keys();
     lWorkFiles.sort();
 
     // Iterate through working directory files
     // Check how each file differs from the tip commit
     for (QString sRelativeName : lWorkFiles)
     {
-        QString sIdInFrom = mapKeyForValue(pFromCommit->files(), sRelativeName);
-        QString sIdInWork = mapKeyForValue(pWorkCommit->files(), sRelativeName);
-        QString sIdInStage = mapKeyForValue(pStageCommit->files(), sRelativeName);
+        QString sIdInFrom = pFromCommit->files()[sRelativeName];
+        QString sIdInWork = pWorkCommit->files()[sRelativeName];
+        QString sIdInStage = pStageCommit->files()[sRelativeName];
 
         CFile file;
         file.setRelativeName(sRelativeName);
@@ -109,7 +109,7 @@ bool CStatusCommand::execute()
     // TODO: Unless marked as deleted
     if (IS_NOT_NULL(m_pRepository->tipCommit()))
     {
-        for (QString sRelativeName : m_pRepository->tipCommit()->files().values())
+        for (QString sRelativeName : m_pRepository->tipCommit()->files().keys())
         {
             if (not lProcessed.contains(sRelativeName))
             {
