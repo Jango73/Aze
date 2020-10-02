@@ -20,7 +20,12 @@ A versioning system (just for pleasure of coding)
 * Open /Aze.pro in QtCreator
 * Build and run
 
+## Running tests
+
+Run the app with command "run-tests"
+
 ## Concepts
+
 [Here is information about architecture](AzeLib/concept/Aze.md)
 
 ## Implemented functionality
