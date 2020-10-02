@@ -1,5 +1,5 @@
 
-QT += core xml testlib network
+QT += core xml network testlib
 CONFIG += console
 
 TEMPLATE = app
