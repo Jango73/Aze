@@ -431,6 +431,21 @@ int CAzeClient::popStash()
 
 //-------------------------------------------------------------------------------------------------
 
+int CAzeClient::patch()
+{
+    // Repository sanity check
+    ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
+
+    for (QString sFilename : m_tArguments.m_lFilesAndIds)
+    {
+        ERROR_WHEN_FALSE(m_pRepository->patch(sFilename), CConstants::s_iError_CouldNotPatch);
+    }
+
+    return CConstants::s_iError_None;
+}
+
+//-------------------------------------------------------------------------------------------------
+
 int CAzeClient::setRemoteHost()
 {
     // Repository sanity check

@@ -102,6 +102,9 @@ public:
     int popStash();
 
     //!
+    int patch();
+
+    //!
     int setRemoteHost();
 
     //!

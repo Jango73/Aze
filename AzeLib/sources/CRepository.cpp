@@ -11,6 +11,7 @@
 #include "commands/CDiffCommand.h"
 #include "commands/CLogCommand.h"
 #include "commands/CMergeCommand.h"
+#include "commands/CPatchCommand.h"
 #include "commands/CPopStashCommand.h"
 #include "commands/CRemoveCommand.h"
 #include "commands/CRevertCommand.h"
@@ -213,6 +214,13 @@ bool CRepository::saveStash(const QString& sMessage)
 bool CRepository::popStash(const QString& sId)
 {
     return CPopStashCommand(this, sId).execute();
+}
+
+//-------------------------------------------------------------------------------------------------
+
+bool CRepository::patch(const QString& sFilename)
+{
+    return CPatchCommand(this, sFilename).execute();
 }
 
 //-------------------------------------------------------------------------------------------------

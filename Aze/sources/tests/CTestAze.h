@@ -71,8 +71,13 @@ private:
 
 private slots:
 
-    void testAll();
+    // Tests merge functionality
+    void testMerge();
 
+    // Tests patch functionality
+    void testPatch();
+
+    // Tests functionalities under heavy load
     void testHeavy();
 
     void testFinalize();

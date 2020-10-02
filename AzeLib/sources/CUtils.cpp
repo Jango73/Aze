@@ -325,6 +325,7 @@ QString CUtils::unifiedDiff(const QString& sText1, const QString& sText2)
 }
 
 //-------------------------------------------------------------------------------------------------
+// TODO : handle errors
 
 bool CUtils::applyUnifiedDiff(const QString& sText, const QString& sDiff, QString& sResult)
 {

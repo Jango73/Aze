@@ -20,6 +20,12 @@
 //-------------------------------------------------------------------------------------------------
 // Some macros to hide boiler plate code
 
+#define INIT() \
+    clearRepository(); \
+    QDir rootDir(m_sRootPath); \
+    QVERIFY(rootDir.mkdir(m_sFilesFolderName)); \
+    exec({ CConstants::s_sSwitchInitRepository })
+
 #define COMMIT(a) \
 exec({ \
     CConstants::s_sSwitchCommit, \
@@ -40,6 +46,11 @@ exec({ \
 #define DIFF_LAST(a) \
     a = exec({ \
     CConstants::s_sSwitchDiff, "tip~1 tip > " \
+    })
+
+#define DIFF_BEFORE_LAST(a) \
+    a = exec({ \
+    CConstants::s_sSwitchDiff, "tip~2 tip~1 > " \
     })
 
 #define CREATE_BRANCH(a) \
@@ -74,6 +85,13 @@ exec({ \
     CConstants::s_sSwitchPopStash, \
     QString("--%1").arg(SILENT_OR_DEBUG), \
     __VA_ARGS__ \
+    })
+
+#define PATCH(a, b) \
+    a = exec({ \
+    CConstants::s_sSwitchPatch, \
+    QString("--%1").arg(SILENT_OR_DEBUG), \
+    b, \
     })
 
 //-------------------------------------------------------------------------------------------------
@@ -273,12 +291,8 @@ void CTestAze::checkCommitDiff(const QString& sDiff, QVector<CTransformedFile> v
 
 //-------------------------------------------------------------------------------------------------
 
-void CTestAze::testAll()
+void CTestAze::testMerge()
 {
-    clearRepository();
-
-    exec({ CConstants::s_sSwitchInitRepository });
-
     QString sFile1Path = "Files/MergeTest.txt";
     QString sFile1Content;
     QString sDiffPath = "Files/Diff.txt";
@@ -318,8 +332,7 @@ void CTestAze::testAll()
 
     QString sDA2("diff --aze Files/MergeTest.txt Files/MergeTest.txt\n--- Files/MergeTest.txt\n+++ Files/MergeTest.txt\n@@ -1,2 +1,3 @@\n CA1\n+CA2\n --\n");
 
-    QDir rootDir(m_sRootPath);
-    QVERIFY(rootDir.mkdir(m_sFilesFolderName));
+    INIT();
 
     // Branch A
     CREATE_BRANCH("A");
@@ -532,14 +545,50 @@ void CTestAze::testAll()
 
 //-------------------------------------------------------------------------------------------------
 
+void CTestAze::testPatch()
+{
+    QString sFile1Path = "Files/MergeTest1.txt";
+    QString sPatchPath = "Files/Patch.txt";
+    QString sFile1Content;
+    QString sDiffPath = "Files/Diff.txt";
+    QString sDiffContent;
+    QString sResult;
+
+    QString sC1("L1\nL2\nL3\nL4\n--");
+    QString sC2("L2\nL3\nL4\nL5\n--");
+    QString sC3("L6\nL7\nL8\nL9\nL3\nL4\n--");
+
+    INIT();
+
+    // C1
+    QVERIFY(createFile(sFile1Path, sC1));
+    STAGE(sFile1Path);
+    COMMIT("C1");
+
+    // C2
+    QVERIFY(createFile(sFile1Path, sC2));
+    STAGE(sFile1Path);
+    COMMIT("C2");
+
+    DIFF_LAST(sDiffContent);
+    QVERIFY(createFile(sPatchPath, sDiffContent));
+
+    QVERIFY(createFile(sFile1Path, sC1));
+    PATCH(sResult, sPatchPath);
+
+    QVERIFY(readFile(sFile1Path, sFile1Content));
+    QVERIFY(sFile1Content == sC2);
+
+    QVERIFY(createFile(sFile1Path, sC3));
+    PATCH(sResult, sPatchPath);
+    QVERIFY(sResult != "0");
+}
+
+//-------------------------------------------------------------------------------------------------
+
 void CTestAze::testHeavy()
 {
-//    clearRepository();
-
-//    exec({ CConstants::s_sSwitchInitRepository });
-
-//    QDir rootDir(m_sRootPath);
-//    QVERIFY(rootDir.mkdir(m_sFilesFolderName));
+//     INIT();
 
 //    createManyFiles();
 

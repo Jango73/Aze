@@ -79,6 +79,7 @@ int CAzeClient::run()
     case CConstants::eCommandLog:               return log();
     case CConstants::eCommandMerge:             return merge();
     case CConstants::eCommandMove:              return move();
+    case CConstants::eCommandPatch:             return patch();
     case CConstants::eCommandPopStash:          return popStash();
     case CConstants::eCommandRemove:            return remove();
     case CConstants::eCommandRevert:            return revert();

@@ -7,6 +7,7 @@ HEADERS += \
     sources/commands/CDiffCommand.h \
     sources/commands/CLogCommand.h \
     sources/commands/CMergeCommand.h \
+    sources/commands/CPatchCommand.h \
     sources/commands/CPopStashCommand.h \
     sources/commands/CRemoveCommand.h \
     sources/commands/CRevertCommand.h \
@@ -44,6 +45,7 @@ SOURCES += \
     sources/commands/CDiffCommand.cpp \
     sources/commands/CLogCommand.cpp \
     sources/commands/CMergeCommand.cpp \
+    sources/commands/CPatchCommand.cpp \
     sources/commands/CPopStashCommand.cpp \
     sources/commands/CRemoveCommand.cpp \
     sources/commands/CRevertCommand.cpp \

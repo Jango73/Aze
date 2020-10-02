@@ -119,6 +119,9 @@ public:
     //! Restores the contents of a stash
     bool popStash(const QString& sId);
 
+    //! Patches the repository with file
+    bool patch(const QString& sFilename);
+
     //! Returns the staging commit
     CCommit* getStagingCommit();
 

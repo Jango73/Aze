@@ -33,6 +33,7 @@ public:
         eCommandLog,
         eCommandMerge,
         eCommandMove,
+        eCommandPatch,
         eCommandPopStash,
         eCommandPull,
         eCommandPush,
@@ -59,6 +60,7 @@ public:
     static const char* s_sSwitchLog;
     static const char* s_sSwitchMerge;
     static const char* s_sSwitchMove;
+    static const char* s_sSwitchPatch;
     static const char* s_sSwitchPopStash;
     static const char* s_sSwitchPull;
     static const char* s_sSwitchPush;
@@ -99,6 +101,7 @@ public:
     static const int s_iError_CouldNotCreateBranch;
     static const int s_iError_CouldNotMerge;
     static const int s_iError_CouldNotMoveFiles;
+    static const int s_iError_CouldNotPatch;
     static const int s_iError_CouldNotPopStash;
     static const int s_iError_CouldNotReadStage;
     static const int s_iError_CouldNotRemoveFiles;
