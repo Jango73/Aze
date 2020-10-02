@@ -314,9 +314,6 @@ QString CUtils::unifiedDiff(const QString& sText1, const QString& sText2)
 
     dtl::Diff< elem > diff(ALines, BLines);
     diff.compose();
-
-    dtl::uniHunk< sesElem > hunk;
-
     diff.composeUnifiedHunks();
     diff.printUnifiedFormat(outputStream);
 
@@ -344,30 +341,12 @@ bool CUtils::applyUnifiedDiff(const QString& sText, const QString& sDiff, QStrin
 
     inputStream.str(sDiff.toStdString());
 
-    const Ses<elem> ses = Diff<elem, sequence>::composeSesFromStream<std::stringstream>(inputStream);
+    dtl::Diff< elem > diff;
+    diff.composeUnifiedHunksFromStream<std::stringstream>(inputStream);
+    sequence patchedSeq = diff.uniPatch(ALines, true);
 
-    sesElemVec    sesSeq = ses.getSequence();
-    elemList      seqLst(ALines.begin(), ALines.end());
-    elemList_iter lstIt = seqLst.begin();
-    for (sesElemVec_iter sesIt = sesSeq.begin(); sesIt != sesSeq.end(); ++sesIt)
-    {
-        switch (sesIt->second.type)
-        {
-        case dtl::SES_ADD :
-            seqLst.insert(lstIt, sesIt->first);
-            break;
-        case dtl::SES_DELETE :
-            lstIt = seqLst.erase(lstIt);
-            break;
-        case dtl::SES_COMMON :
-            ++lstIt;
-            break;
-        default :
-            // no through
-            break;
-        }
-    }
-    sequence patchedSeq(seqLst.begin(), seqLst.end());
+    if (patchedSeq == ALines)
+        return false;
 
     QStringList lReturnValue;
 

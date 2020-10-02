@@ -548,8 +548,9 @@ void CTestAze::testMerge()
 void CTestAze::testPatch()
 {
     QString sFile1Path = "Files/MergeTest1.txt";
+    QString sFile2Path = "Files/MergeTest2.txt";
     QString sPatchPath = "Files/Patch.txt";
-    QString sFile1Content;
+    QString sFileContent;
     QString sDiffPath = "Files/Diff.txt";
     QString sDiffContent;
     QString sResult;
@@ -562,22 +563,29 @@ void CTestAze::testPatch()
 
     // C1
     QVERIFY(createFile(sFile1Path, sC1));
+    QVERIFY(createFile(sFile2Path, sC1));
     STAGE(sFile1Path);
+    STAGE(sFile2Path);
     COMMIT("C1");
 
     // C2
     QVERIFY(createFile(sFile1Path, sC2));
+    QVERIFY(createFile(sFile2Path, sC2));
     STAGE(sFile1Path);
+    STAGE(sFile2Path);
     COMMIT("C2");
 
     DIFF_LAST(sDiffContent);
     QVERIFY(createFile(sPatchPath, sDiffContent));
 
     QVERIFY(createFile(sFile1Path, sC1));
+    QVERIFY(createFile(sFile2Path, sC1));
     PATCH(sResult, sPatchPath);
 
-    QVERIFY(readFile(sFile1Path, sFile1Content));
-    QVERIFY(sFile1Content == sC2);
+    QVERIFY(readFile(sFile1Path, sFileContent));
+    QVERIFY(sFileContent == sC2);
+    QVERIFY(readFile(sFile2Path, sFileContent));
+    QVERIFY(sFileContent == sC2);
 
     QVERIFY(createFile(sFile1Path, sC3));
     PATCH(sResult, sPatchPath);
