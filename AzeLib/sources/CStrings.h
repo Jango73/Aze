@@ -70,6 +70,7 @@ public:
     static const QString s_sDefaultBranchName;
 
     static const QString s_sTextBranchAlreadyExists;
+    static const QString s_sTextBranchDoesNotExist;
     static const QString s_sTextBranchNameEmpty;
     static const QString s_sTextCannotMergeSameCommits;
     static const QString s_sTextCommitEmpty;

@@ -73,6 +73,7 @@ int CAzeClient::run()
     case CConstants::eCommandCleanUp:           return cleanUp();
     case CConstants::eCommandCommit:            return commit();
     case CConstants::eCommandCreateBranch:      return createBranch();
+    case CConstants::eCommandDeleteBranch:      return deleteBranch();
     case CConstants::eCommandDiff:              return diff();
     case CConstants::eCommandDump:              return dump();
     case CConstants::eCommandInitRepository:    return init();

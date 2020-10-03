@@ -67,6 +67,7 @@ const QString CStrings::s_sStagingCommitFileName                = "stage";
 const QString CStrings::s_sDefaultBranchName                    = "trunk";
 
 const QString CStrings::s_sTextBranchAlreadyExists              = tr("Branch already exists.");
+const QString CStrings::s_sTextBranchDoesNotExist               = tr("Branch does not exist.");
 const QString CStrings::s_sTextBranchNameEmpty                  = tr("No branch name specified.");
 const QString CStrings::s_sTextCannotMergeSameCommits           = tr("You are trying to merge a commit onto itself, cannot do that.");
 const QString CStrings::s_sTextCommitEmpty                      = tr("No files to commit.");

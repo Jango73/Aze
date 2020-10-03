@@ -77,6 +77,9 @@ public:
     //! Creates a branch as sName
     bool createBranch(const QString& sName);
 
+    //! Deletes the branch sName
+    bool deleteBranch(const QString& sName);
+
     //! Sets the current branch to sName
     bool switchToBranch(const QString& sName, bool bAllowFileDelete = false);
 

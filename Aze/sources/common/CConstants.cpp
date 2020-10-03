@@ -14,6 +14,7 @@ const char* CConstants::s_sContextMain                      = "main";
 const char* CConstants::s_sSwitchCleanUp                    = "clean-up";
 const char* CConstants::s_sSwitchCommit                     = "commit";
 const char* CConstants::s_sSwitchCreateBranch               = "create-branch";
+const char* CConstants::s_sSwitchDeleteBranch               = "delete-branch";
 const char* CConstants::s_sSwitchDiff                       = "diff";
 const char* CConstants::s_sSwitchDump                       = "show";
 const char* CConstants::s_sSwitchHelp                       = "help";
@@ -66,33 +67,42 @@ const char* CConstants::s_sSwitchPort                       = "port";
 const int CConstants::s_iError_None                             = 0;
 const int CConstants::s_iError_CouldNotAddFiles                 = 1;
 const int CConstants::s_iError_CouldNotCreateBranch             = 2;
-const int CConstants::s_iError_CouldNotMerge                    = 3;
-const int CConstants::s_iError_CouldNotMoveFiles                = 4;
-const int CConstants::s_iError_CouldNotPatch                    = 5;
-const int CConstants::s_iError_CouldNotReadStage                = 6;
-const int CConstants::s_iError_CouldNotRemoveFiles              = 7;
-const int CConstants::s_iError_CouldNotRestoreStash             = 8;
-const int CConstants::s_iError_CouldNotRevertFiles              = 9;
-const int CConstants::s_iError_CouldNotSaveStash                = 10;
-const int CConstants::s_iError_CouldNotSetCurrentBranch         = 11;
-const int CConstants::s_iError_CouldNotWriteCurrentBranch       = 12;
-const int CConstants::s_iError_CouldNotWriteGeneralInformation  = 13;
-const int CConstants::s_iError_CouldNotWriteStage               = 14;
-const int CConstants::s_iError_NoBranchNameGiven                = 15;
-const int CConstants::s_iError_NoFileNameGiven                  = 16;
-const int CConstants::s_iError_NoRemoteHostNameGiven            = 17;
-const int CConstants::s_iError_NotARepository                   = 18;
-const int CConstants::s_iError_MergeHasConflicts                = 19;
-const int CConstants::s_iError_UnknownCommand                   = 20;
-const int CConstants::s_iError_UnknownSwitch                    = 21;
+const int CConstants::s_iError_CouldNotDeleteBranch             = 3;
+const int CConstants::s_iError_CouldNotMerge                    = 4;
+const int CConstants::s_iError_CouldNotMoveFiles                = 5;
+const int CConstants::s_iError_CouldNotPatch                    = 6;
+const int CConstants::s_iError_CouldNotReadStage                = 7;
+const int CConstants::s_iError_CouldNotRemoveFiles              = 8;
+const int CConstants::s_iError_CouldNotRestoreStash             = 9;
+const int CConstants::s_iError_CouldNotRevertFiles              = 10;
+const int CConstants::s_iError_CouldNotSaveStash                = 11;
+const int CConstants::s_iError_CouldNotSetCurrentBranch         = 12;
+const int CConstants::s_iError_CouldNotWriteCurrentBranch       = 13;
+const int CConstants::s_iError_CouldNotWriteGeneralInformation  = 14;
+const int CConstants::s_iError_CouldNotWriteStage               = 15;
+const int CConstants::s_iError_NoBranchNameGiven                = 16;
+const int CConstants::s_iError_NoFileNameGiven                  = 17;
+const int CConstants::s_iError_NoRemoteHostNameGiven            = 18;
+const int CConstants::s_iError_NotARepository                   = 19;
+const int CConstants::s_iError_MergeHasConflicts                = 20;
+const int CConstants::s_iError_UnknownCommand                   = 21;
+const int CConstants::s_iError_UnknownSwitch                    = 22;
 
 const QString CConstants::s_sAllFilesAreClean               = tr("All files are clean on branch %1.");
 const QString CConstants::s_sStatusOfFiles                  = tr("Status of working directory files, on branch %1:");
-const QString CConstants::s_sTextCannotMergeBranchWithSelf  = tr("Sorry, you can't merge a branch on itself...");
+const QString CConstants::s_sTextCannotDeleteCurrentBranch  = tr("Cannot delete the current branch. Please switch to another branch and try again.");
+const QString CConstants::s_sTextCannotMergeBranchWithSelf  = tr("Cannot merge a branch on itself.");
 const QString CConstants::s_sTextCommands                   = tr("Commands");
-const QString CConstants::s_sTextUnknownCommand             = tr("Unknown command...");
+const QString CConstants::s_sTextUnknownCommand             = tr("Unknown command.");
 const QString CConstants::s_sTextYouAreAlreadyOnBranch      = tr("You are already on branch %1.");
 const QString CConstants::s_sTextYouAreNowOnBranch          = tr("You are now on branch %1.");
+
+const QStringList CConstants::s_lCopyrights =
+{
+    "Aze Copyright (c) 2020 Jango73 (https://github.com/Jango73/Aze)",
+    "Based on Qt 5.13.2 Copyright (c) 2020 The Qt Company",
+    "Using Diff Template Library Copyright (c) 2015 Tatsuhiko Kubo <cubicdaiya@gmail.com> All rights reserved."
+};
 
 QMap<QString, CConstants::ECommand> CConstants::s_mCommands;
 QMap<QString, QString> CConstants::s_mHelp;
@@ -104,6 +114,7 @@ void CConstants::initCommandMap()
     s_mCommands[CConstants::s_sSwitchCleanUp]           = CConstants::eCommandCleanUp;
     s_mCommands[CConstants::s_sSwitchCommit]            = CConstants::eCommandCommit;
     s_mCommands[CConstants::s_sSwitchCreateBranch]      = CConstants::eCommandCreateBranch;
+    s_mCommands[CConstants::s_sSwitchDeleteBranch]      = CConstants::eCommandDeleteBranch;
     s_mCommands[CConstants::s_sSwitchDiff]              = CConstants::eCommandDiff;
     s_mCommands[CConstants::s_sSwitchDump]              = CConstants::eCommandDump;
     s_mCommands[CConstants::s_sSwitchHelp]              = CConstants::eCommandHelp;
@@ -128,6 +139,7 @@ void CConstants::initCommandMap()
     s_mHelp[CConstants::s_sSwitchCleanUp]               = tr("Clears the stage and reverts all files. Warning: loose files are deleted.");
     s_mHelp[CConstants::s_sSwitchCommit]                = tr("Creates a commit from the stage.");
     s_mHelp[CConstants::s_sSwitchCreateBranch]          = tr("Creates a branch.");
+    s_mHelp[CConstants::s_sSwitchDeleteBranch]          = tr("Deletes a branch.");
     s_mHelp[CConstants::s_sSwitchDiff]                  = tr("Shows a diff between two commits or files.");
     s_mHelp[CConstants::s_sSwitchDump]                  = tr("Dumps the content of a database object.");
     s_mHelp[CConstants::s_sSwitchHelp]                  = tr("Shows the help text.");

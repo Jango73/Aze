@@ -94,8 +94,9 @@ void CAzeClientArguments::showHelp(QTextStream* pOutStream)
 
     (*pOutStream) << "\n";
     (*pOutStream) << m_tParser.helpText();
-
-    (*pOutStream) << "Using Diff Template Library Copyright (c) 2015 Tatsuhiko Kubo <cubicdaiya@gmail.com> All rights reserved.";
+    (*pOutStream) << "\n";
+    for (const QString& sText : CConstants::s_lCopyrights)
+        (*pOutStream) << sText << "\n";
     (*pOutStream) << "\n";
 }
 

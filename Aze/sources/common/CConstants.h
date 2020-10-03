@@ -26,6 +26,7 @@ public:
         eCommandCleanUp,
         eCommandCommit,
         eCommandCreateBranch,
+        eCommandDeleteBranch,
         eCommandDiff,
         eCommandDump,
         eCommandHelp,
@@ -53,6 +54,7 @@ public:
     static const char* s_sSwitchCleanUp;
     static const char* s_sSwitchCommit;
     static const char* s_sSwitchCreateBranch;
+    static const char* s_sSwitchDeleteBranch;
     static const char* s_sSwitchDiff;
     static const char* s_sSwitchDump;
     static const char* s_sSwitchHelp;
@@ -99,6 +101,7 @@ public:
     static const int s_iError_None;
     static const int s_iError_CouldNotAddFiles;
     static const int s_iError_CouldNotCreateBranch;
+    static const int s_iError_CouldNotDeleteBranch;
     static const int s_iError_CouldNotMerge;
     static const int s_iError_CouldNotMoveFiles;
     static const int s_iError_CouldNotPatch;
@@ -123,11 +126,14 @@ public:
     // Text strings
     static const QString s_sAllFilesAreClean;
     static const QString s_sStatusOfFiles;
+    static const QString s_sTextCannotDeleteCurrentBranch;
     static const QString s_sTextCannotMergeBranchWithSelf;
     static const QString s_sTextCommands;
     static const QString s_sTextUnknownCommand;
     static const QString s_sTextYouAreAlreadyOnBranch;
     static const QString s_sTextYouAreNowOnBranch;
+
+    static const QStringList s_lCopyrights;
 
     static QMap<QString, CConstants::ECommand> s_mCommands;
     static QMap<QString, QString> s_mHelp;

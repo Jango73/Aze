@@ -37,6 +37,33 @@ int CAzeClient::createBranch()
 
 //-------------------------------------------------------------------------------------------------
 
+int CAzeClient::deleteBranch()
+{
+    // Repository sanity check
+    ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
+
+    ERROR_WHEN_FALSE_PRINT(
+                m_tArguments.m_lFilesAndIds.count() > 0,
+                CConstants::s_sTextCannotDeleteCurrentBranch,
+                CConstants::s_iError_NoBranchNameGiven
+                );
+
+    QString sBranchName = m_tArguments.m_lFilesAndIds[0];
+
+    ERROR_WHEN_FALSE_PRINT(
+                sBranchName != m_pRepository->currentBranchName(),
+                CConstants::s_sTextCannotDeleteCurrentBranch,
+                CConstants::s_iError_CouldNotDeleteBranch
+                );
+
+    // Delete the branch
+    ERROR_WHEN_FALSE(m_pRepository->deleteBranch(sBranchName), CConstants::s_iError_CouldNotDeleteBranch);
+
+    return CConstants::s_iError_None;
+}
+
+//-------------------------------------------------------------------------------------------------
+
 int CAzeClient::switchToBranch()
 {
     // Repository sanity check

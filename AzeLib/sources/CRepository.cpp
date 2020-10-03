@@ -92,7 +92,7 @@ bool CRepository::createBranch(const QString& sName)
 
     if (QFile(sBranchFileName).exists())
     {
-        OUT_INFO(CStrings::s_sTextBranchAlreadyExists);
+        tellInfo(CStrings::s_sTextBranchAlreadyExists);
     }
     else
     {
@@ -107,6 +107,22 @@ bool CRepository::createBranch(const QString& sName)
         pNewBranch->toNode().save(sBranchFileName);
     }
 
+    return true;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+bool CRepository::deleteBranch(const QString& sName)
+{
+    QString sBranchFileName = m_pDatabase->composeBranchFileName(sName);
+
+    if (not QFile(sBranchFileName).exists())
+    {
+        tellInfo(CStrings::s_sTextBranchDoesNotExist);
+        return false;
+    }
+
+    QFile::remove(sBranchFileName);
     return true;
 }
 

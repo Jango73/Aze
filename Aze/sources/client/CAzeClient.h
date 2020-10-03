@@ -59,6 +59,9 @@ public:
     //! Creates a branch
     int createBranch();
 
+    //! Deletes a branch
+    int deleteBranch();
+
     //! Switches to a branch
     int switchToBranch();
 
