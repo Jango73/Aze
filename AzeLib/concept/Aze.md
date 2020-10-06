@@ -66,17 +66,17 @@ These files reside in .aze/commits.
       some value 2
     ...
 <files>
-  Identifier@some-folder-1/some-file-1.txt \n
-  Identifier@some-folder-1/some-file-2.txt \n
-  Identifier@some-folder-2/some-file-3.cpp \n
-  Identifier@some-folder-2/some-file-4.h
+  some-folder-1/some-file-1.txt@Identifier\n
+  some-folder-1/some-file-2.txt@Identifier\n
+  some-folder-2/some-file-3.cpp@Identifier\n
+  some-folder-2/some-file-4.h@Identifier
   ...
 ```
 
 ## Object files structure
 These files reside in .aze/objects.
 
-Each object file holds data for a single file in the repository at a specific moment in time.
+Each object file holds data for a single file in the repository.
 A single object file may be referenced by many commits.
 
 ## Branching and merging
