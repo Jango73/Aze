@@ -1,0 +1,15 @@
+name: Install Qt
+      uses: jurplel/install-qt-action@v2
+      with:
+        version: '5.14.2'
+        host: 'windows'
+        target: 'desktop'
+        arch: 'win64_msvc2017_64'
+        dir: '${{ github.workspace }}/example/'
+        install-deps: 'true'
+        modules: 'qtcharts qtwebengine'
+        mirror: 'http://mirrors.ocf.berkeley.edu/qt/'
+        cached: 'false'
+        aqtversion: '==0.9.7'
+        py7zrversion: '==0.10.1'
+        extra: '--external 7z'
