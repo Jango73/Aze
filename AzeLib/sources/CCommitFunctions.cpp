@@ -24,6 +24,37 @@ CCommitFunctions::CCommitFunctions(CDatabase* pDatabase, QObject* parent, bool b
 {
 }
 
+
+//-------------------------------------------------------------------------------------------------
+
+CCommit* CCommitFunctions::getCommitAncestor(CDatabase* pDatabase, CCommit* pCommit, QObject* owner, int iDelta)
+{
+    QString pAncestor = pCommit->id();
+    int iGuard = 999999;
+
+    while (true)
+    {
+        QStringList parents = CCommit::parentIds(pDatabase, pAncestor);
+
+        if (parents.count() == 0)
+        {
+            pAncestor = "";
+            return nullptr;
+        }
+
+        // The first parent is the one to follow in order to stay on branch of pCommit
+        pAncestor = parents[0];
+
+        iDelta--;
+        iGuard--;
+
+        if (iDelta == 0 || iGuard == 0)
+            break;
+    }
+
+    return CCommit::fromId(pDatabase, pAncestor, owner);
+}
+
 //-------------------------------------------------------------------------------------------------
 
 QList<QPair<int, QString>> CCommitFunctions::getCommitAncestorList(
@@ -306,14 +337,13 @@ QString CCommitFunctions::getCommonCommitChains(
 void CCommitFunctions::diffCommits(QString& sOutput, CCommit* pCommit1, CCommit* pCommit2, const QStringList& lIgnoreFiles, int iDelta1, int iDelta2)
 {
     if (iDelta1 != 0)
-        pCommit1 = pCommit1->getAncestor(m_pDatabase, this, iDelta1);
+        pCommit1 = getCommitAncestor(m_pDatabase, pCommit1, this, iDelta1);
 
     if (iDelta2 != 0)
-        pCommit2 = pCommit2->getAncestor(m_pDatabase, this, iDelta2);
+        pCommit2 = getCommitAncestor(m_pDatabase, pCommit2, this, iDelta2);
 
     if (IS_NOT_NULL(pCommit1) && IS_NOT_NULL(pCommit2))
     {
-
         for (QString sName : pCommit2->files().keys())
         {
             if (not lIgnoreFiles.contains(sName))
@@ -331,6 +361,12 @@ void CCommitFunctions::diffCommits(QString& sOutput, CCommit* pCommit1, CCommit*
             }
         }
     }
+
+    if (iDelta1 != 0)
+        delete pCommit1;
+
+    if (iDelta2 != 0)
+        delete pCommit2;
 }
 
 //-------------------------------------------------------------------------------------------------

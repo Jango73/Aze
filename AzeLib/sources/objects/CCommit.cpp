@@ -186,36 +186,6 @@ QByteArray CCommit::fileContent(CDatabase* pDatabase, QString sFileName)
 
 //-------------------------------------------------------------------------------------------------
 
-CCommit* CCommit::getAncestor(CDatabase* pDatabase, QObject* owner, int iDelta)
-{
-    QString pAncestor = m_sId;
-    int iGuard = 999999;
-
-    while (true)
-    {
-        QStringList parents = parentIds(pDatabase, pAncestor);
-
-        if (parents.count() == 0)
-        {
-            pAncestor = "";
-            return nullptr;
-        }
-
-        // The first parent is the one to follow in order to stay on branch of pCommit
-        pAncestor = parents[0];
-
-        iDelta--;
-        iGuard--;
-
-        if (iDelta == 0 || iGuard == 0)
-            break;
-    }
-
-    return fromId(pDatabase, pAncestor, owner);
-}
-
-//-------------------------------------------------------------------------------------------------
-
 CCommit* CCommit::fromNode(const CXMLNode& xNode, QObject* parent, QString sCommitId)
 {
     QDictionary mFiles;

@@ -47,6 +47,9 @@ public:
     // Control methods
     //-------------------------------------------------------------------------------------------------
 
+    //! Returns the nth ancestor of a commit
+    CCommit* getCommitAncestor(CDatabase* pDatabase, CCommit* pCommit, QObject* owner = nullptr, int iDelta = 1);
+
     //! Returns a list of pairs (distance, id) of ancestors of sCommitId
     QList<QPair<int, QString>> getCommitAncestorList(
             const QString& sCommitId,

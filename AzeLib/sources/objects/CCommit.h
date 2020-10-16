@@ -89,9 +89,6 @@ public:
     //!
     QByteArray fileContent(CDatabase* pDatabase, QString sFileName);
 
-    //!
-    CCommit* getAncestor(CDatabase* pDatabase, QObject* owner = nullptr, int iDelta = 1);
-
     //-------------------------------------------------------------------------------------------------
     // Static control methods
     //-------------------------------------------------------------------------------------------------
