@@ -31,7 +31,7 @@ bool CMergeCommand::execute()
     }
 
     // Check presence of current branch
-    if (IS_NULL(m_pRepository->currentBranch()))
+    if (m_pRepository->currentBranch().isNull())
     {
         m_pRepository->tellError(CStrings::s_sTextBranchNameEmpty);
         return false;
@@ -52,7 +52,6 @@ bool CMergeCommand::execute()
     }
 
     CCommit* pToTipCommit = m_pRepository->tipCommit().get();
-
     CBranch* pFromBranch = m_pRepository->database()->getBranch(m_sFromBranch, this);
 
     // Check presence of 'from' branch tip commit

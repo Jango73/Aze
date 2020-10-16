@@ -26,7 +26,7 @@ CSwitchToBranchCommand::CSwitchToBranchCommand(CRepository* pRepository, const Q
 bool CSwitchToBranchCommand::execute()
 {
     // Check presence of current branch
-    if (IS_NULL(m_pRepository->currentBranch()))
+    if (m_pRepository->currentBranch().isNull())
     {
         m_pRepository->tellError(CStrings::s_sTextNoCurrentBranch);
         return false;
@@ -50,7 +50,7 @@ bool CSwitchToBranchCommand::execute()
 
     // Make the branch switch
     m_pRepository->setCurrentBranchName(m_sBranchName);
-    m_pRepository->readCurrentBranch();
+    m_pRepository->refreshCurrentBranch();
 
     // Get the working directory as commit
     CCommit* pToCommit = m_pRepository->commitFunctions()->directoryAsCommit(this);

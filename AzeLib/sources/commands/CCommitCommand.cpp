@@ -23,7 +23,7 @@ CCommitCommand::CCommitCommand(CRepository* pRepository, const QString& sAuthor,
 bool CCommitCommand::execute()
 {
     // Check presence of current branch
-    if (IS_NULL(m_pRepository->currentBranch()))
+    if (m_pRepository->currentBranch().isNull())
     {
         m_pRepository->tellError(CStrings::s_sTextNoCurrentBranch);
         return false;

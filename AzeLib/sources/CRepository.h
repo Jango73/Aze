@@ -49,7 +49,7 @@ public:
     Q_FAST_PROPERTY(QString, s, currentBranchName, CurrentBranchName)
     Q_FAST_PROPERTY(QString, s, stagingCommitFileName, StagingCommitFileName)
 
-    Q_FAST_PROPERTY(CBranch*, p, currentBranch, CurrentBranch)
+    Q_FAST_REFED_PROPERTY(CLazyPointer<CBranch>, p, currentBranch, CurrentBranch)
     Q_FAST_REFED_PROPERTY(CLazyPointer<CCommit>, p, stagingCommit, StagingCommit)
     Q_FAST_REFED_PROPERTY(CLazyPointer<CCommit>, p, rootCommit, RootCommit)
     Q_FAST_REFED_PROPERTY(CLazyPointer<CCommit>, p, tipCommit, TipCommit)
@@ -132,11 +132,12 @@ public:
     //! Reads the stage commit
     bool readGeneralInformation();
 
-    //! Reads the current branch
-    bool readCurrentBranch();
-
     //! Writes the general information
     bool writeGeneralInformation();
+
+    //! Forces a reload of the current branch
+    //! Needed when switching branches
+    void refreshCurrentBranch();
 
     //! Writes the current branch
     bool writeCurrentBranch();
@@ -187,6 +188,9 @@ public:
     //-------------------------------------------------------------------------------------------------
     // Instantiators
     //-------------------------------------------------------------------------------------------------
+
+    //! Reads the current branch
+    static CBranch* readCurrentBranch(void* pContext);
 
     //! Reads the general information
     static CCommit* readStage(void* pContext);

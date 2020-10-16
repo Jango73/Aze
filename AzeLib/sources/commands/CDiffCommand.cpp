@@ -31,7 +31,7 @@ bool CDiffCommand::execute()
     bool bWorkOnCommits = false;
 
     // Check presence of current branch
-    if (IS_NULL(m_pRepository->currentBranch()))
+    if (m_pRepository->currentBranch().isNull())
     {
         m_pRepository->tellError(CStrings::s_sTextNoCurrentBranch);
         return false;

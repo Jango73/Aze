@@ -24,7 +24,6 @@ CCommitFunctions::CCommitFunctions(CDatabase* pDatabase, QObject* parent, bool b
 {
 }
 
-
 //-------------------------------------------------------------------------------------------------
 
 CCommit* CCommitFunctions::getCommitAncestor(CDatabase* pDatabase, CCommit* pCommit, QObject* owner, int iDelta)

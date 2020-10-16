@@ -24,7 +24,7 @@ CSaveStashCommand::CSaveStashCommand(CRepository* pRepository, const QString& sM
 bool CSaveStashCommand::execute()
 {
     // Check presence of current branch
-    if (IS_NULL(m_pRepository->currentBranch()))
+    if (m_pRepository->currentBranch().isNull())
     {
         if (not m_bCalledInternally)
             m_pRepository->tellError(CStrings::s_sTextNoCurrentBranch);

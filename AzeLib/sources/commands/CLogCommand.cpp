@@ -41,7 +41,7 @@ bool CLogCommand::execute()
     bool bGetAllLog = m_iCount == 0;
 
     // Check presence of current branch
-    if (IS_NULL(m_pRepository->currentBranch()))
+    if (m_pRepository->currentBranch().isNull())
     {
         m_pRepository->tellError(CStrings::s_sTextNoCurrentBranch);
         return false;

@@ -48,7 +48,7 @@ CRepository::CRepository(const QString& sRootPath, QObject* parent, bool bSilent
     , m_pDatabase(new CDatabase(sRootPath, this))
     , m_pRemoteHostInfo(new CRemoteHostInfo(this))
     , m_pCommitFunctions(new CCommitFunctions(m_pDatabase, this, bSilent, bDebug))
-    , m_pCurrentBranch(nullptr)
+    , m_pCurrentBranch(readCurrentBranch, this)
     , m_pStagingCommit(readStage, this)
     , m_pRootCommit(readRootCommit, this)
     , m_pTipCommit(readTipCommit, this)
@@ -64,7 +64,6 @@ CRepository::CRepository(const QString& sRootPath, QObject* parent, bool bSilent
     if (m_bOk)
     {
         readGeneralInformation();
-        readCurrentBranch();
     }
 }
 
@@ -90,13 +89,9 @@ bool CRepository::init()
     if (m_pDatabase->init())
     {
         createBranch(CStrings::s_sDefaultBranchName);
-
-        QString sBranchFileName = m_pDatabase->composeBranchFileName(CStrings::s_sDefaultBranchName);
-        setCurrentBranch(CBranch::fromNode(CXMLNode::load(sBranchFileName), this));
         setCurrentBranchName(CStrings::s_sDefaultBranchName);
 
         writeGeneralInformation();
-        writeCurrentBranch();
 
         setOk(true);
 
@@ -123,7 +118,7 @@ bool CRepository::createBranch(const QString& sName)
     {
         CBranch* pNewBranch = new CBranch(this);
 
-        if (not IS_NULL(m_pCurrentBranch))
+        if (not m_pCurrentBranch.isNull())
         {
             pNewBranch->setRootCommitId(m_pCurrentBranch->tipCommitId());
             pNewBranch->setTipCommitId(m_pCurrentBranch->tipCommitId());
@@ -356,23 +351,6 @@ bool CRepository::readGeneralInformation()
 
 //-------------------------------------------------------------------------------------------------
 
-/*!
-    Reads the current branch file.
-*/
-bool CRepository::readCurrentBranch()
-{
-    QString sFileName = m_pDatabase->composeBranchFileName(m_sCurrentBranchName);
-    setCurrentBranch(CBranch::fromNode(CXMLNode::load(sFileName), this));
-
-    m_pStagingCommit.clear();
-    m_pTipCommit.clear();
-    m_pRootCommit.clear();
-
-    return true;
-}
-
-//-------------------------------------------------------------------------------------------------
-
 bool CRepository::writeGeneralInformation()
 {
     CXMLNode xInfo(CStrings::s_sParamInfo);
@@ -405,9 +383,17 @@ bool CRepository::writeGeneralInformation()
 
 //-------------------------------------------------------------------------------------------------
 
+void CRepository::refreshCurrentBranch()
+{
+    m_pCurrentBranch.clear();
+    m_pCurrentBranch.get();
+}
+
+//-------------------------------------------------------------------------------------------------
+
 bool CRepository::writeCurrentBranch()
 {
-    if (m_pCurrentBranch != nullptr)
+    if (not m_pCurrentBranch.isNull())
         m_pCurrentBranch->toNode().save(m_pDatabase->composeBranchFileName(m_sCurrentBranchName));
 
     return true;
@@ -514,10 +500,10 @@ void CRepository::tellInfo(const QString& sText)
 
 QString CRepository::processKeywords(const QString& sText)
 {
-    if (sText == CStrings::s_sParamTip && not IS_NULL(m_pCurrentBranch))
+    if (sText == CStrings::s_sParamTip && not m_pCurrentBranch.isNull())
         return m_pCurrentBranch->tipCommitId();
 
-    if (sText == CStrings::s_sParamRoot && not IS_NULL(m_pCurrentBranch))
+    if (sText == CStrings::s_sParamRoot && not m_pCurrentBranch.isNull())
         return m_pCurrentBranch->rootCommitId();
 
     return sText;
@@ -570,13 +556,29 @@ QString CRepository::diffWorkingDirectory()
 //-------------------------------------------------------------------------------------------------
 
 /*!
+    Reads the current branch file.
+*/
+CBranch* CRepository::readCurrentBranch(void* pContext)
+{
+    CRepository* pRepository = static_cast<CRepository*>(pContext);
+
+    pRepository->m_pStagingCommit.clear();
+    pRepository->m_pRootCommit.clear();
+    pRepository->m_pTipCommit.clear();
+
+    return  pRepository->m_pDatabase->getBranch(pRepository->m_sCurrentBranchName, nullptr);
+}
+
+//-------------------------------------------------------------------------------------------------
+
+/*!
     Reads the stage commit.
 */
 CCommit* CRepository::readStage(void* pContext)
 {
     CRepository* pRepository = static_cast<CRepository*>(pContext);
 
-    return CCommit::fromFile(pRepository->m_sStagingCommitFileName, pRepository, "");
+    return CCommit::fromFile(pRepository->m_sStagingCommitFileName, nullptr, "");
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -589,7 +591,7 @@ CCommit* CRepository::readRootCommit(void* pContext)
     CRepository* pRepository = static_cast<CRepository*>(pContext);
 
     if (not pRepository->m_pCurrentBranch->rootCommitId().isEmpty())
-        return pRepository->m_pDatabase->getCommit(pRepository->m_pCurrentBranch->rootCommitId(), pRepository);
+        return pRepository->m_pDatabase->getCommit(pRepository->m_pCurrentBranch->rootCommitId(), nullptr);
 
     return nullptr;
 }
@@ -604,7 +606,7 @@ CCommit* CRepository::readTipCommit(void* pContext)
     CRepository* pRepository = static_cast<CRepository*>(pContext);
 
     if (not pRepository->m_pCurrentBranch->tipCommitId().isEmpty())
-        return pRepository->m_pDatabase->getCommit(pRepository->m_pCurrentBranch->tipCommitId(), pRepository);
+        return pRepository->m_pDatabase->getCommit(pRepository->m_pCurrentBranch->tipCommitId(), nullptr);
 
     return nullptr;
 }
