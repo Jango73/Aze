@@ -3,6 +3,9 @@
 #include <QDebug>
 #include <QDir>
 
+// qt-plus
+#include "File/CDirectoryListing.h"
+
 // Application
 #include "CCommitFunctions.h"
 #include "CEnums.h"
@@ -19,46 +22,6 @@ CCommitFunctions::CCommitFunctions(CDatabase* pDatabase, QObject* parent, bool b
     , m_bSilent(bSilent)
     , m_bDebug(bDebug)
 {
-}
-
-//-------------------------------------------------------------------------------------------------
-
-CCommit* CCommitFunctions::getCommitAncestor(CCommit* pCommit, QObject* owner, int iDelta)
-{
-    if (IS_NULL(pCommit))
-        return nullptr;
-
-    CCommit* pAncestor = pCommit;
-    int iGuard = 999999;
-
-    while (true)
-    {
-        QList<CCommit*> parents = CCommit::parentList(m_pDatabase, pAncestor, owner);
-
-        if (parents.count() == 0)
-        {
-            pAncestor = nullptr;
-            break;
-        }
-
-        // Delete unused data
-        if (pAncestor != pCommit)
-            delete pAncestor;
-
-        // The first parent is the one to follow in order to stay on branch of pCommit
-        pAncestor = parents[0]->clone(owner);
-
-        // Delete unused data
-        qDeleteAll(parents);
-
-        iDelta--;
-        iGuard--;
-
-        if (iDelta == 0 || iGuard == 0)
-            return pAncestor;
-    }
-
-    return pAncestor;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -230,12 +193,12 @@ void CCommitFunctions::getShortestCommitChainRecurse(
         lNewList << sParentId;
 
         getShortestCommitChainRecurse(
-            lCommitListList,
-            lNewList,
-            sParentId,
-            sStopAtCommitId,
-            iGuard - 1
-            );
+                    lCommitListList,
+                    lNewList,
+                    sParentId,
+                    sStopAtCommitId,
+                    iGuard - 1
+                    );
 
         lCommitListList << lNewList;
     }
@@ -340,63 +303,13 @@ QString CCommitFunctions::getCommonCommitChains(
 
 //-------------------------------------------------------------------------------------------------
 
-CCommit* CCommitFunctions::directoryAsCommit(QObject* owner, QString sRootPath)
-{
-    CCommit* pNewCommit = new CCommit(owner);
-    QStringList lFiles;
-
-    if (sRootPath.isEmpty())
-        sRootPath = m_pDatabase->rootPath();
-
-    listFilesRecursive(lFiles, sRootPath, sRootPath);
-
-    // Add agregated files to the commit
-    // The id will be generated from the file's contents
-    for (QString sFile : lFiles)
-        pNewCommit->addFile(m_pDatabase, sFile);
-
-    return pNewCommit;
-}
-
-//-------------------------------------------------------------------------------------------------
-
-void CCommitFunctions::listFilesRecursive(QStringList& lStack, QString sRootDirectory, QString sCurrentDirectory)
-{
-    QStringList lFilter; lFilter << "*";
-
-    QDir dDirectory(sCurrentDirectory);
-    QFileInfoList lFiles = dDirectory.entryInfoList(lFilter, QDir::Files | QDir::NoSymLinks);
-
-    for (QFileInfo iFile : lFiles)
-    {
-        QString sFullName = QString("%1/%2").arg(iFile.absolutePath()).arg(iFile.fileName());
-        lStack << CUtils::relativeFileName(sRootDirectory, sFullName);
-    }
-
-    lFiles = dDirectory.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot | QDir::NoSymLinks);
-
-    for (QFileInfo iFile : lFiles)
-    {
-        QString sDirectoryName = iFile.fileName();
-
-        // Proceed recursively if we are not entering the .aze directory
-        if (sDirectoryName != CStrings::s_sPathAzeDataRootPath)
-        {
-            QString sTargetDirectory = QString("%1/%2").arg(sCurrentDirectory).arg(sDirectoryName);
-            listFilesRecursive(lStack, sRootDirectory, sTargetDirectory);
-        }
-    }
-}
-
-//-------------------------------------------------------------------------------------------------
-
 void CCommitFunctions::diffCommits(QString& sOutput, CCommit* pCommit1, CCommit* pCommit2, const QStringList& lIgnoreFiles, int iDelta1, int iDelta2)
 {
     if (iDelta1 != 0)
-        pCommit1 = getCommitAncestor(pCommit1, this, iDelta1);
+        pCommit1 = pCommit1->getAncestor(m_pDatabase, this, iDelta1);
 
     if (iDelta2 != 0)
-        pCommit2 = getCommitAncestor(pCommit2, this, iDelta2);
+        pCommit2 = pCommit2->getAncestor(m_pDatabase, this, iDelta2);
 
     if (IS_NOT_NULL(pCommit1) && IS_NOT_NULL(pCommit2))
     {
@@ -442,11 +355,11 @@ void CCommitFunctions::diffCommitLists(QString& sOutput, const QList<CCommit*>& 
         CCommit* pCommit1 = lFromList[index - 1];
         CCommit* pCommit2 = lFromList[index];
 
-//        QList<CCommit*>::const_iterator foundCommit = std::find_if(
-//                    lIgnoreList.begin(),
-//                    lIgnoreList.end(),
-//                    [&](const CCommit*& c) { return c->id() == pCommit2->id(); }
-//        );
+        //        QList<CCommit*>::const_iterator foundCommit = std::find_if(
+        //                    lIgnoreList.begin(),
+        //                    lIgnoreList.end(),
+        //                    [&](const CCommit*& c) { return c->id() == pCommit2->id(); }
+        //        );
 
         bool bFound = false;
 
@@ -457,7 +370,7 @@ void CCommitFunctions::diffCommitLists(QString& sOutput, const QList<CCommit*>& 
                 break;
             }
 
-//        if (foundCommit == lIgnoreList.end())
+        //        if (foundCommit == lIgnoreList.end())
         if (bFound == false)
         {
             for (QString sName : pCommit2->files().keys())
@@ -781,6 +694,30 @@ bool CCommitFunctions::threeWayMerge(CCommit* pBaseCommit, CCommit* pFromTipComm
     }
 
     return not bHasConflicts;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+CCommit* CCommitFunctions::directoryAsCommit(QObject* owner, QString sRootPath)
+{
+    CCommit* pNewCommit = new CCommit(owner);
+    QStringList lFiles;
+
+    if (sRootPath.isEmpty())
+        sRootPath = m_pDatabase->rootPath();
+
+    // List contents of directory
+    CDirectoryListing tDirectory;
+    tDirectory.addIgnoreName(CStrings::s_sPathAzeDataRootPath);
+    tDirectory.setRootPath(sRootPath);
+
+    // Add agregated files to the commit
+    // The id will be generated from the file's contents
+    for (const CDirectoryListingItem& sFile : tDirectory.files())
+        if (not sFile.isFolder())
+            pNewCommit->addFile(m_pDatabase, sFile.relativeName());
+
+    return pNewCommit;
 }
 
 //-------------------------------------------------------------------------------------------------

@@ -27,19 +27,6 @@
 #include "CStrings.h"
 
 using namespace dtl;
-using std::vector;
-using std::string;
-using std::pair;
-using std::ostream;
-using std::list;
-using std::for_each;
-using std::distance;
-using std::fill;
-using std::cout;
-using std::endl;
-using std::rotate;
-using std::swap;
-using std::max;
 
 namespace Aze {
 

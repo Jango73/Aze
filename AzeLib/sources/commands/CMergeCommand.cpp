@@ -38,20 +38,20 @@ bool CMergeCommand::execute()
     }
 
     // Check presence of stage
-    if (IS_NULL(m_pRepository->stagingCommit()))
+    if (m_pRepository->stagingCommit().isNull())
     {
         m_pRepository->tellError(CStrings::s_sTextNoStagingCommit);
         return false;
     }
 
     // Check presence of current branch tip commit
-    if (IS_NULL(m_pRepository->tipCommit()))
+    if (m_pRepository->tipCommit().isNull())
     {
         m_pRepository->tellError(CStrings::s_sTextNoTipCommit);
         return false;
     }
 
-    CCommit* pToTipCommit = m_pRepository->tipCommit();
+    CCommit* pToTipCommit = m_pRepository->tipCommit().get();
 
     CBranch* pFromBranch = m_pRepository->database()->getBranch(m_sFromBranch, this);
 
@@ -117,7 +117,7 @@ bool CMergeCommand::execute()
         return false;
     }
 
-    m_bHasConflicts = not m_pRepository->commitFunctions()->threeWayMerge(pCommonAncestor, pFromTipCommit, pToTipCommit, true, m_pRepository->stagingCommit());
+    m_bHasConflicts = not m_pRepository->commitFunctions()->threeWayMerge(pCommonAncestor, pFromTipCommit, pToTipCommit, true, m_pRepository->stagingCommit().get());
 
     // Set merge information in staging commit
     // Only the 'from' commit is added as a parent here, the other will be added by commit command

@@ -37,7 +37,7 @@ bool CStageCommand::execute()
 
 bool CStageCommand::addSingleFile(QString sRelativeFileName)
 {
-    if (not IS_NULL(m_pRepository->stagingCommit()))
+    if (not m_pRepository->stagingCommit().isNull())
     {
         if (CUtils::fileExists(m_pRepository->database()->rootPath(), sRelativeFileName))
         {

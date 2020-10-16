@@ -33,17 +33,16 @@ bool CStatusCommand::execute()
     if (IS_NULL(m_pGeneralStatus))
         return false;
 
-    if (IS_NULL(m_pRepository->stagingCommit()))
+    if (m_pRepository->stagingCommit().isNull())
         return false;
 
     (*m_pGeneralStatus) = CEnums::eClean;
 
-    CCommit* pStageCommit = m_pRepository->stagingCommit();
     CCommit* pFromCommit = nullptr;
 
-    if (not IS_NULL(m_pRepository->tipCommit()))
+    if (not m_pRepository->tipCommit().isNull())
     {
-        pFromCommit = m_pRepository->tipCommit();
+        pFromCommit = m_pRepository->tipCommit().get();
     }
     else
     {
@@ -62,7 +61,7 @@ bool CStatusCommand::execute()
     {
         QString sIdInFrom = pFromCommit->files()[sRelativeName];
         QString sIdInWork = pWorkCommit->files()[sRelativeName];
-        QString sIdInStage = pStageCommit->files()[sRelativeName];
+        QString sIdInStage = m_pRepository->stagingCommit()->files()[sRelativeName];
 
         CFile file;
         file.setRelativeName(sRelativeName);
@@ -107,7 +106,7 @@ bool CStatusCommand::execute()
     // Traverse tip commit files
     // Every file in the tip not existing in working directory is considered missing
     // TODO: Unless marked as deleted
-    if (IS_NOT_NULL(m_pRepository->tipCommit()))
+    if (not m_pRepository->tipCommit().isNull())
     {
         for (QString sRelativeName : m_pRepository->tipCommit()->files().keys())
         {

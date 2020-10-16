@@ -35,7 +35,6 @@ public:
 
     Q_FAST_PROPERTY(bool, b, isMerge, IsMerge)
     Q_FAST_PROPERTY(QString, s, author, Author)
-    Q_FAST_PROPERTY(QString, s, date, Date)
     Q_FAST_PROPERTY(QString, s, message, Message)
     Q_FAST_PROPERTY(QStringList, l, parents, Parents)
     Q_FAST_PROPERTY(QDictionary, m, user, User)
@@ -70,9 +69,6 @@ public:
     bool toFile(const QString& sFileName) const;
 
     //!
-    void setDateToNow();
-
-    //!
     void clearParents();
 
     //!
@@ -92,6 +88,9 @@ public:
 
     //!
     QByteArray fileContent(CDatabase* pDatabase, QString sFileName);
+
+    //!
+    CCommit* getAncestor(CDatabase* pDatabase, QObject* owner = nullptr, int iDelta = 1);
 
     //-------------------------------------------------------------------------------------------------
     // Static control methods

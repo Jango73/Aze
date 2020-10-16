@@ -40,7 +40,7 @@ bool CPopStashCommand::execute()
             m_pRepository->database()->removeStash(m_sId);
             m_pRepository->removeStashFromList(m_sId);
 
-            if (IS_NOT_NULL(m_pRepository->stagingCommit()) && IS_NOT_NULL(pStash->stage()))
+            if (not m_pRepository->stagingCommit().isNull() && IS_NOT_NULL(pStash->stage()))
             {
                 m_pRepository->stagingCommit()->addCommit(m_pRepository->database(), pStash->stage());
             }

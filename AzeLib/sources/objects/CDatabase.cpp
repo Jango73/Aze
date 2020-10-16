@@ -170,7 +170,7 @@ QString CDatabase::absoluteFileName(const QString& sFileName)
 
 QString CDatabase::generalInformationFileName()
 {
-	return QString("%1/%2").arg(m_sDataPath).arg(CStrings::s_sGeneralInformationFileName);
+    return QString("%1/%2").arg(m_sDataPath).arg(CStrings::s_sGeneralInformationFileName);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -226,7 +226,7 @@ QString CDatabase::composeStashFileName(const QString& sId)
 
 //-------------------------------------------------------------------------------------------------
 
-QString CDatabase::storeFile(const QString& sFileName)
+QString CDatabase::storeFileAsObject(const QString& sFileName)
 {
     QString sId;
     QFile tInputFile(sFileName);

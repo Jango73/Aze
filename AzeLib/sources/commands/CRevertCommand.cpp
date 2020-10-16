@@ -12,6 +12,16 @@ namespace Aze {
 
 //-------------------------------------------------------------------------------------------------
 
+CRevertCommand::CRevertCommand(CRepository* pRepository, bool bAllowFileDelete)
+    : CBaseCommand(pRepository)
+    , m_bAllowFileDelete(bAllowFileDelete)
+    , m_pWorkingDirectory(pRepository->commitFunctions()->directoryAsCommit(this))
+    , m_lFileNames(m_pWorkingDirectory->files().keys())
+{
+}
+
+//-------------------------------------------------------------------------------------------------
+
 CRevertCommand::CRevertCommand(CRepository* pRepository, const QStringList& lFileNames, bool bAllowFileDelete)
     : CBaseCommand(pRepository)
     , m_bAllowFileDelete(bAllowFileDelete)
@@ -52,7 +62,7 @@ bool CRevertCommand::revertSingleFile(QString sRelativeFileName)
     bool bInStage = false;
 
     // Check presence of stage
-    if (IS_NULL(m_pRepository->stagingCommit()))
+    if (m_pRepository->stagingCommit().isNull())
     {
         m_pRepository->tellError(CStrings::s_sTextNoStagingCommit);
         return false;
@@ -61,7 +71,7 @@ bool CRevertCommand::revertSingleFile(QString sRelativeFileName)
     bInStage = m_pRepository->stagingCommit()->files().keys().contains(sRelativeFileName);
 
     // Proceed only when there is a tip commit
-    if (not IS_NULL(m_pRepository->tipCommit()))
+    if (not m_pRepository->tipCommit().isNull())
     {
         // Get the id of this file in the tip commit
         QString sIdInTip = m_pRepository->tipCommit()->files()[sRelativeFileName];

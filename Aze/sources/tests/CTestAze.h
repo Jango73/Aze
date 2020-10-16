@@ -71,6 +71,9 @@ private:
 
 private slots:
 
+    //
+    void testCommit();
+
     // Tests merge functionality
     void testMerge();
 
@@ -99,6 +102,8 @@ private:
     QString m_sBranch1Path;
     QString m_sFilesFolderName;
     QString m_sFilesFolderPath;
+    QString m_sFilesSubFolderName;
+    QString m_sFilesSubFolderPath;
     QString m_sBranch1;
     QString m_sBranch2;
     int m_iCommitIndex;

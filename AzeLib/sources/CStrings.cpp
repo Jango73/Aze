@@ -28,6 +28,7 @@ const QString CStrings::s_sParamAuthor                          = "author";
 const QString CStrings::s_sParamBranch                          = "branch";
 const QString CStrings::s_sParamBranches                        = "branches";
 const QString CStrings::s_sParamCommit                          = "commit";
+const QString CStrings::s_sParamCommitChain                     = "commitChain";
 const QString CStrings::s_sParamCurrent                         = "current";
 const QString CStrings::s_sParamDate                            = "date";
 const QString CStrings::s_sParamDiff                            = "diff";
@@ -61,7 +62,7 @@ const QString CStrings::s_sPathAzeMergePath                     = "merge";
 const QString CStrings::s_sPathAzeObjectPath                    = "objects";
 const QString CStrings::s_sPathAzeStashPath                     = "stash";
 
-const QString CStrings::s_sGeneralInformationFileName                  = "info." XMLC_EXTENSION;
+const QString CStrings::s_sGeneralInformationFileName           = "info." XMLC_EXTENSION;
 const QString CStrings::s_sStagingCommitFileName                = "stage";
 
 const QString CStrings::s_sDefaultBranchName                    = "trunk";

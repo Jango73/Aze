@@ -38,7 +38,9 @@ bool CSwitchToBranchCommand::execute()
         return false;
 
     // Save stash : diffs between last commit and working directory
-    bool bStashSaved = CSaveStashCommand(m_pRepository, "").execute();
+    CSaveStashCommand stash(m_pRepository, "");
+    stash.setCalledInternally(true);
+    bool bStashSaved = stash.execute();
 
     if (not bStashSaved)
     {
@@ -49,7 +51,6 @@ bool CSwitchToBranchCommand::execute()
     // Make the branch switch
     m_pRepository->setCurrentBranchName(m_sBranchName);
     m_pRepository->readCurrentBranch();
-    m_pRepository->readTipCommit();
 
     // Get the working directory as commit
     CCommit* pToCommit = m_pRepository->commitFunctions()->directoryAsCommit(this);

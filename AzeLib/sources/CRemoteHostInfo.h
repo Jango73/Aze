@@ -26,7 +26,7 @@ public:
     //-------------------------------------------------------------------------------------------------
 
     Q_FAST_PROPERTY(QString, s, name, Name)
-	Q_FAST_PROPERTY(QString, s, repositoryPath, RepositoryPath)
+    Q_FAST_PROPERTY(QString, s, repositoryPath, RepositoryPath)
 
     //-------------------------------------------------------------------------------------------------
     // Constructor & destructor

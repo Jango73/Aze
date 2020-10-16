@@ -31,6 +31,7 @@ public:
     static const QString s_sParamBranch;
     static const QString s_sParamBranches;
     static const QString s_sParamCommit;
+    static const QString s_sParamCommitChain;
     static const QString s_sParamCurrent;
     static const QString s_sParamDate;
     static const QString s_sParamDiff;

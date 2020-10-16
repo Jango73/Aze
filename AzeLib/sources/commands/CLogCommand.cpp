@@ -48,7 +48,7 @@ bool CLogCommand::execute()
     }
 
     // Check presence of tip commit
-    if (IS_NULL(m_pRepository->tipCommit()))
+    if (m_pRepository->tipCommit().isNull())
     {
         m_pRepository->tellError(CStrings::s_sTextNoTipCommit);
         return false;

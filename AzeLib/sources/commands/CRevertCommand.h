@@ -23,6 +23,9 @@ public:
     //-------------------------------------------------------------------------------------------------
 
     //!
+    CRevertCommand(CRepository* pRepository, bool bAllowFileDelete = false);
+
+    //!
     CRevertCommand(CRepository* pRepository, const QStringList& lFileNames, bool bAllowFileDelete = false);
 
     //!

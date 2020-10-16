@@ -31,6 +31,7 @@ public:
 
     Q_FAST_PROPERTY_NO_SET_IMPL(QString, s, id, Id)
     Q_PROPERTY(QString shortId READ shortId NOTIFY shortIdChanged)
+    Q_FAST_PROPERTY(QString, s, date, Date)
 
 public:
 
@@ -57,6 +58,9 @@ public:
 
     //!
     QString generateId() const;
+
+    //!
+    void setDateToNow();
 
     //!
     virtual CXMLNode toNode() const;

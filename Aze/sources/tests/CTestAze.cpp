@@ -1,4 +1,7 @@
 
+// std
+#include "stdlib.h"
+
 // Qt
 #include <QFile>
 #include <QDir>
@@ -24,10 +27,12 @@
     clearRepository(); \
     QDir rootDir(m_sRootPath); \
     QVERIFY(rootDir.mkdir(m_sFilesFolderName)); \
+    QDir filesDir(m_sFilesFolderPath); \
+    QVERIFY(filesDir.mkdir(m_sFilesSubFolderName)); \
     exec({ CConstants::s_sSwitchInitRepository })
 
 #define COMMIT(a) \
-exec({ \
+    exec({ \
     CConstants::s_sSwitchCommit, \
     QString("--%1").arg(SILENT_OR_DEBUG), \
     QString("--%1").arg(CConstants::s_sSwitchMessage), \
@@ -91,7 +96,13 @@ exec({ \
     a = exec({ \
     CConstants::s_sSwitchPatch, \
     QString("--%1").arg(SILENT_OR_DEBUG), \
-    b, \
+    b \
+    })
+
+#define STATUS(a) \
+    a = exec({ \
+    CConstants::s_sSwitchShowStatus, \
+    QString("--%1").arg(SILENT_OR_DEBUG) \
     })
 
 //-------------------------------------------------------------------------------------------------
@@ -124,6 +135,9 @@ CTestAze::CTestAze(const QString& sArgument0)
 
     m_sFilesFolderName = "Files";
     m_sFilesFolderPath = QString("%1/%2").arg(m_sRootPath).arg(m_sFilesFolderName);
+
+    m_sFilesSubFolderName = "OtherFiles";
+    m_sFilesSubFolderPath = QString("%1/%2/%3").arg(m_sRootPath).arg(m_sFilesFolderName).arg(m_sFilesSubFolderName);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -236,18 +250,18 @@ void CTestAze::createManyFiles()
 QString CTestAze::exec(const QStringList& lInputArguments)
 {
     QStringList lFinalArguments(lInputArguments);
-    QByteArray baOutput;
+    QString baOutput;
     QTextStream sOutput(&baOutput);
 
     lFinalArguments.prepend(m_sArgument0);
     int argc = lFinalArguments.count();
-    char** argv = new char*[size_t(argc)];
+    char** argv = new char*[std::size_t(argc)];
     int index;
 
     // Add arguments
     for (index = 0; index < argc; index++)
     {
-        argv[index] = new char[size_t(lFinalArguments[index].count() + 2)];
+        argv[index] = new char[std::size_t(lFinalArguments[index].count() + 2)];
         strcpy(argv[index], lFinalArguments[index].toUtf8().constData());
     }
 
@@ -265,7 +279,7 @@ QString CTestAze::exec(const QStringList& lInputArguments)
         return QString::number(iErrorCode);
     }
 
-    return QString::fromUtf8(baOutput);
+    return baOutput;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -287,6 +301,43 @@ void CTestAze::checkCommitDiff(const QString& sDiff, QVector<CTransformedFile> v
         QVERIFY(bPatchOk);
         QVERIFY(file.m_sFileContent2 == sFilePatched);
     }
+}
+
+//-------------------------------------------------------------------------------------------------
+
+void CTestAze::testCommit()
+{
+    QString sFile1Path = "Files/CommitTest1.txt";
+    QString sFile2Path = "Files/OtherFiles/CommitTest2.txt";
+    QString sDiffContent;
+
+    QString sC1("C1\n--");
+    QString sC2("C2\n--");
+    QString sD12 = Aze::CUtils::fileDiffHeader(sFile1Path, sFile1Path) + "@@ -1,2 +1,2 @@\n-C1\n+C2\n --\n";
+    QString sD23 = Aze::CUtils::fileDiffHeader(sFile2Path, sFile2Path) + "@@ -1,1 +1,2 @@\n-\n+C1\n+--\n";
+
+    INIT();
+
+    // C1
+    QVERIFY(createFile(sFile1Path, sC1));
+    STAGE(sFile1Path);
+    COMMIT("C1");
+
+    // C2
+    QVERIFY(createFile(sFile1Path, sC2));
+    STAGE(sFile1Path);
+    COMMIT("C2");
+
+    DIFF_LAST(sDiffContent);
+    QVERIFY(sDiffContent == sD12);
+
+    // C3
+    QVERIFY(createFile(sFile2Path, sC1));
+    STAGE(sFile2Path);
+    COMMIT("C3");
+
+    DIFF_LAST(sDiffContent);
+    QVERIFY(sDiffContent == sD23);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -330,7 +381,7 @@ void CTestAze::testMerge()
 
     QString sMC4("CA1\nCA2\nCA3\n--\nCB1\nCB2\nCB3\nCB4\nCB5\n--\nCC1\nCC2\nCC3");
 
-    QString sDA2("diff --aze Files/MergeTest.txt Files/MergeTest.txt\n--- Files/MergeTest.txt\n+++ Files/MergeTest.txt\n@@ -1,2 +1,3 @@\n CA1\n+CA2\n --\n");
+    QString sDA2 = Aze::CUtils::fileDiffHeader(sFile1Path, sFile1Path) + "@@ -1,2 +1,3 @@\n CA1\n+CA2\n --\n";
 
     INIT();
 
@@ -341,6 +392,7 @@ void CTestAze::testMerge()
     // CA1
     QVERIFY(createFile(sFile1Path, sCA1));
     STAGE(sFile1Path);
+    STATUS(sResult); OUT_INFO(sResult);
     COMMIT("CA1");
 
     // Stash
@@ -359,6 +411,7 @@ void CTestAze::testMerge()
     // CA2
     QVERIFY(createFile(sFile1Path, sCA2));
     STAGE(sFile1Path);
+    STATUS(sResult); OUT_INFO(sResult);
     COMMIT("CA2");
 
     DIFF_LAST(sDiffContent);
@@ -370,6 +423,7 @@ void CTestAze::testMerge()
     // CA3
     QVERIFY(createFile(sFile1Path, sCA3));
     STAGE(sFile1Path);
+    STATUS(sResult); OUT_INFO(sResult);
     COMMIT("CA3");
 
     // Switch to branch B
@@ -378,16 +432,19 @@ void CTestAze::testMerge()
     // CB1
     QVERIFY(createFile(sFile1Path, sCB1));
     STAGE(sFile1Path);
+    STATUS(sResult); OUT_INFO(sResult);
     COMMIT("CB1");
 
     // CB2
     QVERIFY(createFile(sFile1Path, sCB2));
     STAGE(sFile1Path);
+    STATUS(sResult); OUT_INFO(sResult);
     COMMIT("CB2");
 
     // CB3
     QVERIFY(createFile(sFile1Path, sCB3));
     STAGE(sFile1Path);
+    STATUS(sResult); OUT_INFO(sResult);
     COMMIT("CB3");
 
     // Create branch C
@@ -399,11 +456,13 @@ void CTestAze::testMerge()
     // CC1
     QVERIFY(createFile(sFile1Path, sCC1));
     STAGE(sFile1Path);
+    STATUS(sResult); OUT_INFO(sResult);
     COMMIT("CC1");
 
     // CC2
     QVERIFY(createFile(sFile1Path, sCC2));
     STAGE(sFile1Path);
+    STATUS(sResult); OUT_INFO(sResult);
     COMMIT("CC2");
 
     // Switch to branch A
@@ -433,11 +492,13 @@ void CTestAze::testMerge()
     // CB4
     QVERIFY(createFile(sFile1Path, sCB4));
     STAGE(sFile1Path);
+    STATUS(sResult); OUT_INFO(sResult);
     COMMIT("CB4");
 
     // CB5
     QVERIFY(createFile(sFile1Path, sCB5));
     STAGE(sFile1Path);
+    STATUS(sResult); OUT_INFO(sResult);
     COMMIT("CB5");
 
     // Switch to branch C
@@ -446,6 +507,7 @@ void CTestAze::testMerge()
     // CC3
     QVERIFY(createFile(sFile1Path, sCC3));
     STAGE(sFile1Path);
+    STATUS(sResult); OUT_INFO(sResult);
     COMMIT("CC3");
 
     // Switch to branch A
@@ -475,6 +537,7 @@ void CTestAze::testMerge()
     // CC5
     QVERIFY(createFile(sFile1Path, sCC5));
     STAGE(sFile1Path);
+    STATUS(sResult); OUT_INFO(sResult);
     COMMIT("CC5");
 
     // Switch to branch B
@@ -483,6 +546,7 @@ void CTestAze::testMerge()
     // CB6
     QVERIFY(createFile(sFile1Path, sCB6));
     STAGE(sFile1Path);
+    STATUS(sResult); OUT_INFO(sResult);
     COMMIT("CB6");
 
     // Switch to branch A
@@ -521,6 +585,7 @@ void CTestAze::testMerge()
     // CB8
     QVERIFY(createFile(sFile1Path, sCB8));
     STAGE(sFile1Path);
+    STATUS(sResult); OUT_INFO(sResult);
     COMMIT("CB8");
 
     // Switch to branch C
@@ -529,6 +594,7 @@ void CTestAze::testMerge()
     // CC6
     QVERIFY(createFile(sFile1Path, sCC6));
     STAGE(sFile1Path);
+    STATUS(sResult); OUT_INFO(sResult);
     COMMIT("CC6");
 
     // Switch to branch B
@@ -547,8 +613,8 @@ void CTestAze::testMerge()
 
 void CTestAze::testPatch()
 {
-    QString sFile1Path = "Files/MergeTest1.txt";
-    QString sFile2Path = "Files/MergeTest2.txt";
+    QString sFile1Path = "Files/PatchTest1.txt";
+    QString sFile2Path = "Files/PatchTest2.txt";
     QString sPatchPath = "Files/Patch.txt";
     QString sFileContent;
     QString sDiffPath = "Files/Diff.txt";
@@ -566,6 +632,7 @@ void CTestAze::testPatch()
     QVERIFY(createFile(sFile2Path, sC1));
     STAGE(sFile1Path);
     STAGE(sFile2Path);
+    STATUS(sResult); OUT_INFO(sResult);
     COMMIT("C1");
 
     // C2
@@ -573,6 +640,7 @@ void CTestAze::testPatch()
     QVERIFY(createFile(sFile2Path, sC2));
     STAGE(sFile1Path);
     STAGE(sFile2Path);
+    STATUS(sResult); OUT_INFO(sResult);
     COMMIT("C2");
 
     DIFF_LAST(sDiffContent);
@@ -581,6 +649,7 @@ void CTestAze::testPatch()
     QVERIFY(createFile(sFile1Path, sC1));
     QVERIFY(createFile(sFile2Path, sC1));
     PATCH(sResult, sPatchPath);
+    QVERIFY(sResult == "0");
 
     QVERIFY(readFile(sFile1Path, sFileContent));
     QVERIFY(sFileContent == sC2);

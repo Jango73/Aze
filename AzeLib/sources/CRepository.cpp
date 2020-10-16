@@ -23,21 +23,35 @@
 
 namespace Aze {
 
+/*!
+    \class CRepository
+    \inmodule Aze
+    \brief The top level class of a repository.
+*/
+
+
 //-------------------------------------------------------------------------------------------------
 
+/*!
+    Constructs a CRepository. \br\br
+    \a sRootPath is the repository's root folder \br
+    \a parent is the repository's owner \br
+    \a bSilent tells that we should not output any text \br
+    \a bDebug tells that we should output debug information \br
+*/
 CRepository::CRepository(const QString& sRootPath, QObject* parent, bool bSilent, bool bDebug)
     : CObject(parent)
     , m_bOk(false)
     , m_bSilent(bSilent)
     , m_bDebug(bDebug)
+    , m_eStatus(CEnums::eUnknown)
     , m_pDatabase(new CDatabase(sRootPath, this))
     , m_pRemoteHostInfo(new CRemoteHostInfo(this))
     , m_pCommitFunctions(new CCommitFunctions(m_pDatabase, this, bSilent, bDebug))
-    , m_eStatus(CEnums::eUnknown)
     , m_pCurrentBranch(nullptr)
-    , m_pStagingCommit(nullptr)
-    , m_pRootCommit(nullptr)
-    , m_pTipCommit(nullptr)
+    , m_pStagingCommit(readStage, this)
+    , m_pRootCommit(readRootCommit, this)
+    , m_pTipCommit(readTipCommit, this)
 {
     // Get the path of the staging file
     m_sStagingCommitFileName = m_pDatabase->composeCommitFileName(CStrings::s_sStagingCommitFileName);
@@ -51,18 +65,26 @@ CRepository::CRepository(const QString& sRootPath, QObject* parent, bool bSilent
     {
         readGeneralInformation();
         readCurrentBranch();
-        readTipCommit();
     }
 }
 
 //-------------------------------------------------------------------------------------------------
 
-CRepository::~CRepository()
-{
-}
+/*!
+    Destroys a CRepository.
+*/
+CRepository::~CRepository() = default;
 
 //-------------------------------------------------------------------------------------------------
 
+/*!
+    Initializes the repository. \br\br
+    \list
+        \li Initializes the database
+        \li Creates the default branch
+        \li Creates the general information file
+    \endlist
+*/
 bool CRepository::init()
 {
     if (m_pDatabase->init())
@@ -86,6 +108,9 @@ bool CRepository::init()
 
 //-------------------------------------------------------------------------------------------------
 
+/*!
+    Creates a branch named \a sName.
+*/
 bool CRepository::createBranch(const QString& sName)
 {
     QString sBranchFileName = m_pDatabase->composeBranchFileName(sName);
@@ -112,6 +137,9 @@ bool CRepository::createBranch(const QString& sName)
 
 //-------------------------------------------------------------------------------------------------
 
+/*!
+    Deletes, if it exists, the branch named \a sName.
+*/
 bool CRepository::deleteBranch(const QString& sName)
 {
     QString sBranchFileName = m_pDatabase->composeBranchFileName(sName);
@@ -128,6 +156,10 @@ bool CRepository::deleteBranch(const QString& sName)
 
 //-------------------------------------------------------------------------------------------------
 
+/*!
+    Switches to the branch named \a sName. \br\br
+    \a bAllowFileDelete is passed to the underlying revert command
+*/
 bool CRepository::switchToBranch(const QString& sName, bool bAllowFileDelete)
 {
     return CSwitchToBranchCommand(this, sName, bAllowFileDelete).execute();
@@ -135,6 +167,10 @@ bool CRepository::switchToBranch(const QString& sName, bool bAllowFileDelete)
 
 //-------------------------------------------------------------------------------------------------
 
+/*!
+    Adds files to the stage. \br\br
+    \a lFileNames contains the file names to stage
+*/
 bool CRepository::stage(const QStringList& lFileNames)
 {
     return CStageCommand(this, lFileNames).execute();
@@ -142,6 +178,10 @@ bool CRepository::stage(const QStringList& lFileNames)
 
 //-------------------------------------------------------------------------------------------------
 
+/*!
+    Removes files from the stage. \br\br
+    \a lFileNames contains the file names to unstage
+*/
 bool CRepository::unstage(const QStringList& lFileNames)
 {
     return CUnstageCommand(this, lFileNames).execute();
@@ -149,6 +189,10 @@ bool CRepository::unstage(const QStringList& lFileNames)
 
 //-------------------------------------------------------------------------------------------------
 
+/*!
+    Adds a file deletion to the stage. \br\br
+    \a lFileNames contains the file names to delete
+*/
 bool CRepository::remove(const QStringList& lFileNames)
 {
     return CRemoveCommand(this, lFileNames).execute();
@@ -156,6 +200,11 @@ bool CRepository::remove(const QStringList& lFileNames)
 
 //-------------------------------------------------------------------------------------------------
 
+/*!
+    Saves the state of the repository to a new commit. \br\br
+    \a sAuthor tells who is committing
+    \a sMessage tells what we are comitting
+*/
 bool CRepository::commit(const QString& sAuthor, const QString& sMessage)
 {
     return CCommitCommand(this, sAuthor, sMessage).execute();
@@ -163,6 +212,11 @@ bool CRepository::commit(const QString& sAuthor, const QString& sMessage)
 
 //-------------------------------------------------------------------------------------------------
 
+/*!
+    Reverts files to the state they were in the last commit. \br\br
+    \a lFileNames contains the file names to revert
+    \a bAllowFileDelete allows to delete files that were not present in the last commit
+*/
 bool CRepository::revert(const QStringList& lFileNames, bool bAllowFileDelete)
 {
     return CRevertCommand(this, lFileNames, bAllowFileDelete).execute();
@@ -170,6 +224,11 @@ bool CRepository::revert(const QStringList& lFileNames, bool bAllowFileDelete)
 
 //-------------------------------------------------------------------------------------------------
 
+/*!
+    Reverts files to the state they were in the last commit. \br\br
+    \a pWorkingDirectory contains the files to revert
+    \a bAllowFileDelete allows to delete files that were not present in the last commit
+*/
 bool CRepository::revert(CCommit* pWorkingDirectory, bool bAllowFileDelete)
 {
     return CRevertCommand(this, pWorkingDirectory, bAllowFileDelete).execute();
@@ -177,14 +236,23 @@ bool CRepository::revert(CCommit* pWorkingDirectory, bool bAllowFileDelete)
 
 //-------------------------------------------------------------------------------------------------
 
+/*!
+    Reverts files to the state they were in the last commit. \br\br
+    \a bAllowFileDelete allows to delete files that were not present in the last commit
+*/
 bool CRepository::revert(bool bAllowFileDelete)
 {
-    CCommit* pWorkingDirectory = m_pCommitFunctions->directoryAsCommit();
-    return CRevertCommand(this, pWorkingDirectory, bAllowFileDelete).execute();
+    return CRevertCommand(this, bAllowFileDelete).execute();
 }
 
 //-------------------------------------------------------------------------------------------------
 
+/*!
+    Shows a list of commits on the current branch. \br\br
+    \a bGraph tells if the log is shown as a graph
+    \a iStart is the index of the commit where we start outputting data
+    \a iCount is the number of commits to show
+*/
 QString CRepository::log(const QStringList& lFileNames, bool bGraph, int iStart, int iCount)
 {
     QString sReturnValue;
@@ -199,6 +267,11 @@ QString CRepository::log(const QStringList& lFileNames, bool bGraph, int iStart,
 
 //-------------------------------------------------------------------------------------------------
 
+/*!
+    Shows a diff between two commits. \br\br
+    \a sFirst is the 'from' commit
+    \a sSecond is the 'to' commit
+*/
 QString CRepository::diff(const QString& sFirst, const QString& sSecond)
 {
     QString sReturnValue;
@@ -213,6 +286,11 @@ QString CRepository::diff(const QString& sFirst, const QString& sSecond)
 
 //-------------------------------------------------------------------------------------------------
 
+/*!
+    Merges a branch onto the current branch. \br\br
+    \a sName is the branch to merge
+    \a bHasConflicts will contain whether the merge has conflict files
+*/
 bool CRepository::merge(const QString& sName, bool& bHasConflicts)
 {
     return CMergeCommand(this, sName, bHasConflicts).execute();
@@ -249,6 +327,9 @@ QList<CFile> CRepository::fileStatus(const QStringList& lFileNames)
 
 //-------------------------------------------------------------------------------------------------
 
+/*!
+    Reads the general information file.
+*/
 bool CRepository::readGeneralInformation()
 {
     CXMLNode xInfo = CXMLNode::load(m_pDatabase->generalInformationFileName());
@@ -275,52 +356,19 @@ bool CRepository::readGeneralInformation()
 
 //-------------------------------------------------------------------------------------------------
 
+/*!
+    Reads the current branch file.
+*/
 bool CRepository::readCurrentBranch()
 {
     QString sFileName = m_pDatabase->composeBranchFileName(m_sCurrentBranchName);
     setCurrentBranch(CBranch::fromNode(CXMLNode::load(sFileName), this));
 
-    return true;
-}
-
-//-------------------------------------------------------------------------------------------------
-
-bool CRepository::readStage()
-{
-    if (IS_NULL(m_pStagingCommit))
-    {
-        setStagingCommit(CCommit::fromFile(m_sStagingCommitFileName, this, ""));
-    }
+    m_pStagingCommit.clear();
+    m_pTipCommit.clear();
+    m_pRootCommit.clear();
 
     return true;
-}
-
-//-------------------------------------------------------------------------------------------------
-
-bool CRepository::readRootCommit()
-{
-    if (not m_pCurrentBranch->rootCommitId().isEmpty())
-    {
-        delete m_pRootCommit;
-        setRootCommit(m_pDatabase->getCommit(m_pCurrentBranch->rootCommitId(), this));
-        return true;
-    }
-
-    return false;
-}
-
-//-------------------------------------------------------------------------------------------------
-
-bool CRepository::readTipCommit()
-{
-    if (not m_pCurrentBranch->tipCommitId().isEmpty())
-    {
-        delete m_pTipCommit;
-        setTipCommit(m_pDatabase->getCommit(m_pCurrentBranch->tipCommitId(), this));
-        return true;
-    }
-
-    return false;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -332,7 +380,7 @@ bool CRepository::writeGeneralInformation()
     // Write remote host information
     CXMLNode xRemoteHost(CStrings::s_sParamRemoteHost);
     xRemoteHost.attributes()[CStrings::s_sParamName] = m_pRemoteHostInfo->name();
-	xInfo << xRemoteHost;
+    xInfo << xRemoteHost;
 
     // Write branches
     CXMLNode xBranches(CStrings::s_sParamBranches);
@@ -369,7 +417,7 @@ bool CRepository::writeCurrentBranch()
 
 bool CRepository::writeStage()
 {
-    if (not IS_NULL(m_pStagingCommit))
+    if (not m_pStagingCommit.isNull())
     {
         m_pStagingCommit->toFile(m_sStagingCommitFileName);
         return true;
@@ -382,10 +430,9 @@ bool CRepository::writeStage()
 
 bool CRepository::clearStage()
 {
-    if (not IS_NULL(m_pStagingCommit))
+    if (not m_pStagingCommit.isNull())
     {
-        delete m_pStagingCommit;
-        m_pStagingCommit = new CCommit(this);
+        m_pStagingCommit.set(new CCommit(this));
 
         return true;
     }
@@ -518,6 +565,48 @@ QString CRepository::diffWorkingDirectory()
     }
 
     return sDiff;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+/*!
+    Reads the stage commit.
+*/
+CCommit* CRepository::readStage(void* pContext)
+{
+    CRepository* pRepository = static_cast<CRepository*>(pContext);
+
+    return CCommit::fromFile(pRepository->m_sStagingCommitFileName, pRepository, "");
+}
+
+//-------------------------------------------------------------------------------------------------
+
+/*!
+    Reads the root commit.
+*/
+CCommit* CRepository::readRootCommit(void* pContext)
+{
+    CRepository* pRepository = static_cast<CRepository*>(pContext);
+
+    if (not pRepository->m_pCurrentBranch->rootCommitId().isEmpty())
+        return pRepository->m_pDatabase->getCommit(pRepository->m_pCurrentBranch->rootCommitId(), pRepository);
+
+    return nullptr;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+/*!
+    Reads the tip commit.
+*/
+CCommit* CRepository::readTipCommit(void* pContext)
+{
+    CRepository* pRepository = static_cast<CRepository*>(pContext);
+
+    if (not pRepository->m_pCurrentBranch->tipCommitId().isEmpty())
+        return pRepository->m_pDatabase->getCommit(pRepository->m_pCurrentBranch->tipCommitId(), pRepository);
+
+    return nullptr;
 }
 
 //-------------------------------------------------------------------------------------------------

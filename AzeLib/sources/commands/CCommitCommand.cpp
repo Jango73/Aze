@@ -30,7 +30,7 @@ bool CCommitCommand::execute()
     }
 
     // Check presence and relevancy of staging commmit
-    if (IS_NULL(m_pRepository->stagingCommit()) || m_pRepository->stagingCommit()->files().count() == 0)
+    if (m_pRepository->stagingCommit().isNull() || m_pRepository->stagingCommit()->files().count() == 0)
     {
         m_pRepository->tellError(CStrings::s_sTextCommitEmpty);
         return false;
@@ -40,7 +40,7 @@ bool CCommitCommand::execute()
     CCommit* pNewCommit = nullptr;
 
     // Read the tip commit of the current branch
-    if (not IS_NULL(m_pRepository->tipCommit()))
+    if (not m_pRepository->tipCommit().isNull())
     {
         pNewCommit = m_pRepository->tipCommit()->clone(this);
         pNewCommit->clearParents();
@@ -52,7 +52,7 @@ bool CCommitCommand::execute()
     }
 
     // Add the staged commmit to this new commit
-    pNewCommit->addCommit(m_pRepository->database(), m_pRepository->stagingCommit());
+    pNewCommit->addCommit(m_pRepository->database(), m_pRepository->stagingCommit().get());
 
     if (m_sMessage.isEmpty())
         m_sMessage = m_pRepository->stagingCommit()->message();

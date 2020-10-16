@@ -12,7 +12,6 @@ CCommit::CCommit(QObject* parent)
     : CObject(parent)
     , m_bIsMerge(false)
 {
-    setDateToNow();
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -83,13 +82,6 @@ bool CCommit::toFile(const QString& sFileName) const
 
 //-------------------------------------------------------------------------------------------------
 
-void CCommit::setDateToNow()
-{
-    m_sDate = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
-}
-
-//-------------------------------------------------------------------------------------------------
-
 void CCommit::clearParents()
 {
     m_lParents.clear();
@@ -156,7 +148,7 @@ bool CCommit::addCommit(CDatabase* pDatabase, const CCommit* pCommitToAdd)
             if (sExistingId.isEmpty() || sExistingId != sNewId)
             {
                 // File object does not exist
-                QString sNewObjectId = pDatabase->storeFile(sAbsoluteFileName);
+                QString sNewObjectId = pDatabase->storeFileAsObject(sAbsoluteFileName);
 
                 if (not sNewObjectId.isEmpty())
                 {
@@ -186,9 +178,47 @@ QByteArray CCommit::fileContent(CDatabase* pDatabase, QString sFileName)
         return pDatabase->getObject(sId);
     }
 
+    // If file not stored in database, return local file content
     QString sFullName = pDatabase->composeLocalFileName(sFileName);
 
     return CUtils::getBinaryFileContent(sFullName);
+}
+
+//-------------------------------------------------------------------------------------------------
+
+CCommit* CCommit::getAncestor(CDatabase* pDatabase, QObject* owner, int iDelta)
+{
+    CCommit* pAncestor = this;
+    int iGuard = 999999;
+
+    while (true)
+    {
+        QList<CCommit*> parents = parentList(pDatabase, pAncestor, owner);
+
+        if (parents.count() == 0)
+        {
+            pAncestor = nullptr;
+            break;
+        }
+
+        // Delete unused data
+        if (pAncestor != this)
+            delete pAncestor;
+
+        // The first parent is the one to follow in order to stay on branch of pCommit
+        pAncestor = parents[0]->clone(owner);
+
+        // Delete unused data
+        qDeleteAll(parents);
+
+        iDelta--;
+        iGuard--;
+
+        if (iDelta == 0 || iGuard == 0)
+            return pAncestor;
+    }
+
+    return pAncestor;
 }
 
 //-------------------------------------------------------------------------------------------------

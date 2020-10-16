@@ -47,9 +47,6 @@ public:
     // Control methods
     //-------------------------------------------------------------------------------------------------
 
-    //!
-    CCommit* getCommitAncestor(CCommit* pCommit, QObject* owner = nullptr, int iDelta = 1);
-
     //! Returns a list of pairs (distance, id) of ancestors of sCommitId
     QList<QPair<int, QString>> getCommitAncestorList(
             const QString& sCommitId,
@@ -73,12 +70,6 @@ public:
             );
 
     //!
-    CCommit* directoryAsCommit(QObject* owner = nullptr, QString sRootPath = "");
-
-    //!
-    void listFilesRecursive(QStringList& lStack, QString sRootDirectory, QString sCurrentDirectory);
-
-    //!
     void diffCommits(QString& sOutput, CCommit* pCommit1, CCommit* pCommit2, const QStringList& lIgnoreFiles, int iDelta1 = 0, int iDelta2 = 0);
 
     //!
@@ -94,6 +85,9 @@ public:
     bool applyDiff(const QString& sFullDiff, bool bAddToStage = false, CCommit* pStagingCommit = nullptr);
 
     bool threeWayMerge(CCommit* pBaseCommit, CCommit* pFromTipCommit, CCommit* pToTipCommit, bool bAddToStage, CCommit* pStagingCommit);
+
+    //!
+    CCommit* directoryAsCommit(QObject* owner = nullptr, QString sRootPath = "");
 
     //-------------------------------------------------------------------------------------------------
     // Protected control methods

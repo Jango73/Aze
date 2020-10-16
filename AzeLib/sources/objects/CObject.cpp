@@ -10,6 +10,7 @@ namespace Aze {
 CObject::CObject(QObject* parent)
     : QObject(parent)
 {
+    setDateToNow();
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -39,6 +40,13 @@ void CObject::setId(QString value)
 QString CObject::generateId() const
 {
     return CUtils::idFromString(toNode().toString());
+}
+
+//-------------------------------------------------------------------------------------------------
+
+void CObject::setDateToNow()
+{
+    m_sDate = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
 }
 
 //-------------------------------------------------------------------------------------------------

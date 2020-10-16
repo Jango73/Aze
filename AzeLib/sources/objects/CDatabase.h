@@ -78,6 +78,9 @@ public:
     //!
     QString storeStash(const CStash* pStash, const QString& sId = "");
 
+    //!
+    QString storeFileAsObject(const QString& sFileName);
+
     //-------------------------------------------------------------------------------------------------
     // Control methods
     //-------------------------------------------------------------------------------------------------
@@ -114,9 +117,6 @@ public:
 
     //!
     QString composeStashFileName(const QString& sId);
-
-    //!
-    QString storeFile(const QString& sFileName);
 
     //!
     bool fileWithIdExists(const QString& sId);

@@ -37,7 +37,7 @@ bool CDiffCommand::execute()
         return false;
     }
 
-    if (IS_NULL(m_pRepository->tipCommit()))
+    if (m_pRepository->tipCommit().isNull())
     {
         m_pRepository->tellError(CStrings::s_sTextNoTipCommit);
         return false;
@@ -93,7 +93,7 @@ bool CDiffCommand::execute()
         }
         else if (not sObject1.isEmpty() && sObject2.isEmpty())
         {
-            if (IS_NULL(m_pRepository->stagingCommit()))
+            if (m_pRepository->stagingCommit().isNull())
                 return false;
 
             pCommit1 = m_pRepository->database()->getCommit(sObject1, this);
@@ -101,7 +101,7 @@ bool CDiffCommand::execute()
         }
         else if (sObject1.isEmpty() && not sObject2.isEmpty())
         {
-            if (IS_NULL(m_pRepository->stagingCommit()))
+            if (m_pRepository->stagingCommit().isNull())
                 return false;
 
             pCommit1 = m_pRepository->database()->getCommit(sObject2, this);

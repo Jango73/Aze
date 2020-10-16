@@ -35,7 +35,6 @@ public:
     //-------------------------------------------------------------------------------------------------
 
     Q_FAST_PROPERTY(QString, s, author, Author)
-    Q_FAST_PROPERTY(QString, s, date, Date)
     Q_FAST_PROPERTY(QString, s, message, Message)
     Q_FAST_PROPERTY(QString, s, diff, Diff)
     Q_FAST_PROPERTY(CCommit*, p, stage, Stage)
@@ -61,9 +60,6 @@ public:
 
     //!
     bool toFile(const QString& sFileName) const;
-
-    //!
-    void setDateToNow();
 
     //-------------------------------------------------------------------------------------------------
     // Static control methods

@@ -10,6 +10,7 @@
 
 // qt-plus
 #include "Macros.h"
+#include "CLazyPointer.h"
 
 // Application
 #include "CRemoteHostInfo.h"
@@ -40,20 +41,20 @@ public:
     Q_FAST_PROPERTY(bool, b, ok, Ok)
     Q_FAST_PROPERTY(bool, b, silent, Silent)
     Q_FAST_PROPERTY(bool, b, debug, Debug)
+    Q_FAST_PROPERTY(CEnums::EFileStatus, e, status, Status)
     Q_FAST_PROPERTY(CDatabase*, p, database, Database)
     Q_FAST_PROPERTY(CRemoteHostInfo*, p, remoteHostInfo, RemoteHostInfo)
     Q_FAST_PROPERTY(CCommitFunctions*, p, commitFunctions, CommitFunctions)
-    Q_FAST_PROPERTY(CEnums::EFileStatus, e, status, Status)
 
     Q_FAST_PROPERTY(QString, s, currentBranchName, CurrentBranchName)
     Q_FAST_PROPERTY(QString, s, stagingCommitFileName, StagingCommitFileName)
 
     Q_FAST_PROPERTY(CBranch*, p, currentBranch, CurrentBranch)
-    Q_FAST_PROPERTY(CCommit*, p, stagingCommit, StagingCommit)
-    Q_FAST_PROPERTY(CCommit*, p, rootCommit, RootCommit)
-    Q_FAST_PROPERTY(CCommit*, p, tipCommit, TipCommit)
+    Q_FAST_REFED_PROPERTY(CLazyPointer<CCommit>, p, stagingCommit, StagingCommit)
+    Q_FAST_REFED_PROPERTY(CLazyPointer<CCommit>, p, rootCommit, RootCommit)
+    Q_FAST_REFED_PROPERTY(CLazyPointer<CCommit>, p, tipCommit, TipCommit)
 
-    Q_FAST_PROPERTY(QStringList, l, stashList, StashList)
+    Q_FAST_REFED_PROPERTY(QStringList, l, stashList, StashList)
 
 public:
 
@@ -134,15 +135,6 @@ public:
     //! Reads the current branch
     bool readCurrentBranch();
 
-    //! Reads the general information
-    bool readStage();
-
-    //! Reads the current branch's root commit
-    bool readRootCommit();
-
-    //! Reads the current branch's tip commit
-    bool readTipCommit();
-
     //! Writes the general information
     bool writeGeneralInformation();
 
@@ -174,7 +166,7 @@ public:
     // Helper methods
     //-------------------------------------------------------------------------------------------------
 
-	//! Prints an error message
+    //! Prints an error message
     void tellError(const QString& sText);
 
     //! Prints an info message
@@ -191,6 +183,19 @@ public:
 
     //!
     QString getPushRequest();
+
+    //-------------------------------------------------------------------------------------------------
+    // Instantiators
+    //-------------------------------------------------------------------------------------------------
+
+    //! Reads the general information
+    static CCommit* readStage(void* pContext);
+
+    //! Reads the current branch's root commit
+    static CCommit* readRootCommit(void* pContext);
+
+    //! Reads the current branch's tip commit
+    static CCommit* readTipCommit(void* pContext);
 
     //-------------------------------------------------------------------------------------------------
     // Properties

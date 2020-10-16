@@ -70,9 +70,6 @@ int CAzeClient::switchToBranch()
     ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
     ERROR_WHEN_FALSE(m_tArguments.m_lFilesAndIds.count() > 0, CConstants::s_iError_NoBranchNameGiven);
 
-    // Read the stage file
-    ERROR_WHEN_FALSE(m_pRepository->readStage(), CConstants::s_iError_CouldNotReadStage);
-
     bool bAllowFileDelete = m_tArguments.m_tParser.isSet(m_tArguments.m_oAllowFileDelete);
 
     QString sBranchName = m_tArguments.m_lFilesAndIds[0];
@@ -100,9 +97,6 @@ int CAzeClient::status()
 {
     // Repository sanity check
     ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
-
-    // Read the stage file
-    ERROR_WHEN_FALSE(m_pRepository->readStage(), CConstants::s_iError_CouldNotReadStage);
 
     QMap<Aze::CEnums::EFileStatus, bool> bVisibility;
 
@@ -195,9 +189,6 @@ int CAzeClient::stage()
     // Repository sanity check
     ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
 
-    // Read the stage file
-    ERROR_WHEN_FALSE(m_pRepository->readStage(), CConstants::s_iError_CouldNotReadStage);
-
     ERROR_WHEN_FALSE_PRINT(
                 m_tArguments.m_lFilesAndIds.count() > 0,
                 Aze::CStrings::s_sTextNoFileSpecified,
@@ -219,9 +210,6 @@ int CAzeClient::unstage()
 {
     // Repository sanity check
     ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
-
-    // Read the stage file
-    ERROR_WHEN_FALSE(m_pRepository->readStage(), CConstants::s_iError_CouldNotReadStage);
 
     ERROR_WHEN_FALSE_PRINT(
                 m_tArguments.m_lFilesAndIds.count() > 0,
@@ -245,9 +233,6 @@ int CAzeClient::revert()
     // Repository sanity check
     ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
 
-    // Read the stage file
-    ERROR_WHEN_FALSE(m_pRepository->readStage(), CConstants::s_iError_CouldNotReadStage);
-
     bool bAllowFileDelete = m_tArguments.m_tParser.isSet(m_tArguments.m_oAllowFileDelete);
 
     ERROR_WHEN_FALSE(m_tArguments.m_lFilesAndIds.count() > 0, CConstants::s_iError_NoFileNameGiven);
@@ -267,9 +252,6 @@ int CAzeClient::move()
     // Repository sanity check
     ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
 
-    // Read the stage file
-    ERROR_WHEN_FALSE(m_pRepository->readStage(), CConstants::s_iError_CouldNotReadStage);
-
     // Move the specified files
     // TODO
 
@@ -285,9 +267,6 @@ int CAzeClient::remove()
 {
     // Repository sanity check
     ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
-
-    // Read the stage file
-    ERROR_WHEN_FALSE(m_pRepository->readStage(), CConstants::s_iError_CouldNotReadStage);
 
     ERROR_WHEN_FALSE(m_tArguments.m_lFilesAndIds.count() > 0, CConstants::s_iError_NoFileNameGiven);
 
@@ -308,9 +287,6 @@ int CAzeClient::commit()
 {
     // Repository sanity check
     ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
-
-    // Read the stage file
-    ERROR_WHEN_FALSE(m_pRepository->readStage(), CConstants::s_iError_CouldNotReadStage);
 
     QString sAuthor = m_tArguments.m_tParser.value(m_tArguments.m_oAuthor);
     QString sMessage = m_tArguments.m_tParser.value(m_tArguments.m_oMessage);
@@ -334,7 +310,6 @@ int CAzeClient::cleanUp()
     ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
 
     // Clear the stage file
-    ERROR_WHEN_FALSE(m_pRepository->readStage(), CConstants::s_iError_CouldNotReadStage);
     ERROR_WHEN_FALSE(m_pRepository->clearStage(), CConstants::s_iError_CouldNotWriteStage);
     ERROR_WHEN_FALSE(m_pRepository->writeStage(), CConstants::s_iError_CouldNotWriteStage);
 
@@ -372,9 +347,6 @@ int CAzeClient::diff()
     // Repository sanity check
     ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
 
-    // Read the stage file
-    ERROR_WHEN_FALSE(m_pRepository->readStage(), CConstants::s_iError_CouldNotReadStage);
-
     QString sFirst = m_tArguments.m_lFilesAndIds.isEmpty() ? "" : m_tArguments.m_lFilesAndIds.takeFirst();
     QString sSecond = m_tArguments.m_lFilesAndIds.isEmpty() ? "" : m_tArguments.m_lFilesAndIds.takeFirst();
 
@@ -391,9 +363,6 @@ int CAzeClient::merge()
     // Repository sanity check
     ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
     ERROR_WHEN_FALSE(m_tArguments.m_lFilesAndIds.count() > 0, CConstants::s_iError_NoBranchNameGiven);
-
-    // Read the stage file
-    ERROR_WHEN_FALSE(m_pRepository->readStage(), CConstants::s_iError_CouldNotReadStage);
 
     QString sBranchName = m_tArguments.m_lFilesAndIds.takeFirst();
 
@@ -419,8 +388,6 @@ int CAzeClient::saveStash()
     // Repository sanity check
     ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
 
-    ERROR_WHEN_FALSE(m_pRepository->readStage(), CConstants::s_iError_CouldNotReadStage);
-
     QString sStashName;
     if (m_tArguments.m_lFilesAndIds.count() > 0)
         sStashName = m_tArguments.m_lFilesAndIds.takeFirst();
@@ -440,8 +407,6 @@ int CAzeClient::popStash()
 {
     // Repository sanity check
     ERROR_WHEN_FALSE(isASainRepository(), CConstants::s_iError_NotARepository);
-
-    ERROR_WHEN_FALSE(m_pRepository->readStage(), CConstants::s_iError_CouldNotReadStage);
 
     QString sStashId;
     if (m_tArguments.m_lFilesAndIds.count() > 0)

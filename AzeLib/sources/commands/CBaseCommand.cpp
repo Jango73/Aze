@@ -11,7 +11,8 @@ namespace Aze {
 //-------------------------------------------------------------------------------------------------
 
 CBaseCommand::CBaseCommand(CRepository* pRepository)
-    : m_pRepository(pRepository)
+    : m_bCalledInternally(false)
+    , m_pRepository(pRepository)
 {
 }
 

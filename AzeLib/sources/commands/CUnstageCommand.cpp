@@ -37,7 +37,7 @@ bool CUnstageCommand::execute()
 
 bool CUnstageCommand::unstageSingleFile(QString sRelativeFileName)
 {
-    if (not IS_NULL(m_pRepository->stagingCommit()))
+    if (not m_pRepository->stagingCommit().isNull())
     {
         m_pRepository->stagingCommit()->removeFile(sRelativeFileName);
         return true;

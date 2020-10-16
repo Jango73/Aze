@@ -12,7 +12,6 @@ CStash::CStash(QObject* parent)
     : CObject(parent)
     , m_pStage(nullptr)
 {
-    setDateToNow();
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -60,13 +59,6 @@ bool CStash::toFile(const QString& sFileName) const
 {
     toNode().save(sFileName);
     return true;
-}
-
-//-------------------------------------------------------------------------------------------------
-
-void CStash::setDateToNow()
-{
-    m_sDate = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
 }
 
 //-------------------------------------------------------------------------------------------------
