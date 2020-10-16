@@ -188,37 +188,30 @@ QByteArray CCommit::fileContent(CDatabase* pDatabase, QString sFileName)
 
 CCommit* CCommit::getAncestor(CDatabase* pDatabase, QObject* owner, int iDelta)
 {
-    CCommit* pAncestor = this;
+    QString pAncestor = m_sId;
     int iGuard = 999999;
 
     while (true)
     {
-        QList<CCommit*> parents = parentList(pDatabase, pAncestor, owner);
+        QStringList parents = parentIds(pDatabase, pAncestor);
 
         if (parents.count() == 0)
         {
-            pAncestor = nullptr;
-            break;
+            pAncestor = "";
+            return nullptr;
         }
 
-        // Delete unused data
-        if (pAncestor != this)
-            delete pAncestor;
-
         // The first parent is the one to follow in order to stay on branch of pCommit
-        pAncestor = parents[0]->clone(owner);
-
-        // Delete unused data
-        qDeleteAll(parents);
+        pAncestor = parents[0];
 
         iDelta--;
         iGuard--;
 
         if (iDelta == 0 || iGuard == 0)
-            return pAncestor;
+            break;
     }
 
-    return pAncestor;
+    return fromId(pDatabase, pAncestor, owner);
 }
 
 //-------------------------------------------------------------------------------------------------
