@@ -72,7 +72,12 @@ CRepository::CRepository(const QString& sRootPath, QObject* parent, bool bSilent
 /*!
     Destroys a CRepository.
 */
-CRepository::~CRepository() = default;
+CRepository::~CRepository()
+{
+    delete m_pCommitFunctions;
+    delete m_pRemoteHostInfo;
+    delete m_pDatabase;
+}
 
 //-------------------------------------------------------------------------------------------------
 
@@ -544,7 +549,7 @@ QString CRepository::diffWorkingDirectory()
         pFromCommit = m_pDatabase->getCommit(m_pCurrentBranch->tipCommitId(), this);
 
         // Get the working directory as commit
-        pToCommit = m_pCommitFunctions->directoryAsCommit(this);
+        pToCommit = m_pCommitFunctions->folderAsCommit(this);
 
         // Diff the current tip commit and the working directory
         m_pCommitFunctions->diffCommits(sDiff, pFromCommit, pToCommit, lLooseFiles);

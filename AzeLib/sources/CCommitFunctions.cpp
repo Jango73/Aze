@@ -21,7 +21,15 @@ CCommitFunctions::CCommitFunctions(CDatabase* pDatabase, QObject* parent, bool b
     , m_pDatabase(pDatabase)
     , m_bSilent(bSilent)
     , m_bDebug(bDebug)
+    , m_pCommitTreeList(new CCommitTreeList(pDatabase, parent, bSilent, bDebug))
 {
+}
+
+//-------------------------------------------------------------------------------------------------
+
+CCommitFunctions::~CCommitFunctions()
+{
+    delete m_pCommitTreeList;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -33,7 +41,7 @@ CCommit* CCommitFunctions::getCommitAncestor(CDatabase* pDatabase, CCommit* pCom
 
     while (true)
     {
-        QStringList parents = CCommit::parentIds(pDatabase, pAncestor);
+        QStringList parents = m_pCommitTreeList->commitParentIds(pAncestor);
 
         if (parents.count() == 0)
         {
@@ -88,7 +96,7 @@ void CCommitFunctions::getCommitAncestorListRecurse(
 
     iGuard--;
 
-    QStringList lParents = CCommit::parentIds(m_pDatabase, sCommitId);
+    QStringList lParents = m_pCommitTreeList->commitParentIds(sCommitId);
 
     if (bStayOnBranch)
     {
@@ -215,7 +223,7 @@ void CCommitFunctions::getShortestCommitChainRecurse(
     if (sCommiId == sStopAtCommitId)
         return;
 
-    QStringList lParentIds = CCommit::parentIds(m_pDatabase, sCommiId);
+    QStringList lParentIds = m_pCommitTreeList->commitParentIds(sCommiId);
 
     for (QString sParentId : lParentIds)
     {
@@ -733,7 +741,7 @@ bool CCommitFunctions::threeWayMerge(CCommit* pBaseCommit, CCommit* pFromTipComm
 
 //-------------------------------------------------------------------------------------------------
 
-CCommit* CCommitFunctions::directoryAsCommit(QObject* owner, QString sRootPath)
+CCommit* CCommitFunctions::folderAsCommit(QObject* owner, QString sRootPath)
 {
     CCommit* pNewCommit = new CCommit(owner);
     QStringList lFiles;

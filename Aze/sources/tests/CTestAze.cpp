@@ -310,6 +310,7 @@ void CTestAze::testCommit()
     QString sFile1Path = "Files/CommitTest1.txt";
     QString sFile2Path = "Files/OtherFiles/CommitTest2.txt";
     QString sDiffContent;
+    QString sResult;
 
     QString sC1("C1\n--");
     QString sC2("C2\n--");
@@ -326,6 +327,7 @@ void CTestAze::testCommit()
     // C2
     QVERIFY(createFile(sFile1Path, sC2));
     STAGE(sFile1Path);
+    STATUS(sResult); OUT_INFO(sResult);
     COMMIT("C2");
 
     DIFF_LAST(sDiffContent);
@@ -334,6 +336,7 @@ void CTestAze::testCommit()
     // C3
     QVERIFY(createFile(sFile2Path, sC1));
     STAGE(sFile2Path);
+    STATUS(sResult); OUT_INFO(sResult);
     COMMIT("C3");
 
     DIFF_LAST(sDiffContent);

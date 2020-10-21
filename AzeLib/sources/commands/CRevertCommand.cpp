@@ -15,7 +15,7 @@ namespace Aze {
 CRevertCommand::CRevertCommand(CRepository* pRepository, bool bAllowFileDelete)
     : CBaseCommand(pRepository)
     , m_bAllowFileDelete(bAllowFileDelete)
-    , m_pWorkingDirectory(pRepository->commitFunctions()->directoryAsCommit(this))
+    , m_pWorkingDirectory(pRepository->commitFunctions()->folderAsCommit(this))
     , m_lFileNames(m_pWorkingDirectory->files().keys())
 {
 }
@@ -25,7 +25,7 @@ CRevertCommand::CRevertCommand(CRepository* pRepository, bool bAllowFileDelete)
 CRevertCommand::CRevertCommand(CRepository* pRepository, const QStringList& lFileNames, bool bAllowFileDelete)
     : CBaseCommand(pRepository)
     , m_bAllowFileDelete(bAllowFileDelete)
-    , m_pWorkingDirectory(pRepository->commitFunctions()->directoryAsCommit(this))
+    , m_pWorkingDirectory(pRepository->commitFunctions()->folderAsCommit(this))
     , m_lFileNames(lFileNames)
 {
 }

@@ -24,11 +24,13 @@ SOURCES += \
 
 # Deployment
 
+LIB_VERSION = 65
+
 unix {
     QT_LIB_NAMES = \
-        libicudata.so.56 \
-        libicui18n.so.56 \
-        libicuuc.so.56 \
+        libicudata.so.$$LIB_VERSION \
+        libicui18n.so.$$LIB_VERSION \
+        libicuuc.so.$$LIB_VERSION \
         libQt5Core.so.5 \
         libQt5Gui.so.5 \
         libQt5Network.so.5 \
@@ -36,22 +38,23 @@ unix {
         libQt5Xml.so.5
 
     QT_PLUGIN_NAMES = \
-        plugins/platforminputcontexts/libcomposeplatforminputcontextplugin.so \
-        plugins/platforms/libqxcb.so \
-        plugins/xcbglintegrations/libqxcb-egl-integration.so \
-        plugins/xcbglintegrations/libqxcb-glx-integration.so
+        platforminputcontexts/libcomposeplatforminputcontextplugin.so \
+        platforms/libqxcb.so \
+        xcbglintegrations/libqxcb-egl-integration.so \
+        xcbglintegrations/libqxcb-glx-integration.so
 
     DEPLOY_NAMES = \
-        deploy/linux/Aze.sh \
+        deploy/linux/"$$TARGET".sh \
         deploy/linux/qt.conf
 
-    LIB_COPY_NAMES =
+    LIB_COPY_NAMES = \
+        ../AzeLib/bin/lib"$$TARGET".so.1
 
     EXEC_NAMES = \
-        CuteGit.sh
+        "$$TARGET".sh
 } else {
     CONFIG(debug, debug|release) {
-        QT_LIB_NAMES = \
+        QT_BIN_NAMES = \
             libgcc_s_seh-1.dll \
             libwinpthread-1.dll \
             # libstdc++-6.dll \
@@ -61,7 +64,7 @@ unix {
             Qt5Testd.dll \
             Qt5Xmld.dll
     } else {
-        QT_LIB_NAMES = \
+        QT_BIN_NAMES = \
             libgcc_s_seh-1.dll \
             libwinpthread-1.dll \
             # libstdc++-6.dll \
@@ -73,7 +76,7 @@ unix {
     }
 
     QT_PLUGIN_NAMES = \
-        plugins/platforms/qwindows.dll
+        platforms/qwindows.dll
 
     DEPLOY_NAMES = \
         deploy/windows/qt.conf

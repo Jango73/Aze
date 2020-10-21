@@ -97,7 +97,7 @@ bool CDiffCommand::execute()
                 return false;
 
             pCommit1 = m_pRepository->database()->getCommit(sObject1, this);
-            pCommit2 = m_pRepository->commitFunctions()->directoryAsCommit(this);
+            pCommit2 = m_pRepository->commitFunctions()->folderAsCommit(this);
         }
         else if (sObject1.isEmpty() && not sObject2.isEmpty())
         {
@@ -105,7 +105,7 @@ bool CDiffCommand::execute()
                 return false;
 
             pCommit1 = m_pRepository->database()->getCommit(sObject2, this);
-            pCommit2 = m_pRepository->commitFunctions()->directoryAsCommit(this);
+            pCommit2 = m_pRepository->commitFunctions()->folderAsCommit(this);
         }
 
         if (not IS_NULL(pCommit1) && not IS_NULL(pCommit2))

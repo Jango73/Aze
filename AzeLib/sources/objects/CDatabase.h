@@ -39,6 +39,7 @@ public:
     Q_FAST_PROPERTY(QString, s, branchPath, BranchPath)
     Q_FAST_PROPERTY(QString, s, commitPath, CommitPath)
     Q_FAST_PROPERTY(QString, s, objectPath, ObjectPath)
+    Q_FAST_PROPERTY(QString, s, cachePath, CachePath)
 
 public:
 
@@ -98,6 +99,9 @@ public:
     QString absoluteFileName(const QString& sFileName);
 
     //!
+    QString startRelativeFileName(const QString& sFileName);
+
+    //!
     QString generalInformationFileName();
 
     //!
@@ -117,6 +121,9 @@ public:
 
     //!
     QString composeStashFileName(const QString& sId);
+
+    //!
+    QString composeCacheFileName(const QString& sFileName);
 
     //!
     bool fileWithIdExists(const QString& sId);

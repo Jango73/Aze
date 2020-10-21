@@ -53,7 +53,7 @@ bool CSwitchToBranchCommand::execute()
     m_pRepository->refreshCurrentBranch();
 
     // Get the working directory as commit
-    CCommit* pToCommit = m_pRepository->commitFunctions()->directoryAsCommit(this);
+    CCommit* pToCommit = m_pRepository->commitFunctions()->folderAsCommit(this);
 
     // Revert local files to their last committed state
     if (IS_NOT_NULL(pToCommit))

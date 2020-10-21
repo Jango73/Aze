@@ -26,6 +26,7 @@ CDatabase::CDatabase(const QString& sRootPath, QObject* parent)
     m_sBranchPath = QString("%1/%2").arg(m_sDataPath).arg(CStrings::s_sPathAzeBranchPath);
     m_sCommitPath = QString("%1/%2").arg(m_sDataPath).arg(CStrings::s_sPathAzeCommitPath);
     m_sObjectPath = QString("%1/%2").arg(m_sDataPath).arg(CStrings::s_sPathAzeObjectPath);
+    m_sCachePath = QString("%1/%2").arg(m_sDataPath).arg(CStrings::s_sPathAzeCachePath);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -140,6 +141,7 @@ bool CDatabase::init()
     rootDir.mkpath(m_sCommitPath);
     rootDir.mkpath(m_sObjectPath);
     rootDir.mkpath(m_sStashPath);
+    rootDir.mkpath(m_sCachePath);
 
     return true;
 }
@@ -164,6 +166,13 @@ QString CDatabase::relativeFileName(const QString& sFileName)
 QString CDatabase::absoluteFileName(const QString& sFileName)
 {
     return CUtils::absoluteFileName(m_sRootPath, sFileName);
+}
+
+//-------------------------------------------------------------------------------------------------
+
+QString CDatabase::startRelativeFileName(const QString& sFileName)
+{
+    return CUtils::relativeFileName(m_sStartPath, sFileName);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -222,6 +231,13 @@ QString CDatabase::composeStashFileName(const QString& sId)
             .arg(m_sStashPath)
             .arg(sId)
             .arg(CStrings::s_sCompressedXMLExtension);
+}
+
+//-------------------------------------------------------------------------------------------------
+
+QString CDatabase::composeCacheFileName(const QString& sFileName)
+{
+    return QString("%1/%2").arg(m_sCachePath).arg(sFileName);
 }
 
 //-------------------------------------------------------------------------------------------------

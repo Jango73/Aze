@@ -50,7 +50,7 @@ bool CStatusCommand::execute()
     }
 
     // Get the working directory
-    CCommit* pWorkCommit = m_pRepository->commitFunctions()->directoryAsCommit(this);
+    CCommit* pWorkCommit = m_pRepository->commitFunctions()->folderAsCommit(this);
 
     QStringList lWorkFiles = pWorkCommit->files().keys();
     lWorkFiles.sort();
@@ -59,12 +59,15 @@ bool CStatusCommand::execute()
     // Check how each file differs from the tip commit
     for (QString sRelativeName : lWorkFiles)
     {
+        QString sAbsoluteName = m_pRepository->database()->absoluteFileName(sRelativeName);
+        QString sStartPathRelativeName = m_pRepository->database()->startRelativeFileName(sAbsoluteName);
+
         QString sIdInFrom = pFromCommit->files()[sRelativeName];
         QString sIdInWork = pWorkCommit->files()[sRelativeName];
         QString sIdInStage = m_pRepository->stagingCommit()->files()[sRelativeName];
 
         CFile file;
-        file.setRelativeName(sRelativeName);
+        file.setRelativeName(sStartPathRelativeName);
 
         if (not CUtils::idValid(sIdInFrom) && not CUtils::idValid(sIdInWork))
         {
@@ -112,8 +115,11 @@ bool CStatusCommand::execute()
         {
             if (not lProcessed.contains(sRelativeName))
             {
+                QString sAbsoluteName = m_pRepository->database()->absoluteFileName(sRelativeName);
+                QString sStartPathRelativeName = m_pRepository->database()->startRelativeFileName(sAbsoluteName);
+
                 CFile file;
-                file.setRelativeName(sRelativeName);
+                file.setRelativeName(sStartPathRelativeName);
                 file.setStatus(CEnums::eMissing);
 
                 (*m_pGeneralStatus) = CEnums::eModified;

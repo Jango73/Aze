@@ -64,6 +64,7 @@ public:
     static const QString s_sPathAzeMergePath;
     static const QString s_sPathAzeObjectPath;
     static const QString s_sPathAzeStashPath;
+    static const QString s_sPathAzeCachePath;
 
     static const QString s_sGeneralInformationFileName;
     static const QString s_sStagingCommitFileName;

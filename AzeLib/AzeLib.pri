@@ -1,6 +1,7 @@
 
 HEADERS += \
     sources/CCommitFunctions.h \
+    sources/CCommitTreeList.h \
     sources/CEnums.h \
     sources/commands/CBaseCommand.h \
     sources/commands/CCommitCommand.h \
@@ -39,6 +40,7 @@ HEADERS += \
 
 SOURCES += \
     sources/CCommitFunctions.cpp \
+    sources/CCommitTreeList.cpp \
     sources/CEnums.cpp \
     sources/commands/CBaseCommand.cpp \
     sources/commands/CCommitCommand.cpp \

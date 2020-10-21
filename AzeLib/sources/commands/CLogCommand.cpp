@@ -120,8 +120,7 @@ bool CLogCommand::execute()
 
         for (int branch = 0; branch < m_vBranches.last().count(); branch++)
         {
-            QList<CCommit*> lParents = CCommit::parentList(
-                        m_pRepository->database(),
+            QList<CCommit*> lParents = m_pRepository->commitFunctions()->commitTreeList()->commitParentList(
                         m_vBranches.last()[branch],
                         this
                         );

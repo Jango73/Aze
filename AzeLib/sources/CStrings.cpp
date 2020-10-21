@@ -61,6 +61,7 @@ const QString CStrings::s_sPathAzeDataRootPath                  = ".aze";
 const QString CStrings::s_sPathAzeMergePath                     = "merge";
 const QString CStrings::s_sPathAzeObjectPath                    = "objects";
 const QString CStrings::s_sPathAzeStashPath                     = "stash";
+const QString CStrings::s_sPathAzeCachePath                     = "cache";
 
 const QString CStrings::s_sGeneralInformationFileName           = "info." XMLC_EXTENSION;
 const QString CStrings::s_sStagingCommitFileName                = "stage";

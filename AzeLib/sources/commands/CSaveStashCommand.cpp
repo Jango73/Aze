@@ -63,7 +63,7 @@ bool CSaveStashCommand::execute()
 
     m_pRepository->clearStage();
 
-    CCommit* pWorkingDirectory = m_pRepository->commitFunctions()->directoryAsCommit(this);
+    CCommit* pWorkingDirectory = m_pRepository->commitFunctions()->folderAsCommit(this);
     CRevertCommand(m_pRepository, pWorkingDirectory, true).execute();
 
     return not sNewStashId.isEmpty();

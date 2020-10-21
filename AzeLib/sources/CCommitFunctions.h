@@ -12,6 +12,7 @@
 #include "Macros.h"
 
 // Application
+#include "CCommitTreeList.h"
 #include "objects/CCommit.h"
 #include "objects/CFile.h"
 #include "objects/CDatabase.h"
@@ -33,6 +34,7 @@ public:
     Q_FAST_PROPERTY(CDatabase*, p, database, Database)
     Q_FAST_PROPERTY(bool, b, silent, Silent)
     Q_FAST_PROPERTY(bool, b, debug, Debug)
+    Q_FAST_PROPERTY(CCommitTreeList* , p, commitTreeList, CommitTreeList)
 
 public:
 
@@ -42,6 +44,9 @@ public:
 
     //!
     CCommitFunctions(CDatabase* pDatabase, QObject* parent = nullptr, bool bSilent = false, bool bDebug = false);
+
+    //!
+    ~CCommitFunctions();
 
     //-------------------------------------------------------------------------------------------------
     // Control methods
@@ -81,16 +86,17 @@ public:
     //!
     void diffFiles(QString& sOutput, const QString& sFile1, const QString& sFile2);
 
-    //!
+    //! Returns the difference between two text files
     void diffText(QString& sOutput, const QString& sFileName, const QString& sText1, const QString& sText2);
 
     //! Applies a diff to the working directory
     bool applyDiff(const QString& sFullDiff, bool bAddToStage = false, CCommit* pStagingCommit = nullptr);
 
+    //! Do a 3-way merge and add (if requested) the modified files to the stage
     bool threeWayMerge(CCommit* pBaseCommit, CCommit* pFromTipCommit, CCommit* pToTipCommit, bool bAddToStage, CCommit* pStagingCommit);
 
-    //!
-    CCommit* directoryAsCommit(QObject* owner = nullptr, QString sRootPath = "");
+    //! Return a commit object that recflects the structure of a given file system folder (and its sub-folder)
+    CCommit* folderAsCommit(QObject* owner = nullptr, QString sRootPath = "");
 
     //-------------------------------------------------------------------------------------------------
     // Protected control methods

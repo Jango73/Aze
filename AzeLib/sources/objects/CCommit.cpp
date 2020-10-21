@@ -89,13 +89,6 @@ void CCommit::clearParents()
 
 //-------------------------------------------------------------------------------------------------
 
-void CCommit::readParentCommits(CDatabase* pDatabase)
-{
-    m_lParentCommits = parentList(pDatabase, this, this);
-}
-
-//-------------------------------------------------------------------------------------------------
-
 void CCommit::addParent(const QString& sParentId)
 {
     m_lParents << sParentId;
@@ -260,31 +253,6 @@ QList<CCommit*> CCommit::fromIdList(CDatabase* pDatabase, const QStringList& sCo
     }
 
     return lCommits;
-}
-
-//-------------------------------------------------------------------------------------------------
-
-QList<CCommit*> CCommit::parentList(CDatabase* pDatabase, const CCommit* pCommit, QObject* parent)
-{
-    QList<CCommit*> lParents;
-
-    for (QString sParentId : pCommit->parents())
-    {
-        QString sCommitFileName = pDatabase->composeCommitFileName(sParentId);
-        lParents << CCommit::fromFile(sCommitFileName, parent, sParentId);
-    }
-
-    return lParents;
-}
-
-//-------------------------------------------------------------------------------------------------
-
-QStringList CCommit::parentIds(CDatabase* pDatabase, const QString& sCommitId)
-{
-    CCommit* pCommit = fromNode(CXMLNode::load(pDatabase->composeCommitFileName(sCommitId)), nullptr, sCommitId);
-    QStringList lParents = pCommit->parents();
-    delete pCommit;
-    return lParents;
 }
 
 //-------------------------------------------------------------------------------------------------
