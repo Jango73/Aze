@@ -37,15 +37,27 @@ bool CRemoveCommand::execute()
 
 bool CRemoveCommand::removeSingleFile(QString sRelativeFileName)
 {
-    // TODO : code this (current is copied from CStageCommand::addSingleFile
-
+    // Sanity check on stage
     if (not m_pRepository->stagingCommit().isNull())
     {
+        // Check existence of given file
         if (CUtils::fileExists(m_pRepository->database()->rootPath(), sRelativeFileName))
         {
-            QString sId = CUtils::idFromString(sRelativeFileName);
-            m_pRepository->stagingCommit()->addFile(m_pRepository->database(), sRelativeFileName, sId);
-            return true;
+            // Get the absolute file name
+            QString sAbsoluteFileName = m_pRepository->database()->absoluteFileName(sRelativeFileName);
+
+            QFile file(sAbsoluteFileName);
+
+            // If file removal OK, stage the file
+            if (file.remove())
+            {
+                m_pRepository->stagingCommit()->addFile(m_pRepository->database(), sRelativeFileName, "");
+                return true;
+            }
+            else
+            {
+                m_pRepository->tellError(QString("%1: %2").arg(CStrings::s_sTextNoSuchFile).arg(sRelativeFileName));
+            }
         }
         else
         {

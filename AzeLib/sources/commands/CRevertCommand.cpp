@@ -89,6 +89,7 @@ bool CRevertCommand::revertSingleFile(QString sRelativeFileName)
 
                 if (not baData.isEmpty())
                 {
+                    // Write file
                     CUtils::putBinaryFileContent(
                                 m_pRepository->database()->composeLocalFileName(sRelativeFileName),
                                 baData

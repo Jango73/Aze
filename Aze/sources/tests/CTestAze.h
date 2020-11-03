@@ -55,6 +55,9 @@ private:
     bool createFile(const QString& sName, const QString& sContent);
 
     //!
+    bool deleteFile(const QString& sName);
+
+    //!
     bool readFile(const QString& sName, QString& sContent);
 
     //!
@@ -63,26 +66,28 @@ private:
     //! Executes a command
     QString exec(const QStringList& lInputArguments);
 
-    void checkCommitDiff(const QString& sDiff, QVector<CTransformedFile> vFiles);
-
     //-------------------------------------------------------------------------------------------------
     // Slots
     //-------------------------------------------------------------------------------------------------
 
 private slots:
 
-    //
+    //! Test stage and commit functionalities
     void testCommit();
 
-    // Tests merge functionality
-    void testMerge();
+    //! Test file deletion functionality
+    void testDelete();
 
-    // Tests patch functionality
+    //! Tests patch functionality
     void testPatch();
 
-    // Tests functionalities under heavy load
+    //! Tests merge functionality
+    void testMerge();
+
+    //! Tests functionalities under heavy load
     void testHeavy();
 
+    //!
     void testFinalize();
 
     //-------------------------------------------------------------------------------------------------

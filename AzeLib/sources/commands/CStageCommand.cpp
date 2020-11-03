@@ -37,18 +37,29 @@ bool CStageCommand::execute()
 
 bool CStageCommand::addSingleFile(QString sRelativeFileName)
 {
-    if (not m_pRepository->stagingCommit().isNull())
+    // Sanity check on stage
+    if (m_pRepository->stagingCommit().isNull())
     {
-        if (CUtils::fileExists(m_pRepository->database()->rootPath(), sRelativeFileName))
+        m_pRepository->tellError(CStrings::s_sTextNoStagingCommit);
+        return false;
+    }
+
+    if (CUtils::fileExists(m_pRepository->database()->rootPath(), sRelativeFileName))
+    {
+        QString sId = CUtils::idFromString(sRelativeFileName);
+        m_pRepository->stagingCommit()->addFile(m_pRepository->database(), sRelativeFileName, sId);
+        return true;
+    }
+    else
+    {
+        // Check if this is a file deletion
+        if (not m_pRepository->tipCommit().isNull() && m_pRepository->tipCommit()->files().contains(sRelativeFileName))
         {
-            QString sId = CUtils::idFromString(sRelativeFileName);
-            m_pRepository->stagingCommit()->addFile(m_pRepository->database(), sRelativeFileName, sId);
+            m_pRepository->stagingCommit()->addFile(m_pRepository->database(), sRelativeFileName, "");
             return true;
         }
-        else
-        {
-            m_pRepository->tellError(QString("%1: %2").arg(CStrings::s_sTextNoSuchFile).arg(sRelativeFileName));
-        }
+
+        m_pRepository->tellError(QString("%1: %2").arg(CStrings::s_sTextNoSuchFile).arg(sRelativeFileName));
     }
 
     return false;

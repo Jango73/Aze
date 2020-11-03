@@ -34,6 +34,22 @@ float CUtils::s_fMatchThreshold = 0.2f;
 
 //-------------------------------------------------------------------------------------------------
 
+bool CUtils::sameIds(const QString& sId1, const QString& sId2)
+{
+    if (sId1.count() == sId2.count())
+        return sId1 == sId2;
+
+    if (sId1.count() < sId2.count())
+        return sId2.startsWith(sId1);
+
+    if (sId1.count() > sId2.count())
+        return sId1.startsWith(sId2);
+
+    return false;
+}
+
+//-------------------------------------------------------------------------------------------------
+
 void CUtils::ensureFilePathExists(const QString& sFilePath)
 {
     if (sFilePath.contains(CStrings::s_sPathSep))
@@ -225,12 +241,12 @@ bool CUtils::putBinaryFileContent(const QString& sFileName, const QByteArray& ba
 {
     ensureFilePathExists(sFileName);
 
-    QFile tInputFile(sFileName);
+    QFile tOutputFile(sFileName);
 
-    if (tInputFile.open(QIODevice::WriteOnly))
+    if (tOutputFile.open(QIODevice::WriteOnly))
     {
-        tInputFile.write(baData);
-        tInputFile.close();
+        tOutputFile.write(baData);
+        tOutputFile.close();
 
         return true;
     }
@@ -358,12 +374,17 @@ bool CUtils::applyThreeWayMerge(
     typedef std::string       elem;
     typedef std::vector<elem> sequence;
 
+    // This method is long because DTL works on std containers
+    // We need to switch back and forth between containers
+
     sequence BaseLines, Lines1, Lines2;
 
+    // Get the lists of lines for the base text, and the two other texts
     QStringList sLinesBase = sBase.split("\n");
     QStringList sLines1 = sText1.split("\n");
     QStringList sLines2 = sText2.split("\n");
 
+    // Populate the sequences with the lines
     for (QString sLine : sLinesBase)
         BaseLines.push_back(sLine.toStdString());
 
@@ -373,6 +394,7 @@ bool CUtils::applyThreeWayMerge(
     for (QString sLine : sLines2)
         Lines2.push_back(sLine.toStdString());
 
+    // Setup DTL differ
     dtl::Diff3<elem, sequence> diff(Lines1, BaseLines, Lines2);
     diff.enableConflictMarkers(
                 QString("<<<<<<< %1").arg(sTitle1).toStdString(),
@@ -380,16 +402,19 @@ bool CUtils::applyThreeWayMerge(
                 QString(">>>>>>> %1").arg(sTitle2).toStdString()
                 );
 
+    //  Call differ compose and merge
     diff.compose();
-
     bool bResult = diff.merge();
 
+    // Get the merged sequence
     QStringList lReturnValue;
     std::vector<elem> vec = diff.getMergedSequence();
 
+    // Create the result line list
     for (elem line : vec)
         lReturnValue << QString::fromStdString(line);
 
+    // Create the result string from the result line list
     sResult = lReturnValue.join("\n");
 
     return bResult;

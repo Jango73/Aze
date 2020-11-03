@@ -67,7 +67,7 @@ bool CCommitTreeList::operator == (const CCommitTreeList& target)
 // TODO : save and load in binary format
 CXMLNode CCommitTreeList::toNode()
 {
-    CXMLNode xReturnValue("CCommitTreeList");
+    CXMLNode xReturnValue(CStrings::s_sParamCommitTreeList);
 
     QStringList lCommitParentList;
 
@@ -76,8 +76,8 @@ CXMLNode CCommitTreeList::toNode()
         lCommitParentList << CUtils::packFileAndId(sKey, m_mCommitParentList[sKey].join(":"));
     }
 
-    xReturnValue.attributes()["CommitParentList"] = lCommitParentList.join("|");
-    xReturnValue.attributes()["CommitTreeList"] = "";
+    xReturnValue.attributes()[CStrings::s_sParamCommitParentList] = lCommitParentList.join("|");
+    xReturnValue.attributes()[CStrings::s_sParamCommitTreeList] = "";
 
     return xReturnValue;
 }
@@ -88,7 +88,7 @@ void CCommitTreeList::fromNode(const CXMLNode& xNode)
 {
     m_mCommitParentList.clear();
 
-    QStringList lCommitParentList = xNode.attributes()["CommitParentList"].split("|");
+    QStringList lCommitParentList = xNode.attributes()[CStrings::s_sParamCommitParentList].split("|");
 
     for (const QString& sItem : lCommitParentList)
     {
@@ -99,7 +99,7 @@ void CCommitTreeList::fromNode(const CXMLNode& xNode)
         m_mCommitParentList[sId] = sParents.split(":");
     }
 
-    QString sToto = xNode.attributes()["CommitTreeList"];
+    QString sToto = xNode.attributes()[CStrings::s_sParamCommitTreeList];
 }
 
 //-------------------------------------------------------------------------------------------------

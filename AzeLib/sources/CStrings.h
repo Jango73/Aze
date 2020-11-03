@@ -32,6 +32,8 @@ public:
     static const QString s_sParamBranches;
     static const QString s_sParamCommit;
     static const QString s_sParamCommitChain;
+    static const QString s_sParamCommitParentList;
+    static const QString s_sParamCommitTreeList;
     static const QString s_sParamCurrent;
     static const QString s_sParamDate;
     static const QString s_sParamDiff;
@@ -78,6 +80,7 @@ public:
     static const QString s_sTextCommitEmpty;
     static const QString s_sTextCommonAncestor;
     static const QString s_sTextCouldNotApplyPatch;
+    static const QString s_sTextCouldNotRemoveFile;
     static const QString s_sTextMergeFailed;
     static const QString s_sTextMergeWorkingDirectoryNotClean;
     static const QString s_sTextNoCommitToMerge;

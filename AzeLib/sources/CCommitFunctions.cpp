@@ -220,7 +220,7 @@ void CCommitFunctions::getShortestCommitChainRecurse(
     if (iGuard <= 0)
         return;
 
-    if (sCommiId == sStopAtCommitId)
+    if (CUtils::sameIds(sCommiId, sStopAtCommitId))
         return;
 
     QStringList lParentIds = m_pCommitTreeList->commitParentIds(sCommiId);
@@ -277,7 +277,7 @@ QString CCommitFunctions::getCommonCommitChains(
     {
         for (QPair<int, QString> pSubCommit2 : lAncestors2)
         {
-            if (pSubCommit1.second == pSubCommit2.second)
+            if (CUtils::sameIds(pSubCommit1.second, pSubCommit2.second))
             {
                 int iDistance = pSubCommit1.first + pSubCommit2.first;
                 commonAncestors[iDistance] = { pSubCommit1.second, pSubCommit2.second };
@@ -351,9 +351,11 @@ void CCommitFunctions::diffCommits(QString& sOutput, CCommit* pCommit1, CCommit*
 
     if (IS_NOT_NULL(pCommit1) && IS_NOT_NULL(pCommit2))
     {
+        QHash<QString, int> lProcessedFiles;
+
         for (QString sName : pCommit2->files().keys())
         {
-            if (not lIgnoreFiles.contains(sName))
+            if (not lIgnoreFiles.contains(sName) && not lProcessedFiles.contains(sName))
             {
                 QByteArray baContent1 = pCommit1->fileContent(m_pDatabase, sName);
                 QByteArray baContent2 = pCommit2->fileContent(m_pDatabase, sName);
@@ -365,6 +367,27 @@ void CCommitFunctions::diffCommits(QString& sOutput, CCommit* pCommit1, CCommit*
                     sOutput += CUtils::fileDiffHeader(sName, sName);
                     sOutput += sDiffText;
                 }
+
+                lProcessedFiles[sName] = 0;
+            }
+        }
+
+        for (QString sName : pCommit1->files().keys())
+        {
+            if (not lIgnoreFiles.contains(sName) && not lProcessedFiles.contains(sName))
+            {
+                QByteArray baContent1 = pCommit1->fileContent(m_pDatabase, sName);
+                QByteArray baContent2 = pCommit2->fileContent(m_pDatabase, sName);
+
+                QString sDiffText = CUtils::unifiedDiff(QString(baContent1), QString(baContent2));
+
+                if (not sDiffText.isEmpty())
+                {
+                    sOutput += CUtils::fileDiffHeader(sName, sName);
+                    sOutput += sDiffText;
+                }
+
+                lProcessedFiles[sName] = 0;
             }
         }
     }
@@ -407,7 +430,7 @@ void CCommitFunctions::diffCommitLists(QString& sOutput, const QList<CCommit*>& 
         bool bFound = false;
 
         for (CCommit* pCommit : lToList)
-            if (pCommit->id() == pCommit2->id())
+            if (CUtils::sameIds(pCommit->id(), pCommit2->id()))
             {
                 bFound = true;
                 break;
@@ -687,6 +710,7 @@ bool CCommitFunctions::threeWayMerge(CCommit* pBaseCommit, CCommit* pFromTipComm
         QString sFromMarker = QString("%1 %2").arg(pFromTipCommit->shortId()).arg(pFromTipCommit->message().left(16));
         QString sToMarker = QString("%1 %2").arg(pToTipCommit->shortId()).arg(pToTipCommit->message().left(16));
 
+        // Do the actual merge
         bool bMergeOk = CUtils::applyThreeWayMerge(sBaseContent, sFromMarker, sFromContent, sToMarker, sToContent, sNewContent);
 
         if (m_bDebug)

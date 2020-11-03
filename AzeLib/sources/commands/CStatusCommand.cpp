@@ -25,7 +25,7 @@ CStatusCommand::CStatusCommand(CRepository* pRepository, const QStringList& lFil
 
 bool CStatusCommand::execute()
 {
-    QHash<QString, int> lProcessed;
+    QHash<QString, int> lProcessedFiles;
 
     if (IS_NULL(m_pFileStatus))
         return false;
@@ -33,13 +33,19 @@ bool CStatusCommand::execute()
     if (IS_NULL(m_pGeneralStatus))
         return false;
 
+    // Sanity check on stage
     if (m_pRepository->stagingCommit().isNull())
+    {
+        m_pRepository->tellError(CStrings::s_sTextNoStagingCommit);
         return false;
+    }
 
+    // Set default status
     (*m_pGeneralStatus) = CEnums::eClean;
 
     CCommit* pFromCommit = nullptr;
 
+    // Get tip commit if it exists
     if (not m_pRepository->tipCommit().isNull())
     {
         pFromCommit = m_pRepository->tipCommit().get();
@@ -102,18 +108,18 @@ bool CStatusCommand::execute()
             }
         }
 
-        lProcessed[sRelativeName] = 0;
+        lProcessedFiles[sRelativeName] = 0;
         (*m_pFileStatus) << file;
     }
 
     // Traverse tip commit files
-    // Every file in the tip not existing in working directory is considered missing
-    // TODO: Unless marked as deleted
+    // Every file in the tip not existing in working directory is considered missing,
+    // unless present in the staging commit, which means it is being deleted
     if (not m_pRepository->tipCommit().isNull())
     {
         for (QString sRelativeName : m_pRepository->tipCommit()->files().keys())
         {
-            if (not lProcessed.contains(sRelativeName))
+            if (not lProcessedFiles.contains(sRelativeName))
             {
                 QString sAbsoluteName = m_pRepository->database()->absoluteFileName(sRelativeName);
                 QString sStartPathRelativeName = m_pRepository->database()->startRelativeFileName(sAbsoluteName);
@@ -122,9 +128,14 @@ bool CStatusCommand::execute()
                 file.setRelativeName(sStartPathRelativeName);
                 file.setStatus(CEnums::eMissing);
 
+                if( m_pRepository->stagingCommit()->files().contains(sRelativeName))
+                {
+                    file.setStatus(CEnums::eDeleted);
+                }
+
                 (*m_pGeneralStatus) = CEnums::eModified;
 
-                lProcessed[sRelativeName] = 0;
+                lProcessedFiles[sRelativeName] = 0;
                 (*m_pFileStatus) << file;
             }
         }

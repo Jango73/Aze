@@ -48,6 +48,18 @@
     __VA_ARGS__ \
     })
 
+#define REMOVE(...) \
+    exec({ \
+    CConstants::s_sSwitchRemove, \
+    QString("--%1").arg(SILENT_OR_DEBUG), \
+    __VA_ARGS__ \
+    })
+
+#define LOG(a) \
+    a = exec({ \
+    CConstants::s_sSwitchLog, \
+    })
+
 #define DIFF_LAST(a) \
     a = exec({ \
     CConstants::s_sSwitchDiff, "tip~1 tip > " \
@@ -188,6 +200,14 @@ bool CTestAze::createFile(const QString& sName, const QString& sContent)
 
 //-------------------------------------------------------------------------------------------------
 
+bool CTestAze::deleteFile(const QString& sName)
+{
+    QFile file(sName);
+    return file.remove();
+}
+
+//-------------------------------------------------------------------------------------------------
+
 bool CTestAze::readFile(const QString& sName, QString& sContent)
 {
     QFile file(sName);
@@ -284,27 +304,6 @@ QString CTestAze::exec(const QStringList& lInputArguments)
 
 //-------------------------------------------------------------------------------------------------
 
-void CTestAze::checkCommitDiff(const QString& sDiff, QVector<CTransformedFile> vFiles)
-{
-    QList<QPair<QString, QString> > mFileDiffs = Aze::CUtils::splitDiff(sDiff);
-    QVERIFY(mFileDiffs.count() == vFiles.count());
-
-    for (CTransformedFile file : vFiles)
-    {
-        // Find the diff for this file
-        auto sItFileDiff = std::find_if(mFileDiffs.begin(), mFileDiffs.end(), [=](QPair<QString, QString> o) { return o.first == file.m_sFilePath; });
-        QVERIFY(sItFileDiff != mFileDiffs.end());
-        // Apply the diff for this file
-        QString sPatch = (*sItFileDiff).second;
-        QString sFilePatched;
-        bool bPatchOk = Aze::CUtils::applyUnifiedDiff(file.m_sFileContent1, sPatch, sFilePatched);
-        QVERIFY(bPatchOk);
-        QVERIFY(file.m_sFileContent2 == sFilePatched);
-    }
-}
-
-//-------------------------------------------------------------------------------------------------
-
 void CTestAze::testCommit()
 {
     QString sFile1Path = "Files/CommitTest1.txt";
@@ -341,6 +340,100 @@ void CTestAze::testCommit()
 
     DIFF_LAST(sDiffContent);
     QVERIFY(sDiffContent == sD23);
+}
+
+//-------------------------------------------------------------------------------------------------
+
+void CTestAze::testDelete()
+{
+    QString sFile1Path = "Files/CommitTest1.txt";
+    QString sFile2Path = "Files/CommitTest2.txt";
+    QString sDiffContent;
+    QString sResult;
+
+    QString sF1("F1\n--");
+    QString sF2("F2\n--");
+    QString sD12 = Aze::CUtils::fileDiffHeader(sFile2Path, sFile2Path) + "@@ -1,2 +1,1 @@\n-F2\n---\n+\n";
+    QString sD23 = Aze::CUtils::fileDiffHeader(sFile1Path, sFile1Path) + "@@ -1,2 +1,1 @@\n-F1\n---\n+\n";
+
+    INIT();
+
+    // C1
+    QVERIFY(createFile(sFile1Path, sF1));
+    QVERIFY(createFile(sFile2Path, sF2));
+    STAGE(sFile1Path);
+    STAGE(sFile2Path);
+    STATUS(sResult); OUT_INFO(sResult);
+    COMMIT("C1");
+
+    // C2
+    QVERIFY(deleteFile(sFile2Path));
+    STAGE(sFile2Path);
+    STATUS(sResult); OUT_INFO(sResult);
+    COMMIT("C2");
+
+    DIFF_LAST(sDiffContent);
+    QVERIFY(sDiffContent == sD12);
+
+    // C3
+    REMOVE(sFile1Path);
+    STATUS(sResult); OUT_INFO(sResult);
+    COMMIT("C3");
+
+    DIFF_LAST(sDiffContent);
+    QVERIFY(sDiffContent == sD23);
+}
+
+//-------------------------------------------------------------------------------------------------
+
+void CTestAze::testPatch()
+{
+    QString sFile1Path = "Files/PatchTest1.txt";
+    QString sFile2Path = "Files/PatchTest2.txt";
+    QString sPatchPath = "Files/Patch.txt";
+    QString sFileContent;
+    QString sDiffPath = "Files/Diff.txt";
+    QString sDiffContent;
+    QString sResult;
+
+    QString sC1("L1\nL2\nL3\nL4\n--");
+    QString sC2("L2\nL3\nL4\nL5\n--");
+    QString sC3("L6\nL7\nL8\nL9\nL3\nL4\n--");
+
+    INIT();
+
+    // C1
+    QVERIFY(createFile(sFile1Path, sC1));
+    QVERIFY(createFile(sFile2Path, sC1));
+    STAGE(sFile1Path);
+    STAGE(sFile2Path);
+    STATUS(sResult); OUT_INFO(sResult);
+    COMMIT("C1");
+
+    // C2
+    QVERIFY(createFile(sFile1Path, sC2));
+    QVERIFY(createFile(sFile2Path, sC2));
+    STAGE(sFile1Path);
+    STAGE(sFile2Path);
+    STATUS(sResult); OUT_INFO(sResult);
+    COMMIT("C2");
+
+    DIFF_LAST(sDiffContent);
+    QVERIFY(createFile(sPatchPath, sDiffContent));
+
+    QVERIFY(createFile(sFile1Path, sC1));
+    QVERIFY(createFile(sFile2Path, sC1));
+    PATCH(sResult, sPatchPath);
+    QVERIFY(sResult == "0");
+
+    QVERIFY(readFile(sFile1Path, sFileContent));
+    QVERIFY(sFileContent == sC2);
+    QVERIFY(readFile(sFile2Path, sFileContent));
+    QVERIFY(sFileContent == sC2);
+
+    QVERIFY(createFile(sFile1Path, sC3));
+    PATCH(sResult, sPatchPath);
+    QVERIFY(sResult != "0");
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -610,58 +703,10 @@ void CTestAze::testMerge()
     // Check merged file contents
     QVERIFY(readFile(sFile1Path, sFile1Content));
     QVERIFY(QRegExp(sMB9).indexIn(sFile1Content) != -1);
-}
 
-//-------------------------------------------------------------------------------------------------
-
-void CTestAze::testPatch()
-{
-    QString sFile1Path = "Files/PatchTest1.txt";
-    QString sFile2Path = "Files/PatchTest2.txt";
-    QString sPatchPath = "Files/Patch.txt";
-    QString sFileContent;
-    QString sDiffPath = "Files/Diff.txt";
-    QString sDiffContent;
-    QString sResult;
-
-    QString sC1("L1\nL2\nL3\nL4\n--");
-    QString sC2("L2\nL3\nL4\nL5\n--");
-    QString sC3("L6\nL7\nL8\nL9\nL3\nL4\n--");
-
-    INIT();
-
-    // C1
-    QVERIFY(createFile(sFile1Path, sC1));
-    QVERIFY(createFile(sFile2Path, sC1));
-    STAGE(sFile1Path);
-    STAGE(sFile2Path);
-    STATUS(sResult); OUT_INFO(sResult);
-    COMMIT("C1");
-
-    // C2
-    QVERIFY(createFile(sFile1Path, sC2));
-    QVERIFY(createFile(sFile2Path, sC2));
-    STAGE(sFile1Path);
-    STAGE(sFile2Path);
-    STATUS(sResult); OUT_INFO(sResult);
-    COMMIT("C2");
-
-    DIFF_LAST(sDiffContent);
-    QVERIFY(createFile(sPatchPath, sDiffContent));
-
-    QVERIFY(createFile(sFile1Path, sC1));
-    QVERIFY(createFile(sFile2Path, sC1));
-    PATCH(sResult, sPatchPath);
-    QVERIFY(sResult == "0");
-
-    QVERIFY(readFile(sFile1Path, sFileContent));
-    QVERIFY(sFileContent == sC2);
-    QVERIFY(readFile(sFile2Path, sFileContent));
-    QVERIFY(sFileContent == sC2);
-
-    QVERIFY(createFile(sFile1Path, sC3));
-    PATCH(sResult, sPatchPath);
-    QVERIFY(sResult != "0");
+    // Log
+    LOG(sResult);
+    OUT_INFO(sResult);
 }
 
 //-------------------------------------------------------------------------------------------------

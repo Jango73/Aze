@@ -52,6 +52,9 @@ public:
     //!
     virtual ~CCommit() override;
 
+    //!
+    const QStringList& constParents() const { return m_lParents; }
+
     //-------------------------------------------------------------------------------------------------
     // Control methods
     //-------------------------------------------------------------------------------------------------
@@ -90,13 +93,13 @@ public:
 public:
 
     //!
-    static CCommit* fromNode(const CXMLNode& xNode, QObject* parent, QString sCommitId);
+    static CCommit* fromNode(const CXMLNode& xNode, QObject* parent, const QString& sCommitId);
 
     //!
-    static CCommit* fromFile(const QString& sFileName, QObject* parent, QString sCommitId);
+    static CCommit* fromFile(const QString& sFileName, QObject* parent, const QString& sCommitId);
 
     //!
-    static CCommit* fromId(CDatabase* pDatabase, QString sCommitId, QObject* parent);
+    static CCommit* fromId(CDatabase* pDatabase, const QString& sCommitId, QObject* parent);
 
     //!
     static QList<CCommit*> fromIdList(CDatabase* pDatabase, const QStringList& sCommitIdList, QObject* parent);

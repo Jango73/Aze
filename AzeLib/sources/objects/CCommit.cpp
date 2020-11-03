@@ -150,6 +150,12 @@ bool CCommit::addCommit(CDatabase* pDatabase, const CCommit* pCommitToAdd)
                 }
             }
         }
+        else
+        {
+            // If the file does not exist locally, this is a file deletion
+            // So we just remove the file from the tree
+            m_mFiles.remove(sRelativeFileName);
+        }
     }
 
     for (QString sParent : pCommitToAdd->parents())
@@ -179,7 +185,7 @@ QByteArray CCommit::fileContent(CDatabase* pDatabase, QString sFileName)
 
 //-------------------------------------------------------------------------------------------------
 
-CCommit* CCommit::fromNode(const CXMLNode& xNode, QObject* parent, QString sCommitId)
+CCommit* CCommit::fromNode(const CXMLNode& xNode, QObject* parent, const QString& sCommitId)
 {
     QDictionary mFiles;
     QString sId;
@@ -228,14 +234,14 @@ CCommit* CCommit::fromNode(const CXMLNode& xNode, QObject* parent, QString sComm
 
 //-------------------------------------------------------------------------------------------------
 
-CCommit* CCommit::fromFile(const QString& sFileName, QObject* parent, QString sCommitId)
+CCommit* CCommit::fromFile(const QString& sFileName, QObject* parent, const QString& sCommitId)
 {
     return fromNode(CXMLNode::load(sFileName), parent, sCommitId);
 }
 
 //-------------------------------------------------------------------------------------------------
 
-CCommit* CCommit::fromId(CDatabase* pDatabase, QString sCommitId, QObject* parent)
+CCommit* CCommit::fromId(CDatabase* pDatabase, const QString& sCommitId, QObject* parent)
 {
     QString sCommitFileName = pDatabase->composeCommitFileName(sCommitId);
     return fromFile(sCommitFileName, parent, sCommitId);

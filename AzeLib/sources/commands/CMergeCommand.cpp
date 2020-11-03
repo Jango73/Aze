@@ -116,6 +116,7 @@ bool CMergeCommand::execute()
         return false;
     }
 
+    // Do the actual 3-way merge
     m_bHasConflicts = not m_pRepository->commitFunctions()->threeWayMerge(pCommonAncestor, pFromTipCommit, pToTipCommit, true, m_pRepository->stagingCommit().get());
 
     // Set merge information in staging commit

@@ -356,6 +356,9 @@ bool CRepository::readGeneralInformation()
 
 //-------------------------------------------------------------------------------------------------
 
+/*!
+    Writes the general information file.
+*/
 bool CRepository::writeGeneralInformation()
 {
     CXMLNode xInfo(CStrings::s_sParamInfo);

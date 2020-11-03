@@ -31,6 +31,9 @@ public:
     // Public static methods
     //-------------------------------------------------------------------------------------------------
 
+    //!
+    static bool sameIds(const QString& sId1, const QString& sId2);
+
     //! Creates the path specified in sFileName if it does not exist
     static void ensureFilePathExists(const QString& sFileName);
 
