@@ -69,19 +69,14 @@ bool CLogCommand::execute()
             // Iterate through each branch
             for (int index = 0; index < m_vBranches.last().count(); index++)
             {
-                // QString sId = m_vBranches.last()[index]->id();
-
                 CCommit* pCommit = m_vBranches.last()[index];
 
                 if (m_bGraph)
                 {
-                    outputBranches(index, false, index == 0);
-                    (*m_pResult) += CStrings::s_sNewLine;
-
-                    outputBranches(index, true, index == 0);
+                    outputBranches(index, index == 0);
 
                     (*m_pResult) += QString("%1 - %2 - %3 - %4%5")
-                            .arg(pCommit->id())
+                            .arg(pCommit->shortId())
                             .arg(PRINTABLE_ISO_DATE(m_vBranches.last()[index]->date()))
                             .arg(pCommit->author())
                             .arg(pCommit->message())
@@ -118,10 +113,10 @@ bool CLogCommand::execute()
         QMap<int, CCommit*> mNewBranches;
         int iNewBranchIndex = 0;
 
-        for (int branch = 0; branch < m_vBranches.last().count(); branch++)
+        for (int index = 0; index < m_vBranches.last().count(); index++)
         {
             QList<CCommit*> lParents = m_pRepository->commitFunctions()->commitTreeList()->commitParentList(
-                        m_vBranches.last()[branch],
+                        m_vBranches.last()[index],
                         this
                         );
 
@@ -158,38 +153,30 @@ bool CLogCommand::execute()
 
 //-------------------------------------------------------------------------------------------------
 
-void CLogCommand::outputBranches(int iCurrentBranch, bool bOnCommit, bool bFirstLine)
+void CLogCommand::outputBranches(int iCurrentBranch, bool bFirstLine)
 {
     for (int index = 0; index < m_vBranches.last().count(); index++)
     {
-        if (bOnCommit)
+        if (m_vBranches.count() > 1)
         {
             if (index == iCurrentBranch)
                 (*m_pResult) += QString(" * ");
+            else if (
+                    bFirstLine
+                    && m_vBranches[m_vBranches.count() - 2].count() < m_vBranches[m_vBranches.count() - 1].count()
+                    && index == m_vBranches.last().count() - 1
+                    )
+            {
+                (*m_pResult) += QString("\\  ");
+            }
             else
+            {
                 (*m_pResult) += QString(" | ");
+            }
         }
         else
         {
-            if (m_vBranches.count() > 1)
-            {
-                if (
-                        bFirstLine
-                        && m_vBranches[m_vBranches.count() - 2].count() < m_vBranches[m_vBranches.count() - 1].count()
-                        && index == m_vBranches.last().count() - 1
-                        )
-                {
-                    (*m_pResult) += QString("\\  ");
-                }
-                else
-                {
-                    (*m_pResult) += QString(" | ");
-                }
-            }
-            else
-            {
-                (*m_pResult) += QString(" | ");
-            }
+            (*m_pResult) += QString(" | ");
         }
     }
 }
